@@ -143,9 +143,9 @@ class PerfilMedico extends Page implements HasForms
                 // Debug para ver qué tenemos en la BD
                 \Log::info('Logo desde BD:', ['logo' => $logo, 'tipo' => gettype($logo)]);
                 
+                // Multi-tenant: centro_id no es necesario en recetarios
                 $this->recetarioData = [
                     'tiene_recetario' => $recetario->tiene_recetario ?? true,
-                    'centro_id' => $recetario->centro_id ?? session('current_centro_id') ?? $user->centro_id,
                     'logo' => $logo, // Mantener como string
                     'color_primario' => $recetario->color_primario ?? '#2563eb',
                     'color_secundario' => $recetario->color_secundario ?? '#64748b',
@@ -163,9 +163,9 @@ class PerfilMedico extends Page implements HasForms
                     'telefonos_medico' => $recetario->telefono_mostrar ?? ($medico->persona->telefono ?? ''),
                 ];
             } else {
+                // Multi-tenant: centro_id no es necesario
                 $this->recetarioData = [
                     'tiene_recetario' => false,
-                    'centro_id' => session('current_centro_id') ?? $user->centro_id,
                     'logo' => null,
                     'color_primario' => '#2563eb',
                     'color_secundario' => '#64748b',
@@ -181,9 +181,9 @@ class PerfilMedico extends Page implements HasForms
             }
         } else {
             // Si es root o solo tiene rol médico pero no registro de médico
+            // Multi-tenant: centro_id no es necesario
             $this->recetarioData = [
                 'tiene_recetario' => false,
-                'centro_id' => session('current_centro_id') ?? $user->centro_id ?? null,
                 'logo' => null,
                 'color_primario' => '#2563eb',
                 'color_secundario' => '#64748b',

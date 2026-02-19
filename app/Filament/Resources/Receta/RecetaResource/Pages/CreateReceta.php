@@ -117,11 +117,7 @@ class CreateReceta extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Asegurar que el centro_id esté presente
-        if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->centro_id) {
-            $data['centro_id'] = \Illuminate\Support\Facades\Auth::user()->centro_id;
-        }
-
+        // Multi-tenant: centro_id no es necesario
         return $data;
     }
 }

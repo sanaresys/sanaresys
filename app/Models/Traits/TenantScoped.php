@@ -5,7 +5,7 @@ namespace App\Models\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Multitenancy\Models\Tenant;
+use App\Models\Tenant;
 
 trait TenantScoped
 {
@@ -52,6 +52,11 @@ trait TenantScoped
      */
     protected static function getCurrentTenantId(): ?int
     {
+        // Durante seeders/comandos de consola, permitir sin tenant
+        if (app()->runningInConsole() && !app()->runningUnitTests()) {
+            return null;
+        }
+
         if (Auth::check()) {
             $user = Auth::user();
             
@@ -64,12 +69,15 @@ trait TenantScoped
             return $user->centro_id;
         }
 
-        // Como respaldo, verificar el tenant actual de Spatie
-        if ($tenant = Tenant::current()) {
-            return $tenant->centro_id;
+        // Como respaldo, verificar el tenant actual
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            $tenant = tenancy()->tenant;
+            if ($tenant && isset($tenant->centro_id)) {
+                return $tenant->centro_id;
+            }
         }
 
-        throw new \Exception('No se ha seleccionado un centro médico.');
+        return null; // Devolver null en lugar de lanzar excepción
     }
 
     /**

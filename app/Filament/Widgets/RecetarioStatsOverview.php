@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class RecetarioStatsOverview extends BaseWidget
 {
+    public static function canView(): bool
+    {
+        // Solo mostrar si hay tenant activo y usuario es médico
+        return tenancy()->initialized && Auth::user()?->medico !== null;
+    }
+
     protected function getHeading(): string
     {
         return 'Estadísticas del Recetario';
@@ -46,11 +52,5 @@ class RecetarioStatsOverview extends BaseWidget
                 ->icon('heroicon-o-calendar')
                 ->color('primary'),
         ];
-    }
-
-    public static function canView(): bool
-    {
-        $user = auth()->user();
-        return $user && $user->hasRole('medico');
     }
 }

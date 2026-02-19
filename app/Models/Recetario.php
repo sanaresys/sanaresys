@@ -15,14 +15,13 @@ class Recetario extends ModeloBase
     /** @use HasFactory<\Database\Factories\RecetarioFactory> */
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Assuming you have a trait for recetario specific methods
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $table = 'recetarios';
 
     protected $fillable = [
         'medico_id',
         'consulta_id',
-        'centro_id',
         'numero_recetario',
         'observaciones_generales',
         'estado',

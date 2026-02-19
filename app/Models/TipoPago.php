@@ -5,20 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Traits\TenantScoped;   
-
-
 class TipoPago extends ModeloBase        
 {
     use HasFactory, SoftDeletes;       
-    use TenantScoped;
-
-    protected string $tenantKeyName = 'centro_id';   
-
+    // TenantScoped NO se usa - el contexto del tenant define el centro
     protected $fillable = [
         'nombre',
         'descripcion',
-        'centro_id',    
         'created_by',   
         'updated_by',    
         'deleted_by',   

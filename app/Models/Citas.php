@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\TenantScoped; 
-
 class Citas extends ModeloBase
 {
     /** @use HasFactory<\Database\Factories\CitasFactory> */
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Assuming you have a trait for tenant scoping
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $table = 'citas';
     
@@ -24,7 +22,6 @@ class Citas extends ModeloBase
         'hora',
         'motivo',
         'estado',
-        'centro_id',
     ];
 
     public function paciente(){

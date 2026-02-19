@@ -14,11 +14,9 @@ class ExamenesStatsWidget extends BaseWidget
         $user = Auth::user();
         $query = Examenes::query();
 
-        // Aplicar filtros por rol
-        if ($user->roles->contains('name', 'root')) {
+        // Multi-tenant: filtrar por rol pero no por centro_id
+        if ($user->roles->contains('name', 'root') || $user->roles->contains('name', 'administrador')) {
             $query->withoutGlobalScopes();
-        } elseif ($user->roles->contains('name', 'administrador')) {
-            $query->where('centro_id', session('current_centro_id'));
         } elseif ($user->roles->contains('name', 'medico')) {
             $query->where('medico_id', $user->medico?->id);
         }

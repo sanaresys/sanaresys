@@ -26,56 +26,12 @@ class CentroStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $currentCentroId = session('current_centro_id');
         $user = auth()->user();
-        
-        if (!$currentCentroId && $user && !$user->hasRole('root')) {
-            $currentCentroId = $user->centro_id;
-        }
-
-        $centro = $currentCentroId ? Centros_Medico::find($currentCentroId) : null;
         $stats = [];
 
-        if ($centro) {
-            // Estadísticas del centro específico - Solo las más importantes
-            $pacientesCount = \App\Models\Pacientes::forCentro($centro->id)->count();
-            $medicosCount = \App\Models\Medico::forCentro($centro->id)->count();
-            
-            $citasHoy = \App\Models\Citas::forCentro($centro->id)->whereDate('fecha', today());
-            $citasPendientes = (clone $citasHoy)->where('estado', 'Pendiente')->count();
-            $citasConfirmadas = (clone $citasHoy)->where('estado', 'Confirmado')->count();
-            $totalCitasHoy = $citasHoy->count();
-
-            // Solo 4 estadísticas principales
-            $stats[] = Stat::make('🏥 ' . $centro->nombre_centro, 'Centro Actual')
-                ->description('Centro médico seleccionado')
-                ->descriptionIcon('heroicon-m-building-office-2')
-                ->color(Color::Emerald);
-
-            $stats[] = Stat::make('👥 Pacientes', number_format($pacientesCount))
-                ->description('Total registrados')
-                ->descriptionIcon('heroicon-m-users')
-                ->color(Color::Blue)
-                ->url('/admin/pacientes');
-
-            $stats[] = Stat::make('🩺 Médicos', number_format($medicosCount))
-                ->description('Personal médico')
-                ->descriptionIcon('heroicon-m-user-group')
-                ->color(Color::Purple)
-                ->url('/admin/medico/medicos');
-
-            $stats[] = Stat::make('📅 Citas Hoy', number_format($totalCitasHoy))
-                ->description($citasPendientes > 0 ? "{$citasPendientes} pendientes" : ($citasConfirmadas > 0 ? "{$citasConfirmadas} confirmadas" : "Sin citas"))
-                ->descriptionIcon('heroicon-m-calendar-days')
-                ->color($totalCitasHoy > 5 ? Color::Orange : ($totalCitasHoy > 0 ? Color::Green : Color::Gray))
-                ->url('/admin/citas/citas');
-
-        } else if ($user && $user->hasRole('root')) {
-            // Estadísticas globales para root - Simplificadas
-            $totalCentros = Centros_Medico::count();
-            $totalPacientes = \App\Models\Pacientes::count();
-            $totalMedicos = \App\Models\Medico::count();
-            $citasHoyGlobal = \App\Models\Citas::whereDate('fecha', today())->count();
+        if ($user && $user->hasRole('root')) {
+            // Vista global para root - Accediendo a la base de datos central
+            $totalCentros = Centros_Medico::on('mysql')->count();
             
             $stats[] = Stat::make('🔧 Vista Global', 'Super Administrador')
                 ->description('Acceso a todos los centros')
@@ -83,21 +39,74 @@ class CentroStatsWidget extends BaseWidget
                 ->color(Color::Red);
 
             $stats[] = Stat::make('🏥 Centros', number_format($totalCentros))
-                ->description('Centros médicos')
+                ->description('Centros médicos activos')
                 ->descriptionIcon('heroicon-m-building-office')
                 ->color(Color::Green)
                 ->url('/admin/centros-medico/centros-medicos');
 
-            $stats[] = Stat::make('👥 Pacientes', number_format($totalPacientes))
-                ->description('Total en sistema')
+            $stats[] = Stat::make('👥 Sistema', 'Multi-Tenant')
+                ->description('Base de datos por centro')
+                ->descriptionIcon('heroicon-m-server-stack')
+                ->color(Color::Blue);
+
+            $stats[] = Stat::make('🔐 Tenants', number_format($totalCentros))
+                ->description('Bases de datos aisladas')
+                ->descriptionIcon('heroicon-m-circle-stack')
+                ->color(Color::Purple);
+
+        } else {
+            // Verificar que hay un tenant activo
+            if (!tenancy()->initialized) {
+                return [
+                    Stat::make('⚠️ No Conectado', 'Sin Tenant')
+                        ->description('Por favor contacte al administrador')
+                        ->descriptionIcon('heroicon-m-exclamation-triangle')
+                        ->color(Color::Orange)
+                ];
+            }
+
+            // Estadísticas del tenant actual (centro específico)
+            // Multi-tenant: los datos ya están filtrados por el tenant automáticamente
+            
+            $pacientesCount = \App\Models\Pacientes::count();
+            $medicosCount = \App\Models\Medico::count();
+            
+            $citasHoy = \App\Models\Citas::whereDate('fecha', today());
+            $citasPendientes = (clone $citasHoy)->where('estado', 'Pendiente')->count();
+            $citasConfirmadas = (clone $citasHoy)->where('estado', 'Confirmado')->count();
+            $totalCitasHoy = $citasHoy->count();
+
+            // Obtener nombre del centro actual desde la base de datos central
+            $tenant = tenancy()->tenant;
+            $centroNombre = 'Centro Médico';
+            
+            if ($tenant) {
+                $centro = Centros_Medico::on('mysql')->find($tenant->id);
+                $centroNombre = $centro ? $centro->nombre_centro : 'Centro ' . $tenant->id;
+            }
+
+            // Estadísticas del tenant actual
+            $stats[] = Stat::make($centroNombre, 'Centro Actual')
+                ->description('Datos del tenant activo')
+                ->descriptionIcon('heroicon-m-building-office-2')
+                ->color(Color::Emerald);
+
+            $stats[] = Stat::make('Pacientes', number_format($pacientesCount))
+                ->description('Total registrados')
                 ->descriptionIcon('heroicon-m-users')
                 ->color(Color::Blue)
                 ->url('/admin/pacientes');
 
-            $stats[] = Stat::make('📅 Citas Hoy', number_format($citasHoyGlobal))
-                ->description('En todos los centros')
+            $stats[] = Stat::make('Médicos', number_format($medicosCount))
+                ->description('Personal médico')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color(Color::Purple)
+                ->url('/admin/medico/medicos');
+
+            $stats[] = Stat::make('Citas Hoy', number_format($totalCitasHoy))
+                ->description($citasPendientes > 0 ? "{$citasPendientes} pendientes" : ($citasConfirmadas > 0 ? "{$citasConfirmadas} confirmadas" : "Sin citas"))
                 ->descriptionIcon('heroicon-m-calendar-days')
-                ->color($citasHoyGlobal > 10 ? Color::Orange : Color::Green)
+                ->color($totalCitasHoy > 5 ? Color::Orange : ($totalCitasHoy > 0 ? Color::Green : Color::Gray))
                 ->url('/admin/citas/citas');
         }
 

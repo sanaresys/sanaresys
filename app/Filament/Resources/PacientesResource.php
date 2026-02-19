@@ -630,10 +630,8 @@ class PacientesResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        // Si no es usuario root, filtrar por centro actual
-        if (!auth()->user()?->hasRole('root')) {
-            $query->where('centro_id', session('current_centro_id'));
-        }
+        // Multi-tenant: el contexto del tenant ya filtra los datos
+        // No es necesario filtrar por centro_id
 
         return $query;
     }

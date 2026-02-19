@@ -22,6 +22,12 @@ class RecetarioWidget extends Widget implements HasForms
     
     protected int | string | array $columnSpan = 'full';
     
+    public static function canView(): bool
+    {
+        // Solo mostrar si hay tenant activo y usuario es médico
+        return tenancy()->initialized && Auth::user()?->medico !== null;
+    }
+    
     public ?array $data = [];
 
     public function mount(): void
@@ -119,10 +125,10 @@ class RecetarioWidget extends Widget implements HasForms
             $recetario = $medico->recetarios()->latest()->first();
             
             if (!$recetario) {
+                // Multi-tenant: centro_id no es necesario
                 Recetario::create([
                     'medico_id' => $medico->id,
                     'consulta_id' => null,
-                    'centro_id' => session('current_centro_id') ?? $user->centro_id ?? null,
                 ]);
                 
                 Notification::make()
@@ -133,10 +139,5 @@ class RecetarioWidget extends Widget implements HasForms
         }
         
         $this->loadRecetarioData();
-    }
-
-    public static function canView(): bool
-    {
-        return Auth::user()?->hasRole('medico') ?? false;
     }
 }

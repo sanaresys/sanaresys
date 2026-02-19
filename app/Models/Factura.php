@@ -9,13 +9,11 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany, HasOne};
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Traits\TenantScoped;
-
 class Factura extends ModeloBase
 {
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped;
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $fillable = [
         'paciente_id',
@@ -30,7 +28,6 @@ class Factura extends ModeloBase
         'estado',
         'observaciones',
         'cai_autorizacion_id',
-        'centro_id',
         'descuento_id',
         'cai_correlativo_id',
         'usa_cai',
@@ -137,8 +134,7 @@ class Factura extends ModeloBase
     public function generarNumeroSinCAI(): string
     {
         // Obtener el último número de factura sin CAI del centro actual
-        $ultimaFactura = static::where('centro_id', $this->centro_id)
-            ->where('usa_cai', false)
+        $ultimaFactura = static::where('usa_cai', false)
             ->orderBy('id', 'desc')
             ->first();
         

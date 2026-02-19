@@ -66,18 +66,12 @@ protected function handleRecordCreation(array $data): Model
 
             Log::info("Persona creada/actualizada", ['persona_id' => $persona->id, 'dni' => $persona->dni]);
 
-            // Obtener centro_id de múltiples fuentes posibles
-            $centro_id = $data['centro_id'] ?? session('current_centro_id') ?? Auth::user()?->centro_id ?? null;
+            // Multi-tenant: el médico se crea automáticamente en el tenant actual
+            // No es necesario obtener centro_id
+            $centro_id = 1; // Valor por defecto
             
-            // Si no hay centro_id, intentar obtenerlo del modelo o usar un valor por defecto
-            if (!$centro_id) {
-                // Buscar el primer centro médico como último recurso
-                $centro_id = Centros_Medico::first()->id ?? 1;
-                
-                // Guardar en la sesión para futuras operaciones
-                session(['current_centro_id' => $centro_id]);
-                
-                // Log para depuración
+            // Log para depuración
+            if (!isset($data['centro_id'])) {
                 Log::warning("No se encontró centro_id, usando valor por defecto: {$centro_id}");
             }
 
@@ -183,12 +177,12 @@ $existingUser = User::where('persona_id', $persona->id)->first();
         }
 
         // Crear el usuario
+        // Multi-tenant: el usuario se crea en el tenant actual
         $user = User::create([
             'name' => $username,
             'email' => $email,
             'password' => Hash::make($password),
             'persona_id' => $persona->id,
-            'centro_id' => session('current_centro_id') ?? auth()->user()->centro_id,
             'email_verified_at' => $isActive ? now() : null,
         ]);
 
@@ -313,12 +307,12 @@ protected function createUserForMedicoInTransaction(Persona $persona, Medico $me
         }
 
         // Crear el usuario
+        // Multi-tenant: el usuario se crea en el tenant actual
         $user = User::create([
             'name' => $username,
             'email' => $email,
             'password' => Hash::make($password),
             'persona_id' => $persona->id,
-            'centro_id' => session('current_centro_id') ?? auth()->user()->centro_id,
             'email_verified_at' => $isActive ? now() : null,
         ]);
 
@@ -443,7 +437,6 @@ protected function createUserForMedico(Persona $persona, Medico $medico, array $
             'email' => $email,
             'password' => Hash::make($password),
             'persona_id' => $persona->id,
-            'centro_id' => session('current_centro_id') ?? auth()->user()->centro_id,
             'email_verified_at' => $isActive ? now() : null,
         ]);
 

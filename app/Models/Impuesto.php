@@ -6,20 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Traits\TenantScoped;
 
 class Impuesto extends ModeloBase
 {
-    use HasFactory, SoftDeletes, TenantScoped;
-
-    protected string $tenantKeyName = 'centro_id';
-
+    use HasFactory, SoftDeletes;
+    // TenantScoped NO se usa - el contexto del tenant define el centro
+    
     protected $fillable = [
         'nombre',
         'porcentaje',
         'vigente_desde',
         'vigente_hasta',
-        'centro_id',
+        // centro_id removido - la BD del tenant ya define el centro
         'created_by',
         'updated_by',
         'deleted_by',

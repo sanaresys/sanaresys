@@ -33,8 +33,6 @@ class RoleResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Información Básica')
                     ->schema([
-                        Hidden::make('centro_id')
-                            ->default(fn() => session('current_centro_id')),
                         TextInput::make('name')
                             ->label('Nombre del Rol')
                             ->required()
@@ -42,14 +40,14 @@ class RoleResource extends Resource
                             ->rules([
                                 function() {
                                     return function($attribute, $value, $fail) {
+                                        // Multi-tenant: validación en el contexto del tenant
                                         $exists = Role::where('name', $value)
                                             ->where('guard_name', 'web')
-                                            ->where('centro_id', session('current_centro_id'))
                                             ->where('id', '!=', request()->route('record'))
                                             ->exists();
                                         
                                         if ($exists) {
-                                            $fail('Este nombre de rol ya existe en este centro médico.');
+                                            $fail('Este nombre de rol ya existe.');
                                         }
                                     };
                                 }
@@ -140,12 +138,9 @@ class RoleResource extends Resource
     {
         $query = parent::getEloquentQuery();
         
-        // Si el usuario no es root, excluimos el rol root
+        // Multi-tenant: si el usuario no es root, excluimos el rol root
         if (!auth()->user()?->hasRole('root')) {
-            return $query->where(function ($query) {
-                $query->where('name', '!=', 'root')
-                      ->where('centro_id', session('current_centro_id'));
-            });
+            return $query->where('name', '!=', 'root');
         }
         
         return $query;

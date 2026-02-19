@@ -7,14 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\TenantScoped;
-
 class Consulta extends ModeloBase
 {
     /** @use HasFactory<\Database\Factories\ConsultaFactory> */
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Assuming you have a trait for tenant scoping
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $table = 'consultas';
     protected $fillable = [
@@ -23,7 +21,6 @@ class Consulta extends ModeloBase
         'observaciones',
         'paciente_id',
         'medico_id',
-        'centro_id',
         'cita_id',
     ];
 

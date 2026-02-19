@@ -21,7 +21,6 @@ class CuentasPorCobrar extends Model
         'saldo_pendiente',
         'fecha_vencimiento',
         'estado_cuentas_por_cobrar',
-        'centro_id',
         'created_by',
         'updated_by',
         'deleted_by',

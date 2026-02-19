@@ -252,11 +252,8 @@ class UserResource extends Resource
                                 ->multiple()
                                 ->relationship('roles', 'name', function ($query) {
                                     if (!auth()->user()?->hasRole('root')) {
-                                       $query->where(function($q) {
-                                            $q->where('centro_id', session('current_centro_id'))
-                                                ->orWhereNull('centro_id'); // Para incluir roles base/default
-                                            $q->where('name', '!=', 'root'); // Excluir rol root
-                                    });
+                                       // Multi-tenant: los roles ya están en el tenant actual
+                                       $query->where('name', '!=', 'root'); // Excluir rol root
                                     }
                                     return $query;
                                 })
@@ -360,12 +357,11 @@ class UserResource extends Resource
         $query = parent::getEloquentQuery()
             ->with(['persona', 'roles', 'centro']);
 
-        // Si no es usuario root, ocultar usuarios root y filtrar por centro
+        // Multi-tenant: ocultar usuarios root
         if (!auth()->user()?->hasRole('root')) {
-            $query->where('centro_id', session('current_centro_id'))
-                ->whereDoesntHave('roles', function ($query) {
-                    $query->where('name', 'root');
-                });
+            $query->whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'root');
+            });
         }
 
         return $query;

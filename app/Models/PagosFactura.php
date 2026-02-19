@@ -16,7 +16,6 @@ class PagosFactura extends Model
     protected $fillable = [
         'factura_id',
         'paciente_id',
-        'centro_id',
         'tipo_pago_id',
         'monto_recibido',
         'monto_devolucion',

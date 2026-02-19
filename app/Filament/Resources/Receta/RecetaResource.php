@@ -234,9 +234,8 @@ class RecetaResource extends Resource
                 Tables\Filters\SelectFilter::make('medico_id')
                     ->label('Médico')
                     ->options(function() {
-                        $centro_id = auth()->user()->centro_id;
+                        // Multi-tenant: los médicos ya están filtrados por el tenant
                         return \App\Models\Medico::withoutGlobalScopes()
-                            ->where('centro_id', $centro_id)
                             ->with('persona')
                             ->get()
                             ->mapWithKeys(function($medico) {
@@ -252,9 +251,8 @@ class RecetaResource extends Resource
                 Tables\Filters\SelectFilter::make('paciente_id')
                     ->label('Paciente')
                     ->options(function() {
-                        $centro_id = auth()->user()->centro_id;
+                        // Multi-tenant: los pacientes ya están filtrados por el tenant
                         return \App\Models\Pacientes::withoutGlobalScopes()
-                            ->where('centro_id', $centro_id)
                             ->with('persona')
                             ->get()
                             ->mapWithKeys(function($paciente) {
@@ -396,7 +394,6 @@ class RecetaResource extends Resource
     {
         $query = parent::getEloquentQuery()
             ->with(['paciente.persona', 'medico.persona', 'consulta'])
-            ->where('centro_id', \Filament\Facades\Filament::auth()->user()->centro_id)
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

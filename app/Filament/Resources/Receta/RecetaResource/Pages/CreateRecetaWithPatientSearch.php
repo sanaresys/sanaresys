@@ -258,10 +258,7 @@ class CreateRecetaWithPatientSearch extends Page implements HasForms
         // Asegurar que el paciente_id esté presente
         $data['paciente_id'] = $this->selectedPatient->id;
 
-        // Agregar centro_id si está disponible en el usuario autenticado
-        if (Auth::check() && Auth::user()->centro_id) {
-            $data['centro_id'] = Auth::user()->centro_id;
-        }
+        // Multi-tenant: centro_id no es necesario
 
         try {
             $receta = Receta::create($data);

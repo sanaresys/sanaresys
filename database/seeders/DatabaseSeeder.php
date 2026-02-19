@@ -31,10 +31,11 @@ class DatabaseSeeder extends Seeder
             //PacientesSeeder::class,
             //CitasSeeder::class,
             
-            // Seeders para contabilidad y facturación
-            ImpuestoSeeder::class,
-            DescuentoSeeder::class,
-            TipoPagoSeeder::class,
+            // NOTA: Los seeders de Impuesto, Descuento y TipoPago se deben ejecutar
+            // en cada BD tenant, NO en la BD central. Se ejecutarán manualmente después.
+            // ImpuestoSeeder::class,
+            // DescuentoSeeder::class,
+            // TipoPagoSeeder::class,
         ]);
 
         // Crear usuario root después de tener los centros
@@ -83,18 +84,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Crear un contrato para el médico root
-        \App\Models\ContabilidadMedica\ContratoMedico::firstOrCreate(
-            ['medico_id' => $medicoRoot->id],
-            [
-                'salario_mensual' => 25000.00,
-                'salario_quincenal' => 12500.00,
-                'porcentaje_servicio' => 10.00,
-                'fecha_inicio' => now(),
-                'activo' => true,
-                'centro_id' => $primerCentro ? $primerCentro->id : 1,
-                'created_by' => 1,
-            ]
-        );
+        // NOTA: Los contratos médicos están en la BD del tenant
+        // Se deben crear desde la aplicación cuando se esté en el contexto del tenant
+        // \App\Models\ContabilidadMedica\ContratoMedico::firstOrCreate(...);
     }
 }

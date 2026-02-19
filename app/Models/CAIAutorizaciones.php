@@ -10,10 +10,16 @@ use App\Models\Traits\TenantScoped;
 
 class CAIAutorizaciones extends ModeloBase
 {
-    use HasFactory, SoftDeletes, TenantScoped;
+    use HasFactory, SoftDeletes;
+    // TenantScoped NO se usa - el contexto del tenant define el centro
+
     protected $table = 'cai_autorizaciones';
 
+    // TenantScoped NO se usa - el contexto del tenant define el centro
+
     protected string $tenantKeyName = 'centro_id';
+
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $fillable = [
         'rtn',
@@ -29,6 +35,8 @@ class CAIAutorizaciones extends ModeloBase
         'updated_by',
         'deleted_by',
     ];
+
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $casts = [
         'fecha_limite' => 'date',
@@ -129,6 +137,8 @@ class CAIAutorizaciones extends ModeloBase
             && $this->fecha_limite >= now()->toDateString()
             && $this->numero_actual <= $this->rango_final;
     }
+
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected static function booted(): void
     {

@@ -209,11 +209,8 @@ class ExamenesResource extends Resource
                 SelectFilter::make('medico_id')
                     ->label('Médico')
                     ->options(function () {
+                        // Multi-tenant: los médicos ya están filtrados por el tenant
                         $query = Medico::withoutGlobalScopes()->with('persona');
-                        $user = Auth::user();
-                        if ($user && !$user->roles->contains('name', 'root')) {
-                            $query->where('centro_id', session('current_centro_id'));
-                        }
 
                         return $query->get()
                             ->filter(fn($m) => $m->persona !== null)
@@ -293,14 +290,9 @@ class ExamenesResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user->roles->contains('name', 'root')) {
-            // Root ve todos los exámenes
+        if ($user->roles->contains('name', 'root') || $user->roles->contains('name', 'administrador')) {
+            // Root y administradores ven todos los exámenes del tenant
             return $query->withoutGlobalScopes();
-        }
-
-        if ($user->roles->contains('name', 'administrador')) {
-            // Administradores ven exámenes de su centro
-            return $query->where('centro_id', session('current_centro_id'));
         }
 
         if ($user->roles->contains('name', 'medico')) {

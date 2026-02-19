@@ -49,11 +49,8 @@ public static function form(Form $form): Form
                 ->options(function () {
                     $query = Medico::with('persona');
                     
-                    // Si no es root, filtrar por centro actual
-                    $user = Auth::user();
-                    if ($user && !$user->roles->contains('name', 'root')) {
-                        $query->where('centro_id', session('current_centro_id'));
-                    }
+                    // Multi-tenant: el contexto ya define el centro
+                    // No filtrar por centro_id
                     
                     return $query->get()
                         ->mapWithKeys(fn($m) => [
@@ -97,10 +94,8 @@ public static function form(Form $form): Form
                 ->label('Paciente')
                 ->options(function () {
                     $query = Pacientes::with('persona');
-                    $user = Auth::user();
-                    if ($user && !$user->roles->contains('name', 'root')) {
-                        $query->where('centro_id', session('current_centro_id'));
-                    }
+                    // Multi-tenant: el contexto ya define el centro
+                    // No filtrar por centro_id
 
                     return $query->get()
                         ->mapWithKeys(fn($p) => [
@@ -246,8 +241,9 @@ public static function form(Form $form): Form
         $user = Auth::user();
 
         if ($user) {
-            // Si es root, puede ver todo
-            if ($user->roles->contains('name', 'root')) {
+            // Si es root o administrador, puede ver todas las citas del tenant
+            if ($user->roles->contains('name', 'root') || $user->roles->contains('name', 'administrador')) {
+                // Multi-tenant: el contexto ya define el centro
                 return $query;
             }
 
@@ -256,13 +252,8 @@ public static function form(Form $form): Form
                 return $query->where('medico_id', $user->medico->id);
             }
 
-            // Si es administrador, ve las citas de su centro
-            if ($user->roles->contains('name', 'administrador')) {
-                return $query->where('centro_id', session('current_centro_id'));
-            }
-
-            // Para otros roles, filtrar por centro actual
-            return $query->where('centro_id', session('current_centro_id'));
+            // Por defecto, mostrar todas las citas del tenant
+            return $query;
         }
 
         return $query;

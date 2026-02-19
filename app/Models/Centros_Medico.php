@@ -13,6 +13,9 @@ class Centros_Medico extends ModeloBase
     use HasFactory;
     use SoftDeletes;
 
+    // Siempre usar la conexión central (no tenant)
+    protected $connection = 'mysql';
+
     protected $table = 'centros_medicos';
 
     protected $fillable = [

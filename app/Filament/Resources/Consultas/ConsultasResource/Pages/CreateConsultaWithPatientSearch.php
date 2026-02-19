@@ -49,10 +49,10 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
 
                 // Prellenar los formularios
                 $this->patientSearchForm->fill(['paciente_id' => $pacienteId]);
+                // Multi-tenant: centro_id no es necesario
                 $this->consultaForm->fill([
                     'paciente_id' => $pacienteId,
                     'cita_id' => $citaId,
-                    'centro_id' => Auth::check() ? Auth::user()->centro_id : null,
                 ]);
 
                 // Verificar que el paciente fue encontrado
@@ -548,9 +548,9 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
         $this->showConsultaForm = true;
 
         // Prellenar el paciente_id en el formulario de consulta
+        // Multi-tenant: centro_id no es necesario
         $this->consultaForm->fill([
             'paciente_id' => $this->selectedPatient->id,
-            'centro_id' => Auth::check() ? Auth::user()->centro_id : null,
         ]);
 
         // Forzar actualización del formulario para que se refresquen las opciones

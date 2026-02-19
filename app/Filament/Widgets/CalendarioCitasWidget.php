@@ -17,6 +17,12 @@ class CalendarioCitasWidget extends Widget
     protected static ?string $pollingInterval = '30s';
     protected static ?int $sort = 2;
     
+    public static function canView(): bool
+    {
+        // Solo mostrar si hay tenant activo
+        return tenancy()->initialized;
+    }
+    
     // Propiedades para el calendario
     public array $citas = [];
     public array $citasPorDia = [];
@@ -261,15 +267,10 @@ class CalendarioCitasWidget extends Widget
             ->with($withRelations);
 
         // Filtrar según el rol del usuario
-        if ($user->roles->contains('name', 'root')) {
-            // Root puede ver todas las citas del centro seleccionado
-            $centroActual = session('current_centro_id');
-            if ($centroActual) {
-                $query->where('centro_id', $centroActual);
-            }
-        } elseif ($user->roles->contains('name', 'administrador')) {
-            // Administradores ven todas las citas de su centro
-            $query->where('centro_id', $user->centro_id);
+        // En multi-tenant, el contexto ya define el centro (no filtrar por centro_id)
+        if ($user->roles->contains('name', 'root') || $user->roles->contains('name', 'administrador')) {
+            // Root y administradores ven todas las citas del tenant actual
+            // Sin filtro adicional - el tenant ya filtra
         } elseif ($user->roles->contains('name', 'medico')) {
             // Médicos solo ven sus propias citas
             if ($user->medico) {

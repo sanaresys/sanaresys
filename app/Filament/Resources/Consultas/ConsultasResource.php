@@ -203,11 +203,11 @@ class ConsultasResource extends Resource
                             ->maxItems(10)
                             ->defaultItems(0)
                             ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
-                                $data['centro_id'] = \Illuminate\Support\Facades\Auth::user()->centro_id ?? null;
+                                // Multi-tenant: centro_id no es necesario en el tenant
                                 return $data;
                             })
                             ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
-                                $data['centro_id'] = \Illuminate\Support\Facades\Auth::user()->centro_id ?? null;
+                                // Multi-tenant: centro_id no es necesario en el tenant
                                 return $data;
                             }),
                     ])
@@ -273,14 +273,14 @@ class ConsultasResource extends Resource
                             ->maxItems(10)
                             ->defaultItems(0)
                             ->mutateRelationshipDataBeforeCreateUsing(function (array $data, $livewire): array {
-                                $data['centro_id'] = \Illuminate\Support\Facades\Auth::user()->centro_id ?? null;
+                                // Multi-tenant: centro_id no es necesario
                                 $data['medico_id'] = \Illuminate\Support\Facades\Auth::user()->medico?->id;
                                 $data['paciente_id'] = $livewire->data['paciente_id'] ?? null;
                                 $data['estado'] = 'Solicitado';
                                 return $data;
                             })
                             ->mutateRelationshipDataBeforeSaveUsing(function (array $data, $livewire): array {
-                                $data['centro_id'] = \Illuminate\Support\Facades\Auth::user()->centro_id ?? null;
+                                // Multi-tenant: centro_id no es necesario
                                 $data['medico_id'] = \Illuminate\Support\Facades\Auth::user()->medico?->id;
                                 $data['paciente_id'] = $livewire->record->paciente_id ?? $livewire->data['paciente_id'] ?? null;
                                 return $data;
@@ -686,19 +686,12 @@ class ConsultasResource extends Resource
             return $query->whereRaw('1 = 0'); // No mostrar nada si no hay usuario
         }
 
-        // Filtrar según el rol del usuario
-        if ($user->roles->contains('name', 'root')) {
-            // Root puede ver todas las consultas del centro seleccionado
-            $centroActual = session('current_centro_id');
-            if ($centroActual) {
-                $query->where('centro_id', $centroActual);
-            }
-        } elseif ($user->roles->contains('name', 'administrador')) {
-            // Administradores ven todas las consultas de su centro
-            $query->where('centro_id', $user->centro_id);
+        // Filtrar según el rol del usuario (multi-tenant)
+        if ($user->roles->contains('name', 'root') || $user->roles->contains('name', 'administrador')) {
+            // Root y administradores ven todas las consultas del tenant
+            // (sin filtro adicional)
         } elseif ($user->roles->contains('name', 'medico')) {
             // Médicos solo ven sus propias consultas
-            $query->where('centro_id', $user->centro_id);
             
             // Buscar el médico asociado al usuario
             if ($user->medico) {

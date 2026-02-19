@@ -43,9 +43,8 @@ class EnfermedadesPacienteResource extends Resource
                 Forms\Components\Select::make('paciente_id')
                     ->label('Paciente')
                     ->relationship('paciente', 'id', function ($query) {
-                        return $query->whereHas('persona', function ($q) {
-                            $q->where('centro_id', auth()->user()->centro_id);
-                        });
+                        // Multi-tenant: los pacientes ya están filtrados por el tenant
+                        return $query->whereHas('persona');
                     })
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->persona->nombre_completo)
                     ->searchable()
@@ -169,9 +168,9 @@ class EnfermedadesPacienteResource extends Resource
     
     public static function getEloquentQuery(): Builder
     {
+        // Multi-tenant: los datos ya están filtrados por el tenant
         return parent::getEloquentQuery()
             ->with(['paciente.persona', 'enfermedad', 'createdBy', 'updatedBy'])
-            ->where('centro_id', auth()->user()->centro_id)
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

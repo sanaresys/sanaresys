@@ -6,13 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Traits\TenantScoped;
-
 class Servicio extends ModeloBase
 {
-    use HasFactory, SoftDeletes, TenantScoped;
-
-    protected string $tenantKeyName = 'centro_id';
+    use HasFactory, SoftDeletes;
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $fillable = [
         'nombre',
@@ -21,7 +18,6 @@ class Servicio extends ModeloBase
         'precio_unitario',
         'impuesto_id',
         'es_exonerado',
-        'centro_id',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -42,6 +38,8 @@ class Servicio extends ModeloBase
     {
         return $this->hasMany(FacturaDetalle::class);
     }
+
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $casts = [
         'precio_unitario' => 'decimal:2',
@@ -74,6 +72,8 @@ class Servicio extends ModeloBase
     {
         return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
+
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected static function booted(): void
     {

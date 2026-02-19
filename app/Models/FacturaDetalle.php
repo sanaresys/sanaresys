@@ -20,7 +20,6 @@ class FacturaDetalle extends Model
         'impuesto_monto',
         'descuento_monto',
         'total_linea',
-        'centro_id',
     ];
 
     protected $casts = [

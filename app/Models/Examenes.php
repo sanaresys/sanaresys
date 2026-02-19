@@ -6,21 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Traits\TenantScoped; 
-
 class Examenes extends ModeloBase
 {
     /** @use HasFactory<\Database\Factories\ExamenesFactory> */
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Assuming you have a trait for tenant scoping
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $table = 'examenes';
     protected $fillable = [
         'paciente_id',
         'consulta_id',
         'medico_id',
-        'centro_id',
         'tipo_examen',
         'observaciones',
         'estado',

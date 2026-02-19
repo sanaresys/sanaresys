@@ -72,12 +72,12 @@ class CreateExamenes extends CreateRecord
         $medicoId = request()->get('medico_id');
         
         if ($consultaId && $pacienteId) {
+            // Multi-tenant: centro_id no es necesario
             $formData = [
                 'consulta_id' => $consultaId,
                 'paciente_id' => $pacienteId,
                 'medico_id' => $medicoId,
                 'estado' => 'Solicitado',
-                'centro_id' => \Illuminate\Support\Facades\Auth::user()->centro_id,
             ];
             
             $this->form->fill($formData);

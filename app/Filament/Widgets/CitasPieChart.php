@@ -13,21 +13,20 @@ class CitasPieChart extends ChartWidget
     protected int | string | array $columnSpan = 1;
     protected static ?string $maxHeight = '250px';
     
+    public static function canView(): bool
+    {
+        // Solo mostrar si hay tenant activo
+        return tenancy()->initialized;
+    }
+    
     protected function getData(): array
     {
-        $currentCentroId = session('current_centro_id');
         $user = Auth::user();
         
         $query = Citas::query();
         
-        // Aplicar filtros según el usuario y centro
-        if ($user && !$user->hasRole('root')) {
-            if ($currentCentroId) {
-                $query->where('centro_id', $currentCentroId);
-            } elseif ($user->centro_id) {
-                $query->where('centro_id', $user->centro_id);
-            }
-        }
+        // En multi-tenant, el contexto ya define el centro
+        // No es necesario filtrar por centro_id
         
         // Solo citas de hoy para simplificar
         $query->whereDate('fecha', today());

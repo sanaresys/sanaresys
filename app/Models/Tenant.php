@@ -2,34 +2,46 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Spatie\Multitenancy\Models\Tenant as BaseTenant;
+use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Stancl\Tenancy\Contracts\TenantWithDatabase;
+use Stancl\Tenancy\Database\Concerns\HasDatabase;
+use Stancl\Tenancy\Database\Concerns\HasDomains;
 
-class Tenant extends BaseTenant
+class Tenant extends BaseTenant implements TenantWithDatabase
 {
-    protected $table = 'tenants';
+    use HasDatabase, HasDomains;
+
+    /**
+     * Siempre usar la conexión central
+     */
+    protected $connection = 'mysql';
+
+    /**
+     * Campos que se pueden asignar masivamente
+     */
     protected $fillable = [
+        'id',
         'centro_id',
-        'name',
-        'domain',
-        'database',
+        'data',
     ];
 
-    public static function booted()
+    /**
+     * Columnas personalizadas del tenant
+     */
+    public static function getCustomColumns(): array
     {
-        parent::booted();
-
-        // Asegurar que el tenant actual siempre esté disponible después de crear uno nuevo
-        static::created(function (self $tenant) {
-            if (!static::current()) {
-                $tenant->makeCurrent();
-            }
-        });
+        return [
+            'id',
+            'centro_id',
+        ];
     }
 
+    /**
+     * Relación con centro médico
+     */
     public function centro()
     {
-        return $this->belongsTo(\App\Models\Centros_Medico::class, 'centro_id');
+        return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
 
     /**
@@ -37,16 +49,27 @@ class Tenant extends BaseTenant
      */
     public static function findOrCreateForCentro(Centros_Medico $centro): self
     {
-        $name = $centro->nombre_centro;
-        $domain = strtolower(str_replace(' ', '-', $name)) . '.' . config('app.domain', 'localhost');
-        
         return static::firstOrCreate(
             ['centro_id' => $centro->id],
             [
-                'name' => $name,
-                'domain' => $domain,
-                'database' => 'clinica_' . $centro->id, // Base de datos por defecto
+                'id' => 'centro_' . $centro->id,
+                'centro_id' => $centro->id,
             ]
         );
     }
+
+    /**
+     * Obtiene el nombre de la base de datos del tenant
+     */
+    public function getTenantKey()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Nombre de la base de datos del tenant
+     */
+    public function getDatabaseName(): string
+    {
+        return $this->id;    }
 }

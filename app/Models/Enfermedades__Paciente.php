@@ -7,14 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Traits\TenantScoped; 
-
 class Enfermedades__Paciente extends ModeloBase
 {
     /** @use HasFactory<\Database\Factories\EnfermedadesPacienteFactory> */
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Assuming you have a trait for tenant scoping
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $table = 'enfermedades_pacientes';
 
@@ -23,7 +21,6 @@ class Enfermedades__Paciente extends ModeloBase
         'enfermedad_id',
         'fecha_diagnostico',
         'tratamiento',
-        'centro_id',
         'created_by',
         'updated_by',
         'deleted_by',

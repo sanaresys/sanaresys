@@ -25,28 +25,21 @@ class ContratoMedicoResource extends Resource
 
     // public static function getNavigationBadge(): ?string
     // {
-    //     return static::getModel()::where('centro_id', \Illuminate\Support\Facades\Auth::user()->centro_id)->count();
+    //     return static::getModel()::count();
     // }
 
     public static function form(Form $form): Form
     {
-        $centro_id = \Illuminate\Support\Facades\Auth::user()->centro_id;
+        // Multi-tenant: no es necesario obtener centro_id
         
         return $form
             ->schema([
                 Forms\Components\Select::make('medico_id')
-                    ->relationship(
-                        'medico',
-                        'persona_id',
-                        fn ($query) => $query->where('centro_id', $centro_id)
-                    )
+                    ->relationship('medico', 'persona_id')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->persona->nombre_completo)
                     ->searchable()
                     ->preload()
                     ->required(),
-                    
-                Forms\Components\Hidden::make('centro_id')
-                    ->default($centro_id),
                     
                 Forms\Components\TextInput::make('salario_quincenal')
                     ->label('Salario Quincenal')
@@ -192,11 +185,10 @@ class ContratoMedicoResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $centro_id = \Illuminate\Support\Facades\Auth::user()->centro_id;
+        // Multi-tenant: los datos ya están filtrados por el tenant
         
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->where('centro_id', $centro_id)
                 ->with(['medico.persona', 'centro']))
             ->columns([
                 Tables\Columns\TextColumn::make('medico.persona.nombre_completo')
@@ -279,8 +271,8 @@ class ContratoMedicoResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
         
-        // Filtrar por centro médico
-        $query = $query->where('centro_id', $user->centro_id);
+        // Multi-tenant: no filtrar por centro_id
+        // Los datos ya están filtrados por el tenant
         
         // Obtener el médico vinculado al usuario actual si existe
         $medico = $user->medico;

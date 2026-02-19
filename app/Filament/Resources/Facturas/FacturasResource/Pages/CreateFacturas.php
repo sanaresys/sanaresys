@@ -181,7 +181,7 @@ class CreateFacturas extends CreateRecord
                 $data['fecha_emision'] = now();
                 $data['usuario_id'] = Auth::id();
                 $data['created_by'] = Auth::id();
-                $data['centro_id'] = Auth::user()->centro_id ?? 1;
+                // Multi-tenant: centro_id no es necesario
                 $data['estado'] = $data['estado'] ?? 'PENDIENTE';
                 
                 // Asegurar usa_cai con múltiples fuentes

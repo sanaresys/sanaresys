@@ -8,31 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\Traits\TenantScoped; 
 
 class Pacientes extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    use TenantScoped; // Trait para el multi-tenant
-
-    protected static function booted()
-    {
-        parent::booted();
-
-        // El trait TenantScoped ya maneja:
-        // - Asignación automática de centro_id al crear
-        // - Global scope para filtrar por centro
-        // - Bypass para usuario root
-        
-        // No necesitamos lógica adicional específica para este modelo
-        // La auditoría (created_by, updated_by, deleted_by) se maneja en ModeloBase
-    }
+    // TenantScoped NO se usa - el contexto del tenant define el centro
 
     protected $fillable = [
         'persona_id',
         'grupo_sanguineo',
         'contacto_emergencia',
-        'centro_id', // multi-tenant
+        // centro_id removido - la BD del tenant ya define el centro
         'created_by',
         'updated_by',
         'deleted_by',

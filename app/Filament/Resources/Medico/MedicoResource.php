@@ -849,19 +849,8 @@ class MedicoResource extends Resource
                         ])
                         ->action(function (Medico $record, array $data) {
                             try {
-                                // Obtener centro_id del usuario autenticado
-                                $centro_id = Auth::user()->centro_id ?? null;
-                                
-                                // Si no hay centro_id, intentar obtenerlo de otras fuentes
-                                if (!$centro_id) {
-                                    $centro_id = session('current_centro_id') ?? null;
-                                    
-                                    if (!$centro_id) {
-                                        // Usar el primer centro como último recurso
-                                        $centro_id = Centros_Medico::first()->id ?? 1;
-                                        Log::warning("No se encontró centro_id para crear usuario, usando valor por defecto: {$centro_id}");
-                                    }
-                                }
+                                // Multi-tenant: el usuario se crea en el tenant actual
+                                // No es necesario especificar centro_id
                                 
                                 // Crear el usuario
                                 $user = \App\Models\User::create([
@@ -869,7 +858,6 @@ class MedicoResource extends Resource
                                     'email' => $data['user_email'],
                                     'password' => Hash::make($data['user_password']),
                                     'persona_id' => $record->persona->id,
-                                    'centro_id' => $centro_id,
                                     'email_verified_at' => $data['user_active'] ? now() : null,
                                 ]);
 
@@ -954,20 +942,8 @@ class MedicoResource extends Resource
         DB::beginTransaction();
 
         try {
-            // Obtener el centro_id de múltiples fuentes posibles
-            $centro_id = $data['centro_id'] ?? Auth::user()->centro_id ?? session('current_centro_id') ?? null;
-            
-            // Si no hay centro_id, intentar obtenerlo del modelo o usar un valor por defecto
-            if (!$centro_id) {
-                // Buscar el primer centro médico como último recurso
-                $centro_id = Centros_Medico::first()->id ?? 1;
-                
-                // Guardar en la sesión para futuras operaciones
-                session(['current_centro_id' => $centro_id]);
-                
-                // Log para depuración
-                Log::warning("No se encontró centro_id, usando valor por defecto: {$centro_id}");
-            }
+            // Multi-tenant: no necesitamos obtener centro_id,
+            // el médico se crea automáticamente en el tenant actual
 
             $persona = Persona::where('dni', $data['dni'])->first();
 
