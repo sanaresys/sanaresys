@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Traits\TenantScoped; // Assuming you have a trait for recetario specific methods
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +14,7 @@ class Recetario extends ModeloBase
     /** @use HasFactory<\Database\Factories\RecetarioFactory> */
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'recetarios';
 
@@ -78,7 +77,7 @@ class Recetario extends ModeloBase
         return $this->belongsTo(CentroMedico::class, 'centro_id');
     }
 
-    // Accessor para datos del paciente (muy útil)
+    // Accessor para datos del paciente (muy Ãºtil)
     public function getDatosPacienteAttribute(): ?object
     {
         if (!$this->consulta || !$this->consulta->paciente) {
@@ -98,7 +97,7 @@ class Recetario extends ModeloBase
         ];
     }
 
-    // Accessor para datos del médico
+    // Accessor para datos del mÃ©dico
     public function getDatosMedicoAttribute(): ?object
     {
         if (!$this->medico || !$this->medico->persona) {
@@ -115,3 +114,4 @@ class Recetario extends ModeloBase
     }
 
 }
+

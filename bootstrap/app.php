@@ -12,8 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'tenant.switcher' => \App\Http\Middleware\TenantSwitcher::class,
-            'centro.switch' => \App\Http\Middleware\HandleCentroSwitch::class,
+            'tenant.resolve' => \App\Http\Middleware\ResolveTenantByHostOrLegacyCentro::class,
+            'tenant.canonical' => \App\Http\Middleware\EnforceCanonicalTenantDomain::class,
+            'tenant.maintenance' => \App\Http\Middleware\EnsureTenantNotInMaintenance::class,
+            'tenant.initialized' => \App\Http\Middleware\EnsureTenantInitialized::class,
+            'central.domain' => \App\Http\Middleware\EnsureCentralDomain::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

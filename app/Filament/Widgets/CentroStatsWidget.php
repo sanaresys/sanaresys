@@ -81,8 +81,8 @@ class CentroStatsWidget extends BaseWidget
             $centroNombre = 'Centro Médico';
             
             if ($tenant) {
-                $centro = Centros_Medico::on('mysql')->find($tenant->id);
-                $centroNombre = $centro ? $centro->nombre_centro : 'Centro ' . $tenant->id;
+                $centro = Centros_Medico::on('mysql')->find($tenant->centro_id);
+                $centroNombre = $centro ? $centro->nombre_centro : 'Centro ' . ($tenant->centro_id ?? $tenant->id);
             }
 
             // Estadísticas del tenant actual

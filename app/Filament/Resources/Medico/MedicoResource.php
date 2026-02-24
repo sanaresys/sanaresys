@@ -24,6 +24,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Centros_Medico;
 use Illuminate\Support\Str;
 
@@ -32,10 +33,10 @@ class MedicoResource extends Resource
 {
     protected static ?string $model = Medico::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
-    protected static ?string $navigationGroup = 'Gestión de Personas';
-    protected static ?string $navigationLabel = 'Médicos';
-    protected static ?string $modelLabel = 'Médico';
-    protected static ?string $pluralModelLabel = 'Médicos';
+    protected static ?string $navigationGroup = 'GestiÃ³n de Personas';
+    protected static ?string $navigationLabel = 'MÃ©dicos';
+    protected static ?string $modelLabel = 'MÃ©dico';
+    protected static ?string $pluralModelLabel = 'MÃ©dicos';
 
     public static function form(Form $form): Form
     {
@@ -52,9 +53,9 @@ class MedicoResource extends Resource
                                 ->placeholder('Ingrese su DNI')
                                 ->disabled(fn ($operation) => $operation === 'edit')
                                 ->dehydrated()
-                                ->live(debounce: 500) // Esto hace que se actualice cada 500ms después de dejar de escribir
+                                ->live(debounce: 500) // Esto hace que se actualice cada 500ms despuÃ©s de dejar de escribir
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                    if (strlen($state) >= 1) { // Asumiendo que el DNI tiene al menos 1 carácter
+                                    if (strlen($state) >= 1) { // Asumiendo que el DNI tiene al menos 1 carÃ¡cter
                                         $existingPersona = Persona::where('dni', $state)->first();
                                         if ($existingPersona) {
                                             $set('primer_nombre', $existingPersona->primer_nombre);
@@ -70,13 +71,13 @@ class MedicoResource extends Resource
 
                                             Notification::make()
                                                 ->title('Persona encontrada')
-                                                ->body("Se encontró: {$existingPersona->nombre_completo}")
+                                                ->body("Se encontrÃ³: {$existingPersona->nombre_completo}")
                                                 ->success()
                                                 ->send();
                                             } else {
                                                 $set('persona_id', null);
                                                                 // Opcional: limpiar campos si no se encuentra la persona
-                                        if ($get('id') === null) { // Solo en creación
+                                        if ($get('id') === null) { // Solo en creaciÃ³n
                                             $set('primer_nombre', '');
                                             $set('segundo_nombre', '');
                                             $set('primer_apellido', '');
@@ -93,11 +94,11 @@ class MedicoResource extends Resource
                        /* ->rules([
                             function (Get $get) {
                                 return function (string $attribute, $value, Closure $fail) use ($get) {
-                                    // Solo validar durante creación
+                                    // Solo validar durante creaciÃ³n
                                     if ($get('id') === null) {
                                         $exists = Persona::where('dni', $value)->exists();
                                         if ($exists) {
-                                            $fail('Este DNI ya está registrado por otra persona');
+                                            $fail('Este DNI ya estÃ¡ registrado por otra persona');
                                         }
                                     }
                                     // Guardar datos en session o en propiedad Livewire si usas Livewire Component
@@ -135,15 +136,15 @@ class MedicoResource extends Resource
 
 
                     Forms\Components\TextInput::make('telefono')
-                        ->label('Teléfono')
+                        ->label('TelÃ©fono')
                         ->maxLength(255)
-                        ->placeholder('Ingrese su número de teléfono')
+                        ->placeholder('Ingrese su nÃºmero de telÃ©fono')
                         ->required(),
 
                     Forms\Components\Textarea::make('direccion')
-                        ->label('Dirección')
+                        ->label('DirecciÃ³n')
                         ->maxLength(255)
-                        ->placeholder('Ingrese su dirección')
+                        ->placeholder('Ingrese su direcciÃ³n')
                         ->required(), // hace obligatorio el campo,
                        // ->columnSpanFull(),
 
@@ -164,8 +165,8 @@ class MedicoResource extends Resource
                         ->placeholder('Seleccione su fecha de nacimiento')
                         ->maxDate(now()) // No permitir fechas futuras
                         ->minDate(now()->subYears(120)) // No permitir fechas demasiado antiguas
-                        ->default(now()->subYears(70)) // Valor por defecto (70 años atrás)
-                        ->displayFormat('d/m/Y') // Formato de visualización
+                        ->default(now()->subYears(70)) // Valor por defecto (70 aÃ±os atrÃ¡s)
+                        ->displayFormat('d/m/Y') // Formato de visualizaciÃ³n
                         ->required(),
 
                     Forms\Components\Select::make('nacionalidad_id')
@@ -176,7 +177,7 @@ class MedicoResource extends Resource
                         ->required(),
 
                     Forms\Components\FileUpload::make('fotografia')
-                    ->label('Fotografía')
+                    ->label('FotografÃ­a')
                     ->image()
                     ->directory('personas/fotos')
                     ->disk('public')
@@ -202,14 +203,12 @@ class MedicoResource extends Resource
 
             Wizard\Step::make('Datos Profesionales')
                 ->schema([
-                    Forms\Components\Hidden::make('centro_id')
-                        ->default(fn() => session('current_centro_id')),
 
                     Forms\Components\TextInput::make('numero_colegiacion')
-                        ->label('Número de Colegiación')
+                        ->label('NÃºmero de ColegiaciÃ³n')
                         ->required()
                         ->maxLength(20)
-                        ->placeholder('Ingrese su número de colegiación'),
+                        ->placeholder('Ingrese su nÃºmero de colegiaciÃ³n'),
                       // ->unique('medicos', 'numero_colegiacion', ignoreRecord: true),
 
                        Forms\Components\Grid::make(2)
@@ -254,10 +253,10 @@ class MedicoResource extends Resource
                                         $fail('Los horarios deben estar entre las 6:00 AM y 10:00 PM');
                                     }
 
-                                    // Validar duración mínima de 2 horas
+                                    // Validar duraciÃ³n mÃ­nima de 2 horas
                                     $diferencia = strtotime($value) - strtotime($entrada);
                                     if ($diferencia < 7200) { // 2 horas en segundos
-                                        $fail('La jornada debe tener al menos 2 horas de duración');
+                                        $fail('La jornada debe tener al menos 2 horas de duraciÃ³n');
                                     }
                                 }
                             };
@@ -266,8 +265,8 @@ class MedicoResource extends Resource
             ]),
                 ]) ->columns(2),
 
-            Wizard\Step::make('Información Contractual')
-                ->description('Información del contrato laboral')
+            Wizard\Step::make('InformaciÃ³n Contractual')
+                ->description('InformaciÃ³n del contrato laboral')
                 ->schema([
                     Forms\Components\Grid::make(2)
                         ->schema([
@@ -279,15 +278,15 @@ class MedicoResource extends Resource
                                 ->prefix('L')
                                 ->placeholder('0.00')
                                 ->extraAttributes([
-                                    'title' => 'Monto que recibirá el médico cada quincena (15 días)'
+                                    'title' => 'Monto que recibirÃ¡ el mÃ©dico cada quincena (15 dÃ­as)'
                                 ])
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $set, Forms\Get $get) {
-                                    // Asegurarse de que sea un número, defecto 0
+                                    // Asegurarse de que sea un nÃºmero, defecto 0
                                     $value = is_numeric($state) ? (float) $state : 0;
                                     $set('salario_mensual', $value * 2);
                                     
-                                    // Validación para verificar si ambos valores son cero
+                                    // ValidaciÃ³n para verificar si ambos valores son cero
                                     $porcentaje = (float) ($get('porcentaje_servicio') ?? 0);
                                     if ($value <= 0 && $porcentaje <= 0) {
                                         $set('validacion_compensacion', false);
@@ -302,7 +301,7 @@ class MedicoResource extends Resource
                                             $salario = (float)($value ?? 0);
                                             
                                             if ($salario <= 0 && $porcentajeServicio <= 0) {
-                                                $fail('Debe especificar al menos una forma de compensación (salario o porcentaje por servicio).');
+                                                $fail('Debe especificar al menos una forma de compensaciÃ³n (salario o porcentaje por servicio).');
                                             }
                                         };
                                     },
@@ -316,7 +315,7 @@ class MedicoResource extends Resource
                                 ->prefix('L')
                                 ->placeholder('0.00')
                                 ->extraAttributes([
-                                    'title' => 'Salario completo mensual (calculado automáticamente)'
+                                    'title' => 'Salario completo mensual (calculado automÃ¡ticamente)'
                                 ])
                                 ->disabled()
                                 ->dehydrated(),
@@ -335,14 +334,14 @@ class MedicoResource extends Resource
                                 ->maxValue(100)
                                 ->required(fn ($operation) => $operation === 'create')
                                 ->extraAttributes([
-                                    'title' => 'Porcentaje de comisión que recibe por servicios médicos realizados'
+                                    'title' => 'Porcentaje de comisiÃ³n que recibe por servicios mÃ©dicos realizados'
                                 ])
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if ($state === '' || $state === null) {
                                         $set('porcentaje_servicio', 0);
                                     }
-                                    // Convertir a número para evitar problemas con strings vacíos
+                                    // Convertir a nÃºmero para evitar problemas con strings vacÃ­os
                                     $set('porcentaje_servicio', floatval($state ?? 0));
                                 }),
 
@@ -358,24 +357,24 @@ class MedicoResource extends Resource
                     Forms\Components\Grid::make(2)
                         ->schema([
                             Forms\Components\DatePicker::make('fecha_fin')
-                                ->label('Fecha de Finalización')
+                                ->label('Fecha de FinalizaciÃ³n')
                                 ->native(false)
                                 ->displayFormat('d/m/Y')
                                 
                               //  ->minDate(fn (Get $get) => $get('fecha_inicio'))
-                                ->placeholder('Sin fecha de finalización')
-                                ->helperText('Dejar vacío si el contrato es indefinido'),
+                                ->placeholder('Sin fecha de finalizaciÃ³n')
+                                ->helperText('Dejar vacÃ­o si el contrato es indefinido'),
 
                             Forms\Components\Toggle::make('activo')
                                 ->label('Contrato Activo')
-                                ->helperText('Indica si el contrato está vigente')
+                                ->helperText('Indica si el contrato estÃ¡ vigente')
                                 ->default(true)
                                 ->inline(false),
                         ]),
 
                     Forms\Components\Textarea::make('observaciones_contrato')
                         ->label('Observaciones del Contrato')
-                        ->placeholder('Ingrese cualquier observación relevante sobre el contrato')
+                        ->placeholder('Ingrese cualquier observaciÃ³n relevante sobre el contrato')
                         ->maxLength(65535)
                         ->columnSpanFull(),
                 ]),
@@ -389,21 +388,21 @@ class MedicoResource extends Resource
                 ]),
 
             Wizard\Step::make('Usuario de Acceso')
-                ->description('Configure los datos de acceso del médico al sistema')
+                ->description('Configure los datos de acceso del mÃ©dico al sistema')
                 ->schema([
-                    Forms\Components\Section::make('¿Crear usuario de acceso?')
-                        ->description('Determine si este médico necesita acceso al sistema')
+                    Forms\Components\Section::make('Â¿Crear usuario de acceso?')
+                        ->description('Determine si este mÃ©dico necesita acceso al sistema')
                         ->schema([
                             Forms\Components\Toggle::make('crear_usuario')
                                 ->label(fn ($operation) => 
                                     $operation === 'edit' 
                                         ? 'Gestionar usuario de acceso'
-                                        : 'Crear usuario de acceso para este médico'
+                                        : 'Crear usuario de acceso para este mÃ©dico'
                                 )
                                 ->helperText(fn ($operation) => 
                                     $operation === 'edit' 
                                         ? 'Active para modificar o crear datos de usuario del sistema'
-                                        : 'Active esta opción si el médico necesita acceder al sistema'
+                                        : 'Active esta opciÃ³n si el mÃ©dico necesita acceder al sistema'
                                 )
                                 ->default(fn ($operation) => $operation === 'create' ? true : false)
                                 ->live()
@@ -413,7 +412,7 @@ class MedicoResource extends Resource
 
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('auto_generate')
-                            ->label('🎲 Generar datos automáticamente')
+                            ->label('ðŸŽ² Generar datos automÃ¡ticamente')
                             ->icon('heroicon-o-sparkles')
                             ->size('lg')
                             ->color('success')
@@ -439,23 +438,23 @@ class MedicoResource extends Resource
                                     $set('user_password_confirmation', $password);
 
                                     Notification::make()
-                                        ->title('Datos generados automáticamente')
-                                        ->body("Usuario: {$username}\nEmail: {$email}\nContraseña: {$password}")
+                                        ->title('Datos generados automÃ¡ticamente')
+                                        ->body("Usuario: {$username}\nEmail: {$email}\nContraseÃ±a: {$password}")
                                         ->icon('heroicon-o-sparkles')
                                         ->iconColor('success')
                                         ->success()
                                         ->persistent()
                                         ->actions([
                                             \Filament\Notifications\Actions\Action::make('copy')
-                                                ->label('Copiar contraseña')
+                                                ->label('Copiar contraseÃ±a')
                                                 ->icon('heroicon-o-clipboard')
                                                 ->button()
                                                 ->color('success')
                                                 ->action(function () use ($password) {
-                                                    // Copiar la contraseña al portapapeles
+                                                    // Copiar la contraseÃ±a al portapapeles
                                                     Notification::make()
-                                                        ->title('¡Copiado!')
-                                                        ->body('La contraseña ha sido copiada al portapapeles')
+                                                        ->title('Â¡Copiado!')
+                                                        ->body('La contraseÃ±a ha sido copiada al portapapeles')
                                                         ->success()
                                                         ->send();
 
@@ -466,7 +465,7 @@ class MedicoResource extends Resource
                                 } else {
                                     Notification::make()
                                         ->title('Error')
-                                        ->body('Se necesita el nombre y apellido del médico para generar los datos')
+                                        ->body('Se necesita el nombre y apellido del mÃ©dico para generar los datos')
                                         ->danger()
                                         ->send();
                                 }
@@ -476,7 +475,7 @@ class MedicoResource extends Resource
                     ->columnSpanFull(),
 
                     Forms\Components\Section::make('Datos del Usuario')
-                        ->description('Complete la información de acceso del médico')
+                        ->description('Complete la informaciÃ³n de acceso del mÃ©dico')
                         ->schema([
                             Forms\Components\Grid::make(2)
                                 ->schema([
@@ -489,12 +488,12 @@ class MedicoResource extends Resource
                                         ->placeholder('Ej: juan.perez')
                                         ->helperText(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Déjalo igual si no quieres cambiar el acceso'
-                                                : 'Usado para iniciar sesión en el sistema'
+                                                ? 'DÃ©jalo igual si no quieres cambiar el acceso'
+                                                : 'Usado para iniciar sesiÃ³n en el sistema'
                                         )
                                         ->live(onBlur: true)
                                         ->afterStateUpdated(function ($state, callable $set, $operation) {
-                                            // Auto-generar email basado en username si está vacío y es creación
+                                            // Auto-generar email basado en username si estÃ¡ vacÃ­o y es creaciÃ³n
                                             if ($operation === 'create' && $state) {
                                                 $set('user_email', strtolower($state) . '@clinica.com');
                                             }
@@ -510,12 +509,12 @@ class MedicoResource extends Resource
                                                     }
                                                     
                                                     if ($operation === 'create') {
-                                                        // En creación, verificar duplicados
+                                                        // En creaciÃ³n, verificar duplicados
                                                         if (\App\Models\User::where('name', $value)->exists()) {
-                                                            $fail('Este nombre de usuario ya está en uso.');
+                                                            $fail('Este nombre de usuario ya estÃ¡ en uso.');
                                                         }
                                                     }
-                                                    // En edición, no validar aquí - se validará en el backend
+                                                    // En ediciÃ³n, no validar aquÃ­ - se validarÃ¡ en el backend
                                                 };
                                             },
                                         ])
@@ -532,8 +531,8 @@ class MedicoResource extends Resource
                                         ->placeholder('Ej: juan.perez@clinica.com')
                                         ->helperText(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Email para notificaciones - déjalo igual si no quieres cambiar'
-                                                : 'Email para notificaciones y recuperación de contraseña'
+                                                ? 'Email para notificaciones - dÃ©jalo igual si no quieres cambiar'
+                                                : 'Email para notificaciones y recuperaciÃ³n de contraseÃ±a'
                                         )
                                         ->reactive()
                                         ->rules([
@@ -546,12 +545,12 @@ class MedicoResource extends Resource
                                                     }
                                                     
                                                     if ($operation === 'create') {
-                                                        // En creación, verificar duplicados
+                                                        // En creaciÃ³n, verificar duplicados
                                                         if (\App\Models\User::where('email', $value)->exists()) {
-                                                            $fail('Este email ya está en uso.');
+                                                            $fail('Este email ya estÃ¡ en uso.');
                                                         }
                                                     }
-                                                    // En edición, no validar aquí - se validará en el backend
+                                                    // En ediciÃ³n, no validar aquÃ­ - se validarÃ¡ en el backend
                                                 };
                                             },
                                         ])
@@ -562,7 +561,7 @@ class MedicoResource extends Resource
                             Forms\Components\Grid::make(2)
                                 ->schema([
                                     Forms\Components\TextInput::make('user_password')
-                                        ->label('Contraseña')
+                                        ->label('ContraseÃ±a')
                                         ->password()
                                         ->required(fn (Forms\Get $get, $operation) => 
                                             $get('crear_usuario') && $operation === 'create'
@@ -571,19 +570,19 @@ class MedicoResource extends Resource
                                         ->maxLength(255)
                                         ->placeholder(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Dejar vacío para mantener la contraseña actual'
-                                                : 'Mínimo 8 caracteres'
+                                                ? 'Dejar vacÃ­o para mantener la contraseÃ±a actual'
+                                                : 'MÃ­nimo 8 caracteres'
                                         )
                                         ->helperText(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Solo complete si desea cambiar la contraseña'
-                                                : 'Contraseña inicial del médico (puede cambiarla después)'
+                                                ? 'Solo complete si desea cambiar la contraseÃ±a'
+                                                : 'ContraseÃ±a inicial del mÃ©dico (puede cambiarla despuÃ©s)'
                                         )
                                         ->revealable()
                                         ->dehydrated(),
 
                                     Forms\Components\TextInput::make('user_password_confirmation')
-                                        ->label('Confirmar contraseña')
+                                        ->label('Confirmar contraseÃ±a')
                                         ->password()
                                         ->required(fn (Forms\Get $get, $operation) => 
                                             $get('crear_usuario') && $operation === 'create' && $get('user_password')
@@ -592,13 +591,13 @@ class MedicoResource extends Resource
                                         ->same('user_password')
                                         ->placeholder(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Confirme solo si cambió la contraseña'
-                                                : 'Repita la contraseña'
+                                                ? 'Confirme solo si cambiÃ³ la contraseÃ±a'
+                                                : 'Repita la contraseÃ±a'
                                         )
                                         ->helperText(fn ($operation) => 
                                             $operation === 'edit' 
-                                                ? 'Solo necesario si cambió la contraseña arriba'
-                                                : 'Debe coincidir con la contraseña anterior'
+                                                ? 'Solo necesario si cambiÃ³ la contraseÃ±a arriba'
+                                                : 'Debe coincidir con la contraseÃ±a anterior'
                                         )
                                         ->dehydrated(false),
                                 ]),
@@ -606,7 +605,7 @@ class MedicoResource extends Resource
                             Forms\Components\Select::make('user_role')
                                 ->label('Rol en el sistema')
                                 ->options([
-                                    'medico' => 'Médico - Puede gestionar pacientes y consultas',
+                                    'medico' => 'MÃ©dico - Puede gestionar pacientes y consultas',
                                     
                                 ])
                                 ->default('medico')
@@ -631,9 +630,9 @@ class MedicoResource extends Resource
                     
                 ]),
         ])
-        ->columnSpanFull() //  Esto hará que el Wizard ocupe el 100% del ancho
+        ->columnSpanFull() //  Esto harÃ¡ que el Wizard ocupe el 100% del ancho
             ->nextAction(
-                fn ($action) => $action->label('Siguiente')  // "Next" → "Siguiente"
+                fn ($action) => $action->label('Siguiente')  // "Next" â†’ "Siguiente"
             )
 
 
@@ -656,11 +655,11 @@ class MedicoResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('numero_colegiacion')
-                    ->label('N° Colegiación')
+                    ->label('NÂ° ColegiaciÃ³n')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('persona.telefono')
-                    ->label('Teléfono')
+                    ->label('TelÃ©fono')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('especialidades.especialidad')
@@ -705,11 +704,11 @@ class MedicoResource extends Resource
                         ->color('success')
                         ->visible(fn (Medico $record) => !$record->persona->user)
                         ->modalHeading('Crear Usuario de Acceso')
-                        ->modalDescription('Complete los datos para crear un usuario de acceso al sistema para este médico')
+                        ->modalDescription('Complete los datos para crear un usuario de acceso al sistema para este mÃ©dico')
                         ->form([
                             Forms\Components\Actions::make([
                                 Forms\Components\Actions\Action::make('auto_generate_modal')
-                                    ->label('🎲 Generar datos automáticamente')
+                                    ->label('ðŸŽ² Generar datos automÃ¡ticamente')
                                     ->icon('heroicon-o-sparkles')
                                     ->size('lg')
                                     ->color('success')
@@ -734,15 +733,15 @@ class MedicoResource extends Resource
                                             $set('password_confirmation', $password);
 
                                             Notification::make()
-                                                ->title('Datos generados automáticamente')
-                                                ->body("Usuario: {$username}\nEmail: {$email}\nContraseña: {$password}")
+                                                ->title('Datos generados automÃ¡ticamente')
+                                                ->body("Usuario: {$username}\nEmail: {$email}\nContraseÃ±a: {$password}")
                                                 ->icon('heroicon-o-sparkles')
                                                 ->iconColor('success')
                                                 ->success()
                                                 ->persistent()
                                                 ->actions([
                                                     \Filament\Notifications\Actions\Action::make('copy')
-                                                        ->label('Copiar contraseña')
+                                                        ->label('Copiar contraseÃ±a')
                                                         ->icon('heroicon-o-clipboard')
                                                         ->button()
                                                         ->color('success')
@@ -764,7 +763,7 @@ class MedicoResource extends Resource
                                             $set('password_confirmation', $password);
 
                                             Notification::make()
-                                                ->title('Datos generados automáticamente')
+                                                ->title('Datos generados automÃ¡ticamente')
                                                 ->success()
                                                 ->send();
                                         }
@@ -780,7 +779,7 @@ class MedicoResource extends Resource
                                                 ->required()
                                                 ->maxLength(255)
                                                 ->placeholder('Ej: juan.perez')
-                                                ->helperText('Usado para iniciar sesión en el sistema')
+                                                ->helperText('Usado para iniciar sesiÃ³n en el sistema')
                                                 ->live(debounce: 500)
                                                 ->afterStateUpdated(function ($state, callable $set) {
                                                     $set('user_email', strtolower($state) . '@clinica.com');
@@ -790,7 +789,7 @@ class MedicoResource extends Resource
                                                     function () {
                                                         return function (string $attribute, $value, \Closure $fail) {
                                                             if (\App\Models\User::where('name', $value)->exists()) {
-                                                                $fail('Este nombre de usuario ya está en uso.');
+                                                                $fail('Este nombre de usuario ya estÃ¡ en uso.');
                                                             }
                                                         };
                                                     },
@@ -806,7 +805,7 @@ class MedicoResource extends Resource
                                                     function () {
                                                         return function (string $attribute, $value, \Closure $fail) {
                                                             if (\App\Models\User::where('email', $value)->exists()) {
-                                                                $fail('Este email ya está en uso.');
+                                                                $fail('Este email ya estÃ¡ en uso.');
                                                             }
                                                         };
                                                     },
@@ -816,25 +815,25 @@ class MedicoResource extends Resource
                                     Forms\Components\Grid::make(2)
                                         ->schema([
                                             Forms\Components\TextInput::make('user_password')
-                                                ->label('Contraseña')
+                                                ->label('ContraseÃ±a')
                                                 ->password()
                                                 ->required()
                                                 ->minLength(8)
                                                 ->maxLength(255)
-                                                ->placeholder('Mínimo 8 caracteres'),
+                                                ->placeholder('MÃ­nimo 8 caracteres'),
 
                                             Forms\Components\TextInput::make('user_password_confirmation')
-                                                ->label('Confirmar contraseña')
+                                                ->label('Confirmar contraseÃ±a')
                                                 ->password()
                                                 ->required()
                                                 ->same('user_password')
-                                                ->placeholder('Repita la contraseña'),
+                                                ->placeholder('Repita la contraseÃ±a'),
                                         ]),
 
                                     Forms\Components\Select::make('user_role')
                                         ->label('Rol en el sistema')
                                         ->options([
-                                            'medico' => 'Médico - Puede gestionar pacientes y consultas',
+                                            'medico' => 'MÃ©dico - Puede gestionar pacientes y consultas',
                                             
                                         ])
                                         ->default('medico')
@@ -865,7 +864,7 @@ class MedicoResource extends Resource
                                 $user->assignRole($data['user_role']);
 
                                 Notification::make()
-                                    ->title('✅ Usuario creado exitosamente')
+                                    ->title('âœ… Usuario creado exitosamente')
                                     ->body("Usuario '{$data['username']}' creado para {$record->persona->primer_nombre} {$record->persona->primer_apellido}")
                                     ->success()
                                     ->persistent()
@@ -873,7 +872,7 @@ class MedicoResource extends Resource
 
                             } catch (\Exception $e) {
                                 Notification::make()
-                                    ->title('❌ Error al crear usuario')
+                                    ->title('âŒ Error al crear usuario')
                                     ->body("Error: " . $e->getMessage())
                                     ->danger()
                                     ->send();
@@ -883,9 +882,9 @@ class MedicoResource extends Resource
                     Tables\Actions\DeleteAction::make()
                         ->label('Eliminar')
                         ->icon('heroicon-o-trash')
-                        ->modalHeading('Eliminar Médico')
-                        ->modalDescription('¿Estás seguro de que deseas eliminar este médico y sus datos personales? Esta acción no se puede deshacer.')
-                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalHeading('Eliminar MÃ©dico')
+                        ->modalDescription('Â¿EstÃ¡s seguro de que deseas eliminar este mÃ©dico y sus datos personales? Esta acciÃ³n no se puede deshacer.')
+                        ->modalSubmitActionLabel('SÃ­, eliminar')
                         ->modalCancelActionLabel('Cancelar')
                         ->action(function (Medico $record) {
                             DB::transaction(function () use ($record) {
@@ -893,7 +892,7 @@ class MedicoResource extends Resource
                                 $record->persona()->delete();
                             });
                         })
-                        ->successNotificationTitle('Médico y datos personales eliminados correctamente'),
+                        ->successNotificationTitle('MÃ©dico y datos personales eliminados correctamente'),
                 ])
                 ->label('Opciones')
                 ->icon('heroicon-m-ellipsis-vertical')
@@ -912,7 +911,7 @@ class MedicoResource extends Resource
     protected function getCreateFormAction(): PageAction
     {
         return PageAction::make('create')
-            ->label('Crear Médico') // Texto personalizado del botón
+            ->label('Crear MÃ©dico') // Texto personalizado del botÃ³n
             ->submit('create')
             ->keyBindings(['mod+s']);
     }
@@ -931,7 +930,7 @@ class MedicoResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        // Ordenar por fecha de creación descendente
+        // Ordenar por fecha de creaciÃ³n descendente
         $query->orderBy('created_at', 'desc');
 
         return $query;
@@ -942,8 +941,8 @@ class MedicoResource extends Resource
         DB::beginTransaction();
 
         try {
-            // Multi-tenant: no necesitamos obtener centro_id,
-            // el médico se crea automáticamente en el tenant actual
+            // Resolver centro solo si alguna tabla aÃºn conserva la columna centro_id.
+            $centroId = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
 
             $persona = Persona::where('dni', $data['dni'])->first();
 
@@ -962,28 +961,32 @@ class MedicoResource extends Resource
                 ];
                 $persona = Persona::create($personaData);
             }
-            // Siempre guardar la fotografía si viene en el formulario
+            // Siempre guardar la fotografÃ­a si viene en el formulario
             if (isset($data['fotografia']) && $data['fotografia']) {
                 $persona->fotografia = $data['fotografia'];
                 $persona->save();
             }
 
-            // Crear el médico con el centro_id verificado
-            $medico = Medico::create([
+            $medicoData = [
                 'persona_id' => $persona->id,
                 'numero_colegiacion' => $data['numero_colegiacion'],
                 'horario_entrada' => $data['horario_entrada'],
                 'horario_salida' => $data['horario_salida'],
-                'centro_id' => $centro_id,
-            ]);
+            ];
+
+            if (Schema::hasColumn('medicos', 'centro_id')) {
+                $medicoData['centro_id'] = $centroId;
+            }
+
+            $medico = Medico::create($medicoData);
 
             if (isset($data['especialidades'])) {
                 $medico->especialidades()->sync($data['especialidades']);
             }
 
-            // Crear el contrato médico
+            // Crear el contrato mÃ©dico
             if (isset($data['salario_quincenal']) && isset($data['porcentaje_servicio'])) {
-                $contrato = \App\Models\ContabilidadMedica\ContratoMedico::create([
+                $contratoData = [
                     'medico_id' => $medico->id,
                     'salario_quincenal' => $data['salario_quincenal'],
                     'salario_mensual' => $data['salario_quincenal'] * 2,
@@ -991,9 +994,14 @@ class MedicoResource extends Resource
                     'fecha_inicio' => $data['fecha_inicio'],
                     'fecha_fin' => isset($data['fecha_fin']) && $data['fecha_fin'] ? $data['fecha_fin'] : null,
                     'activo' => $data['activo'] ?? true,
-                    'centro_id' => $centro_id, // Usar la misma variable que usamos para el médico
-                    'observaciones' => $data['observaciones_contrato'] ?? null, // Añadir observaciones si existen
-                ]);
+                    'observaciones' => $data['observaciones_contrato'] ?? null, // AÃ±adir observaciones si existen
+                ];
+
+                if (Schema::hasColumn('contratos_medicos', 'centro_id')) {
+                    $contratoData['centro_id'] = $centroId;
+                }
+
+                $contrato = \App\Models\ContabilidadMedica\ContratoMedico::create($contratoData);
             }
 
             // Crear usuario si se ha solicitado
@@ -1001,24 +1009,29 @@ class MedicoResource extends Resource
                 
                 // Validar que se proporcionaron todos los datos requeridos
                 if (empty($data['username']) || empty($data['user_email']) || empty($data['user_password'])) {
-                    throw new \Exception("Para crear el usuario debe proporcionar: nombre de usuario, email y contraseña.");
+                    throw new \Exception("Para crear el usuario debe proporcionar: nombre de usuario, email y contraseÃ±a.");
                 }
                 
                 try {
-                    $user = \App\Models\User::create([
+                    $userData = [
                         'name' => $data['username'],
                         'email' => $data['user_email'],
                         'password' => Hash::make($data['user_password']),
                         'persona_id' => $persona->id,
-                        'centro_id' => $centro_id, // Usar el mismo centro_id obtenido anteriormente
                         'email_verified_at' => $data['user_active'] ? now() : null,
-                    ]);
+                    ];
+
+                    if (Schema::hasColumn('users', 'centro_id')) {
+                        $userData['centro_id'] = $centroId;
+                    }
+
+                    $user = \App\Models\User::create($userData);
 
                     // Asignar rol
                     $user->assignRole($data['user_role'] ?? 'medico');
 
                     Notification::make()
-                        ->title('✅ Usuario creado exitosamente')
+                        ->title('âœ… Usuario creado exitosamente')
                         ->body("Usuario '{$data['username']}' creado para {$persona->primer_nombre} {$persona->primer_apellido}")
                         ->success()
                         ->persistent()

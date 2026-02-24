@@ -117,7 +117,6 @@ class EditProfile extends BaseEditProfile
                 Recetario::create([
                     'medico_id' => $medico->id,
                     'consulta_id' => null,
-                    'centro_id' => session('current_centro_id') ?? $user->centro_id,
                 ]);
                 
                 Notification::make()

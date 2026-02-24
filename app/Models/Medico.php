@@ -7,13 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Traits\TenantScoped; 
 
 class Medico extends ModeloBase
 {
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped; // Trait para el multi-tenant
 
 protected $table = 'medicos';
 
@@ -22,7 +20,6 @@ protected $table = 'medicos';
         'numero_colegiacion',
         'horario_entrada',  
         'horario_salida',
-        'centro_id', // multi-tenant
     ];
 
     public function centro()

@@ -1,5 +1,7 @@
 <?php
 
+use Stancl\Tenancy\Database\Models\Domain;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -7,6 +9,23 @@ return [
     |--------------------------------------------------------------------------
     */
     'tenant_model' => \App\Models\Tenant::class,
+    'domain_model' => Domain::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Central Domains & Base Domain
+    |--------------------------------------------------------------------------
+    |
+    | Dominios centrales de la app (sin contexto tenant) y dominio base para
+    | construir subdominios de centros.
+    |
+    */
+    'central_domains' => array_values(array_filter(array_map(
+        static fn (string $domain): string => strtolower(trim($domain)),
+        explode(',', env('TENANCY_CENTRAL_DOMAINS', 'sanaresys.com,localhost,127.0.0.1'))
+    ))),
+    'base_domain' => env('TENANCY_BASE_DOMAIN', 'sanaresys.com'),
+    'tenant_scheme' => env('TENANCY_TENANT_SCHEME', 'https'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,11 +53,24 @@ return [
     |--------------------------------------------------------------------------
     | Executed when tenancy is initialized to make Laravel features tenant-aware.
     */
-    'bootstrappers' => [
+    'bootstrappers' => array_values(array_filter([
         Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
+        env('TENANCY_CACHE_BOOTSTRAPPER', false)
+            ? Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class
+            : null,
+        env('TENANCY_FILESYSTEM_BOOTSTRAPPER', false)
+            ? Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class
+            : null,
         Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
+    ])),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Optional Features
+    |--------------------------------------------------------------------------
+    */
+    'features' => [
+        Stancl\Tenancy\Features\UserImpersonation::class,
     ],
 
     /*
@@ -48,6 +80,7 @@ return [
     */
     'database' => [
         'central_connection' => env('DB_CONNECTION', 'mysql'),
+        'template_tenant_connection' => null,
         'prefix' => env('TENANCY_DATABASE_PREFIX', ''),
         'suffix' => env('TENANCY_DATABASE_SUFFIX', ''),
         'managers' => [

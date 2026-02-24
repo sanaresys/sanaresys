@@ -45,8 +45,7 @@ class FacturaController extends Controller
         // Usar el diseño específico de la factura o el predeterminado del centro
         $diseno = $factura->facturaDiseno;
         if (!$diseno) {
-            $diseno = FacturaDiseno::where('centro_id', $factura->centro_id)
-                ->where('activo', true)
+            $diseno = FacturaDiseno::where('activo', true)
                 ->where('es_predeterminado', true)
                 ->first();
         }
@@ -78,19 +77,8 @@ class FacturaController extends Controller
     private function obtenerDatosReales()
     {
         // Obtener el centro médico actual
-        $centroId = session('current_centro_id');
-        
-        // Si no hay centro en sesión, usar el centro del usuario autenticado
-        if (!$centroId && auth()->user()) {
-            $centroId = auth()->user()->centro_id;
-        }
-        
-        // Si aún no hay centro, usar el primer centro disponible
-        if (!$centroId) {
-            $centroId = \App\Models\Centros_Medico::first()?->id;
-        }
-        
-        $centro = \App\Models\Centros_Medico::find($centroId);
+        $centroId = $this->getCurrentTenantCentroId();
+        $centro = \App\Models\Centros_Medico::on('mysql')->find($centroId);
         
         // Obtener el usuario actual y su médico asociado
         $usuario = auth()->user();
@@ -108,7 +96,7 @@ class FacturaController extends Controller
             
             if (!$medico) {
                 // Si no es médico, tomar el primer médico del centro
-                $medico = \App\Models\Medico::where('centro_id', $centroId)
+                $medico = \App\Models\Medico::query()
                     ->with(['persona', 'especialidades'])
                     ->first();
             }
@@ -152,13 +140,10 @@ class FacturaController extends Controller
         }
         
         // Obtener datos CAI más recientes del centro
-        $caiAutorizacion = null;
-        if ($centroId) {
-            $caiAutorizacion = \App\Models\CAIAutorizaciones::where('centro_id', $centroId)
-                ->where('estado', 'ACTIVA')
-                ->orderBy('created_at', 'desc')
-                ->first();
-        }
+        $caiAutorizacion = \App\Models\CAIAutorizaciones::query()
+            ->where('estado', 'ACTIVA')
+            ->orderBy('created_at', 'desc')
+            ->first();
         
         // Datos realistas con información del sistema
         return [
@@ -242,7 +227,6 @@ class FacturaController extends Controller
     public function generarFacturaReal(Factura $factura)
     {
         $diseno = $factura->facturaDiseno ?? FacturaDiseno::where('es_predeterminado', true)
-                                                      ->where('centro_id', $factura->centro_id)
                                                       ->first();
 
         if (!$diseno) {
@@ -380,13 +364,7 @@ class FacturaController extends Controller
     public function vistaPreviewDemo()
     {
         // Obtener el diseño actual del centro
-        $user = auth()->user();
-        $centroId = session('current_centro_id') ?? $user->centro_id;
-        
-        // Si no hay centro, usar el primer centro disponible
-        if (!$centroId) {
-            $centroId = \App\Models\Centros_Medico::first()?->id;
-        }
+        $centroId = $this->getCurrentTenantCentroId();
 
         // Buscar diseño existente para el centro
         $diseno = FacturaDiseno::where('centro_id', $centroId)
@@ -501,5 +479,16 @@ class FacturaController extends Controller
             'diseno' => $diseno,
             'datosFactura' => $datosFactura
         ]);
+    }
+
+    private function getCurrentTenantCentroId(): int
+    {
+        $centroId = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
+
+        if (! $centroId) {
+            throw new \RuntimeException('No hay tenant inicializado para generar vistas de facturas.');
+        }
+
+        return (int) $centroId;
     }
 }

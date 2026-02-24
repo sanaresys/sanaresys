@@ -78,6 +78,9 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
             ])
             ->middleware([
+                'tenant.resolve',
+                'tenant.canonical',
+                'tenant.maintenance',
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -87,8 +90,6 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                'tenant.switcher',
-                'centro.switch',
             ])
             ->authMiddleware([
                 Authenticate::class,

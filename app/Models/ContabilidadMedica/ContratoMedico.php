@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Traits\TenantScoped;
 use App\Models\ModeloBase;
 use App\Models\Medico;
 use App\Models\Centros_Medico;
@@ -19,7 +18,6 @@ class ContratoMedico extends ModeloBase
 {
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped;
     
     protected static function booted()
     {

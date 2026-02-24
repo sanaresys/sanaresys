@@ -11,7 +11,7 @@ class Citas extends ModeloBase
     /** @use HasFactory<\Database\Factories\CitasFactory> */
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'citas';
     
@@ -44,3 +44,4 @@ class Citas extends ModeloBase
 
    
 }
+

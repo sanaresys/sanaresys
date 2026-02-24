@@ -6,14 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\TenantScoped;
 use App\Models\Medico;
-use Illuminate\Support\Facades\Auth;
 
 class DetalleNomina extends Model
 {
     use HasFactory;
-    use TenantScoped;
     use SoftDeletes;
 
     protected $table = 'detalle_nominas';
@@ -33,7 +30,7 @@ class DetalleNomina extends Model
 
     protected $guarded = [
         'created_by',
-        'updated_by', 
+        'updated_by',
         'deleted_by'
     ];
 
@@ -45,7 +42,7 @@ class DetalleNomina extends Model
     ];
 
     /**
-     * Relación con la nómina
+     * Relacion con la nomina
      */
     public function nomina(): BelongsTo
     {
@@ -53,7 +50,7 @@ class DetalleNomina extends Model
     }
 
     /**
-     * Relación con el médico
+     * Relacion con el medico
      */
     public function medico(): BelongsTo
     {
@@ -69,20 +66,13 @@ class DetalleNomina extends Model
     }
 
     /**
-     * Boot del modelo - control total sobre el comportamiento
+     * Boot del modelo
      */
     protected static function boot()
     {
         parent::boot();
-        
-        // Solo aplicar el tenant scoped si es necesario
-        static::creating(function ($model) {
-            if (!$model->centro_id && Auth::check() && Auth::user()->centro) {
-                $model->centro_id = Auth::user()->centro->id;
-            }
-        });
-        
-        // Calcular el total automáticamente
+
+        // Calcular el total automaticamente
         static::saving(function ($detalle) {
             $detalle->total_pagar = $detalle->salario_base + $detalle->percepciones - $detalle->deducciones;
         });
@@ -93,11 +83,10 @@ class DetalleNomina extends Model
      */
     public static function create(array $attributes = [])
     {
-        // Eliminar created_by si existe
         unset($attributes['created_by']);
         unset($attributes['updated_by']);
         unset($attributes['deleted_by']);
-        
+
         return static::query()->create($attributes);
     }
 }

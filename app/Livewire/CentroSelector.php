@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Centros_Medico;
-use Illuminate\Support\Facades\Auth;
 
 class CentroSelector extends Component
 {
@@ -15,22 +14,32 @@ class CentroSelector extends Component
 
     public function mount()
     {
-        $this->selectedCentro = session('current_centro_id') ?? auth()->user()?->centro_id;
+        if (! $this->canManageCenters()) {
+            $this->availableCentros = collect();
+            $this->selectedCentro = null;
+            $this->showDropdown = false;
+            return;
+        }
+
+        $this->selectedCentro = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
         $this->loadCentros();
     }
 
     public function loadCentros()
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user || ! $this->canManageCenters()) {
             $this->availableCentros = collect();
             return;
         }
 
-        $this->availableCentros = $user->getAccessibleCentros()
+        $this->availableCentros = Centros_Medico::query()
+            ->where('tenancy_mode', 'domain')
             ->when($this->search, function ($query) {
                 return $query->where('nombre_centro', 'like', '%' . $this->search . '%');
-            });
+            })
+            ->orderBy('nombre_centro')
+            ->get();
     }
 
     public function updatedSearch()
@@ -55,6 +64,17 @@ class CentroSelector extends Component
 
     public function render()
     {
+        if (! $this->canManageCenters()) {
+            return view('livewire.centro-selector-empty');
+        }
+
         return view('livewire.centro-selector');
+    }
+
+    protected function canManageCenters(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) $user?->hasRole('root');
     }
 }

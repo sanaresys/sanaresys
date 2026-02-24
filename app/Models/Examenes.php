@@ -11,7 +11,7 @@ class Examenes extends ModeloBase
     /** @use HasFactory<\Database\Factories\ExamenesFactory> */
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'examenes';
     protected $fillable = [
@@ -77,7 +77,7 @@ class Examenes extends ModeloBase
         return null;
     }
 
-    // Método para obtener el color del estado
+    // MÃ©todo para obtener el color del estado
     public function getColorEstadoAttribute()
     {
         return match($this->estado) {
@@ -88,7 +88,7 @@ class Examenes extends ModeloBase
         };
     }
 
-    // Scope para filtrar por médico
+    // Scope para filtrar por mÃ©dico
     public function scopePorMedico($query, $medicoId)
     {
         return $query->where('medico_id', $medicoId);
@@ -100,13 +100,13 @@ class Examenes extends ModeloBase
         return $query->where('estado', $estado);
     }
 
-    // Scope para exámenes que deben aparecer en nuevas consultas
+    // Scope para exÃ¡menes que deben aparecer en nuevas consultas
     public function scopeParaNuevasConsultas($query)
     {
         return $query->whereIn('estado', ['Solicitado', 'Completado']);
     }
 
-    // Scope para exámenes previos de un paciente (excluyendo la consulta actual)
+    // Scope para exÃ¡menes previos de un paciente (excluyendo la consulta actual)
     public function scopeExamenesPrevios($query, $pacienteId, $consultaActualId = null)
     {
         $query = $query->where('paciente_id', $pacienteId)
@@ -120,19 +120,19 @@ class Examenes extends ModeloBase
         return $query->orderBy('created_at', 'desc');
     }
 
-    // Método para verificar si se puede subir imagen
+    // MÃ©todo para verificar si se puede subir imagen
     public function puedeSubirImagen()
     {
         return $this->estado === 'Solicitado';
     }
 
-    // Método para verificar si se puede cambiar a "No presentado"
+    // MÃ©todo para verificar si se puede cambiar a "No presentado"
     public function puedeMarcarNoPresent()
     {
         return in_array($this->estado, ['Solicitado', 'Completado']);
     }
 
-    // Método para completar examen con imagen
+    // MÃ©todo para completar examen con imagen
     public function completarConImagen($rutaImagen)
     {
         $this->update([
@@ -143,7 +143,7 @@ class Examenes extends ModeloBase
         ]);
     }
 
-    // Método para marcar como no presentado
+    // MÃ©todo para marcar como no presentado
     public function marcarNoPresent()
     {
         $this->update([
@@ -151,7 +151,7 @@ class Examenes extends ModeloBase
         ]);
     }
 
-    // Método para eliminar imagen anterior si existe
+    // MÃ©todo para eliminar imagen anterior si existe
     public function eliminarImagenAnterior()
     {
         if ($this->imagen_resultado && Storage::disk('public')->exists($this->imagen_resultado)) {
@@ -159,3 +159,4 @@ class Examenes extends ModeloBase
         }
     }
 }
+

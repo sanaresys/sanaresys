@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Servicio extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $fillable = [
         'nombre',
@@ -39,14 +39,14 @@ class Servicio extends ModeloBase
         return $this->hasMany(FacturaDetalle::class);
     }
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $casts = [
         'precio_unitario' => 'decimal:2',
     ];
 
 
-    // Métodos auxiliares
+    // MÃ©todos auxiliares
     public function calcularImpuesto(?float $subtotal = null): float
     {
         if ($this->es_exonerado === 'SI') {
@@ -55,7 +55,7 @@ class Servicio extends ModeloBase
 
         $monto = $subtotal ?? $this->precio_unitario;
 
-        // Solo usar el impuesto de la relación
+        // Solo usar el impuesto de la relaciÃ³n
         if ($this->impuesto && $this->impuesto->porcentaje > 0) {
             return ($monto * $this->impuesto->porcentaje) / 100;
         }
@@ -73,7 +73,7 @@ class Servicio extends ModeloBase
         return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected static function booted(): void
     {

@@ -151,16 +151,22 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         $roleAdminCentro = Role::firstOrCreate(['name' => 'administrador']);
-        $roleAdminCentro->givePermissionTo([
-            // VER
-            'ver medicos', 'ver pacientes', 'ver usuario', 'ver enfermedades', 'ver especialidad', 'ver recetas', 'ver consultas', 'ver citas', 'ver examenes', 'ver contratomedico', 'ver nomina', 'ver detallenomina',
-            // CREAR
-            'crear medicos', 'crear pacientes', 'crear usuario', 'crear recetas', 'crear consultas', 'crear citas', 'crear contratomedico', 'crear nomina', 'crear detallenomina',
-            // ACTUALIZAR
-            'actualizar medicos', 'actualizar pacientes', 'actualizar usuario', 'actualizar recetas', 'actualizar consultas', 'actualizar citas', 'actualizar examenes', 'actualizar contratomedico', 'actualizar nomina', 'actualizar detallenomina',
-            // BORRAR
-            'borrar medicos', 'borrar pacientes', 'borrar usuario', 'borrar recetas', 'borrar consultas', 'borrar citas', 'borrar contratomedico', 'borrar nomina', 'borrar detallenomina'
-        ]);
+        $adminRestrictedPermissions = [
+            // Catálogos y entidades reservadas al root/sistema central
+            'ver personas', 'crear personas', 'actualizar personas', 'borrar personas',
+            'ver nacionalidad', 'crear nacionalidad', 'actualizar nacionalidad', 'borrar nacionalidad',
+            'ver centromedico', 'crear centromedico', 'actualizar centromedico', 'borrar centromedico',
+            'ver medicocentromedico', 'crear medicocentromedico', 'actualizar medicocentromedico', 'borrar medicocentromedico',
+            'crear especialidad', 'actualizar especialidad', 'borrar especialidad',
+            'ver especialidadmedicos', 'crear especialidadmedicos', 'actualizar especialidadmedicos', 'borrar especialidadmedicos',
+        ];
+
+        $adminPermissions = Permission::query()
+            ->whereNotIn('name', $adminRestrictedPermissions)
+            ->pluck('name')
+            ->all();
+
+        $roleAdminCentro->syncPermissions($adminPermissions);
 
        
 

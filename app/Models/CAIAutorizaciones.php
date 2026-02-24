@@ -6,20 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Traits\TenantScoped;
 
 class CAIAutorizaciones extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'cai_autorizaciones';
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected string $tenantKeyName = 'centro_id';
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $fillable = [
         'rtn',
@@ -36,7 +35,7 @@ class CAIAutorizaciones extends ModeloBase
         'deleted_by',
     ];
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $casts = [
         'fecha_limite' => 'date',
@@ -64,7 +63,7 @@ class CAIAutorizaciones extends ModeloBase
             return $this->cantidad;
         }
         
-        // Los números disponibles son desde numero_actual hasta rango_final (inclusive)
+        // Los nÃºmeros disponibles son desde numero_actual hasta rango_final (inclusive)
         return max(0, $this->rango_final - $this->numero_actual + 1);
     }
 
@@ -77,8 +76,8 @@ class CAIAutorizaciones extends ModeloBase
             return 0;
         }
         
-        // Los números utilizados son desde rango_inicial hasta numero_actual - 1
-        // porque numero_actual apunta al SIGUIENTE número a usar
+        // Los nÃºmeros utilizados son desde rango_inicial hasta numero_actual - 1
+        // porque numero_actual apunta al SIGUIENTE nÃºmero a usar
         $utilizados = $this->numero_actual - $this->rango_inicial;
         return ($utilizados / $this->cantidad) * 100;
     }
@@ -96,7 +95,7 @@ class CAIAutorizaciones extends ModeloBase
 
         $this->increment('numero_actual');
         
-        // Verificar si se agotó
+        // Verificar si se agotÃ³
         if ($this->numero_actual > $this->rango_final) {
             $this->update(['estado' => 'AGOTADA']);
         }
@@ -104,7 +103,7 @@ class CAIAutorizaciones extends ModeloBase
         return true;
     }
 
-    // Agregar estos métodos al modelo CAIAutorizaciones existente
+    // Agregar estos mÃ©todos al modelo CAIAutorizaciones existente
 
     public function obtenerSiguienteNumero(): ?int
     {
@@ -123,7 +122,7 @@ class CAIAutorizaciones extends ModeloBase
 
         $this->increment('numero_actual');
         
-        // Verificar si se agotó
+        // Verificar si se agotÃ³
         if ($this->numero_actual > $this->rango_final) {
             $this->update(['estado' => 'AGOTADA']);
         }
@@ -138,13 +137,13 @@ class CAIAutorizaciones extends ModeloBase
             && $this->numero_actual <= $this->rango_final;
     }
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected static function booted(): void
     {
         parent::booted();
 
-        // ── 1. Al CREAR/ACTUALIZAR recalculamos «cantidad» ───────────────────────
+        // â”€â”€ 1. Al CREAR/ACTUALIZAR recalculamos Â«cantidadÂ» â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         static::saving(function ($model) {
             $model->cantidad = max(
                 0,
@@ -152,9 +151,9 @@ class CAIAutorizaciones extends ModeloBase
             );
         });
 
-        // ── 2. Cuando el número sube, verificamos agotado o vencido ──────────────
+        // â”€â”€ 2. Cuando el nÃºmero sube, verificamos agotado o vencido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         static::updated(function ($model) {
-            $model->refrescarEstado();   // método nuevo que vemos abajo
+            $model->refrescarEstado();   // mÃ©todo nuevo que vemos abajo
         });
 
                 static::creating(function ($model) {
@@ -174,7 +173,7 @@ class CAIAutorizaciones extends ModeloBase
         });
     }
 
-    /** Marca VENCIDA o AGOTADA según corresponda.  */
+    /** Marca VENCIDA o AGOTADA segÃºn corresponda.  */
     public function refrescarEstado(): void
     {
         $hoy      = now()->toDateString();
@@ -193,3 +192,4 @@ class CAIAutorizaciones extends ModeloBase
     }
 
 }
+

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TipoPago extends ModeloBase        
 {
     use HasFactory, SoftDeletes;       
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
     protected $fillable = [
         'nombre',
         'descripcion',
@@ -36,3 +36,4 @@ class TipoPago extends ModeloBase
         });
     }
 }
+

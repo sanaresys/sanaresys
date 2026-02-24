@@ -150,13 +150,16 @@
                 @if($availableCentros->count() > 0)
                     <div class="p-2">
                         @foreach($availableCentros as $centro)
-                            <a 
-                                href="{{ request()->url() }}?switch_centro={{ $centro->id }}"
+                            <form
+                                method="POST"
+                                action="{{ route('portal.root.enter-tenant', $centro) }}"
                                 class="block w-full px-3 py-3 mb-1 text-sm text-left rounded-lg transition-all duration-200 group
                                        {{ $centro->id == $selectedCentro 
                                           ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 ring-2 ring-primary-300 dark:ring-primary-600 shadow-sm' 
                                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-sm' }}"
                             >
+                                @csrf
+                                <button type="submit" class="w-full text-left">
                                 <div class="flex items-center justify-between">
                                     <div class="flex-1 min-w-0">
                                         <div class="font-medium truncate">
@@ -175,7 +178,8 @@
                                         </svg>
                                     @endif
                                 </div>
-                            </a>
+                                </button>
+                            </form>
                         @endforeach
                     </div>
                 @else

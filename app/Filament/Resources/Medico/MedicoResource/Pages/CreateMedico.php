@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class CreateMedico extends CreateRecord
 {
@@ -66,23 +67,24 @@ protected function handleRecordCreation(array $data): Model
 
             Log::info("Persona creada/actualizada", ['persona_id' => $persona->id, 'dni' => $persona->dni]);
 
-            // Multi-tenant: el médico se crea automáticamente en el tenant actual
-            // No es necesario obtener centro_id
-            $centro_id = 1; // Valor por defecto
-            
-            // Log para depuración
-            if (!isset($data['centro_id'])) {
-                Log::warning("No se encontró centro_id, usando valor por defecto: {$centro_id}");
-            }
+            // Solo resolver centro_id si la tabla todavía usa esa columna.
+            $centroId = tenancy()->initialized
+                ? tenancy()->tenant?->centro_id
+                : ($data['centro_id'] ?? auth()->user()?->centro_id);
 
             // Luego creamos el médico asociado
-            $medico = Medico::create([
+            $medicoData = [
                 'persona_id' => $persona->id,
                 'numero_colegiacion' => $data['numero_colegiacion'],
                 'horario_entrada' => $data['horario_entrada'],
                 'horario_salida' => $data['horario_salida'],
-                'centro_id' => $centro_id,
-            ]);
+            ];
+
+            if (Schema::hasColumn('medicos', 'centro_id')) {
+                $medicoData['centro_id'] = $centroId;
+            }
+
+            $medico = Medico::create($medicoData);
             
             // Si vamos a crear un contrato manualmente, asegurar que los valores puedan ser cero
             if (isset($data['salario_quincenal'])) {

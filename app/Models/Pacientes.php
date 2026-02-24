@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Pacientes extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $fillable = [
         'persona_id',
@@ -55,7 +55,7 @@ class Pacientes extends ModeloBase
         return $this->hasMany(Consulta::class, 'paciente_id');
     }
 
-    // Relación muchos a muchos con Enfermedade
+    // RelaciÃ³n muchos a muchos con Enfermedade
     public function enfermedades()
     {
         return $this->belongsToMany(

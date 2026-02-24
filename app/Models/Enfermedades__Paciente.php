@@ -12,7 +12,7 @@ class Enfermedades__Paciente extends ModeloBase
     /** @use HasFactory<\Database\Factories\EnfermedadesPacienteFactory> */
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'enfermedades_pacientes';
 
@@ -40,7 +40,7 @@ class Enfermedades__Paciente extends ModeloBase
         return $this->belongsTo(Enfermedade::class, 'enfermedad_id');
     }
 
-    // Relaciones para mostrar quién creó/editó
+    // Relaciones para mostrar quiÃ©n creÃ³/editÃ³
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

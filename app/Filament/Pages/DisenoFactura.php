@@ -19,8 +19,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 use App\Models\FacturaDiseno;
-use App\Models\Centros_Medico;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 
@@ -34,9 +32,9 @@ class DisenoFactura extends Page implements HasForms
     }
 
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
-    protected static ?string $navigationLabel = 'Diseño de Facturas';
-    protected static ?string $title = 'Configuración de Diseño de Facturas';
-    protected static ?string $navigationGroup = 'Configuración';
+    protected static ?string $navigationLabel = 'DiseÃ±o de Facturas';
+    protected static ?string $title = 'ConfiguraciÃ³n de DiseÃ±o de Facturas';
+    protected static ?string $navigationGroup = 'ConfiguraciÃ³n';
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.diseno-factura';
@@ -79,15 +77,9 @@ class DisenoFactura extends Page implements HasForms
 
     protected function loadFacturaDisenoData(): void
     {
-        $user = Auth::user();
-        $centroId = session('current_centro_id') ?? $user->centro_id;
-        
-        // Si no hay centro, usar el primer centro disponible
-        if (!$centroId) {
-            $centroId = Centros_Medico::first()?->id;
-        }
+        $centroId = $this->getCurrentTenantCentroId();
 
-        // Buscar diseño existente para el centro
+        // Buscar diseÃ±o existente para el centro
         $diseno = FacturaDiseno::where('centro_id', $centroId)
             ->where('activo', true)
             ->first();
@@ -98,8 +90,8 @@ class DisenoFactura extends Page implements HasForms
             // Valores por defecto
             $this->data = [
                 'centro_id' => $centroId,
-                'nombre' => 'Diseño Principal',
-                'descripcion' => 'Diseño principal de facturas para el centro médico',
+                'nombre' => 'DiseÃ±o Principal',
+                'descripcion' => 'DiseÃ±o principal de facturas para el centro mÃ©dico',
                 'activo' => true,
                 'es_predeterminado' => true,
                 
@@ -113,18 +105,18 @@ class DisenoFactura extends Page implements HasForms
                 'color_texto_primario' => '#374151',
                 'color_fondo_secundario' => '#f9fafb',
                 
-                // Tipografía
+                // TipografÃ­a
                 'fuente_titulo' => 'Arial Black',
                 'fuente_texto' => 'Arial',
-                'tamaño_titulo' => 18,
-                'tamaño_texto' => 12,
-                'tamaño_subtitulo' => 14,
+                'tamaÃ±o_titulo' => 18,
+                'tamaÃ±o_texto' => 12,
+                'tamaÃ±o_subtitulo' => 14,
                 
                 // Logo
                 'mostrar_logo' => true,
                 'posicion_logo' => 'izquierda',
-                'tamaño_logo_ancho' => 120,
-                'tamaño_logo_alto' => 80,
+                'tamaÃ±o_logo_ancho' => 120,
+                'tamaÃ±o_logo_alto' => 80,
                 
                 // Elementos de la factura
                 'mostrar_titulo_factura' => true,
@@ -133,7 +125,7 @@ class DisenoFactura extends Page implements HasForms
                 'mostrar_fecha_emision' => true,
                 'mostrar_fecha_vencimiento' => false,
                 
-                // Información del centro
+                // InformaciÃ³n del centro
                 'mostrar_info_centro' => true,
                 'mostrar_direccion_centro' => true,
                 'mostrar_telefono_centro' => true,
@@ -145,13 +137,13 @@ class DisenoFactura extends Page implements HasForms
                 'mostrar_rango_cai' => true,
                 'mostrar_fecha_limite_cai' => true,
                 
-                // Información del paciente
+                // InformaciÃ³n del paciente
                 'mostrar_info_paciente' => true,
                 'mostrar_direccion_paciente' => true,
                 'mostrar_telefono_paciente' => true,
                 'mostrar_rtn_paciente' => true,
                 
-                // Médico
+                // MÃ©dico
                 'mostrar_medico' => true,
                 'mostrar_email' => true,
                 
@@ -173,7 +165,7 @@ class DisenoFactura extends Page implements HasForms
                 'posicion_totales' => 'derecha',
                 'resaltar_total' => true,
                 
-                // Pie de página
+                // Pie de pÃ¡gina
                 'mostrar_pie_pagina' => true,
                 'texto_pie_pagina' => 'Gracias por su preferencia',
                 'mostrar_firma_medico' => false,
@@ -199,37 +191,37 @@ class DisenoFactura extends Page implements HasForms
     protected function getFacturaDisenoFormSchema(): array
     {
         return [
-            Section::make('Información Básica')
-                ->description('Configuración básica del diseño')
+            Section::make('InformaciÃ³n BÃ¡sica')
+                ->description('ConfiguraciÃ³n bÃ¡sica del diseÃ±o')
                 ->schema([
                     Grid::make(2)->schema([
                         TextInput::make('nombre')
-                            ->label('Nombre del Diseño')
+                            ->label('Nombre del DiseÃ±o')
                             ->required()
                             ->maxLength(255)
-                            ->default('Diseño Principal'),
+                            ->default('DiseÃ±o Principal'),
                         
                         TextInput::make('descripcion')
-                            ->label('Descripción')
+                            ->label('DescripciÃ³n')
                             ->maxLength(500)
-                            ->default('Diseño principal de facturas para el centro médico'),
+                            ->default('DiseÃ±o principal de facturas para el centro mÃ©dico'),
                     ]),
                     
                     Grid::make(2)->schema([
                         Toggle::make('activo')
                             ->label('Activo')
                             ->default(true)
-                            ->helperText('Activar o desactivar este diseño'),
+                            ->helperText('Activar o desactivar este diseÃ±o'),
                         
                         Toggle::make('es_predeterminado')
-                            ->label('Diseño Predeterminado')
+                            ->label('DiseÃ±o Predeterminado')
                             ->default(true)
-                            ->helperText('Usar como diseño por defecto'),
+                            ->helperText('Usar como diseÃ±o por defecto'),
                     ]),
                 ])
                 ->collapsible(),
 
-            Section::make('Colores del Diseño')
+            Section::make('Colores del DiseÃ±o')
                 ->description('Personaliza la paleta de colores de la factura')
                 ->schema([
                     Grid::make(4)->schema([
@@ -261,9 +253,9 @@ class DisenoFactura extends Page implements HasForms
                             ->helperText('Color de los bordes de tabla'),
                         
                         ColorPicker::make('color_titulo')
-                            ->label('Color de Títulos')
+                            ->label('Color de TÃ­tulos')
                             ->default('#1f2937')
-                            ->helperText('Color específico para títulos'),
+                            ->helperText('Color especÃ­fico para tÃ­tulos'),
                         
                         ColorPicker::make('color_texto_primario')
                             ->label('Color Texto Primario')
@@ -278,12 +270,12 @@ class DisenoFactura extends Page implements HasForms
                 ])
                 ->collapsible(),
 
-            Section::make('Tipografía')
-                ->description('Configuración de fuentes y tamaños de texto')
+            Section::make('TipografÃ­a')
+                ->description('ConfiguraciÃ³n de fuentes y tamaÃ±os de texto')
                 ->schema([
                     Grid::make(2)->schema([
                         Select::make('fuente_titulo')
-                            ->label('Fuente para Títulos')
+                            ->label('Fuente para TÃ­tulos')
                             ->options([
                                 'Arial' => 'Arial',
                                 'Arial Black' => 'Arial Black',
@@ -312,24 +304,24 @@ class DisenoFactura extends Page implements HasForms
                     ]),
                     
                     Grid::make(3)->schema([
-                        TextInput::make('tamaño_titulo')
-                            ->label('Tamaño Título (px)')
+                        TextInput::make('tamaÃ±o_titulo')
+                            ->label('TamaÃ±o TÃ­tulo (px)')
                             ->numeric()
                             ->default(18)
                             ->minValue(10)
                             ->maxValue(30)
                             ->suffix('px'),
                         
-                        TextInput::make('tamaño_subtitulo')
-                            ->label('Tamaño Subtítulo (px)')
+                        TextInput::make('tamaÃ±o_subtitulo')
+                            ->label('TamaÃ±o SubtÃ­tulo (px)')
                             ->numeric()
                             ->default(14)
                             ->minValue(8)
                             ->maxValue(24)
                             ->suffix('px'),
                         
-                        TextInput::make('tamaño_texto')
-                            ->label('Tamaño Texto (px)')
+                        TextInput::make('tamaÃ±o_texto')
+                            ->label('TamaÃ±o Texto (px)')
                             ->numeric()
                             ->default(12)
                             ->minValue(8)
@@ -340,7 +332,7 @@ class DisenoFactura extends Page implements HasForms
                 ->collapsible(),
 
             Section::make('Logo y Encabezado')
-                ->description('Configuración del logo y elementos del encabezado')
+                ->description('ConfiguraciÃ³n del logo y elementos del encabezado')
                 ->schema([
                     Grid::make(2)->schema([
                         Toggle::make('mostrar_logo')
@@ -349,7 +341,7 @@ class DisenoFactura extends Page implements HasForms
                             ->reactive(),
                         
                         Select::make('posicion_logo')
-                            ->label('Posición del Logo')
+                            ->label('PosiciÃ³n del Logo')
                             ->options([
                                 'izquierda' => 'Izquierda',
                                 'centro' => 'Centro',
@@ -360,7 +352,7 @@ class DisenoFactura extends Page implements HasForms
                     ]),
                     
                     Grid::make(2)->schema([
-                        TextInput::make('tamaño_logo_ancho')
+                        TextInput::make('tamaÃ±o_logo_ancho')
                             ->label('Ancho del Logo (px)')
                             ->numeric()
                             ->default(120)
@@ -369,7 +361,7 @@ class DisenoFactura extends Page implements HasForms
                             ->suffix('px')
                             ->visible(fn ($get) => $get('mostrar_logo')),
                         
-                        TextInput::make('tamaño_logo_alto')
+                        TextInput::make('tamaÃ±o_logo_alto')
                             ->label('Alto del Logo (px)')
                             ->numeric()
                             ->default(80)
@@ -382,25 +374,25 @@ class DisenoFactura extends Page implements HasForms
                 ->collapsible(),
 
             Section::make('Elementos de la Factura')
-                ->description('Selecciona qué elementos mostrar en la factura')
+                ->description('Selecciona quÃ© elementos mostrar en la factura')
                 ->schema([
                     Grid::make(3)->schema([
                         Toggle::make('mostrar_titulo_factura')
-                            ->label('Mostrar Título "FACTURA"')
+                            ->label('Mostrar TÃ­tulo "FACTURA"')
                             ->default(true)
                             ->reactive(),
                         
                         Toggle::make('mostrar_numero_factura')
-                            ->label('Mostrar Número de Factura')
+                            ->label('Mostrar NÃºmero de Factura')
                             ->default(true),
                         
                         Toggle::make('mostrar_fecha_emision')
-                            ->label('Mostrar Fecha de Emisión')
+                            ->label('Mostrar Fecha de EmisiÃ³n')
                             ->default(true),
                     ]),
                     
                     TextInput::make('texto_titulo_factura')
-                        ->label('Texto del Título')
+                        ->label('Texto del TÃ­tulo')
                         ->default('FACTURA')
                         ->visible(fn ($get) => $get('mostrar_titulo_factura')),
                     
@@ -410,14 +402,14 @@ class DisenoFactura extends Page implements HasForms
                             ->default(false),
                         
                         Toggle::make('mostrar_cai')
-                            ->label('Mostrar Información CAI')
+                            ->label('Mostrar InformaciÃ³n CAI')
                             ->default(true),
                     ]),
                 ])
                 ->collapsible(),
 
-            Section::make('Información del Centro Médico')
-                ->description('Configurar qué información del centro mostrar')
+            Section::make('InformaciÃ³n del Centro MÃ©dico')
+                ->description('Configurar quÃ© informaciÃ³n del centro mostrar')
                 ->schema([
                     Grid::make(3)->schema([
                         Toggle::make('mostrar_info_centro')
@@ -426,12 +418,12 @@ class DisenoFactura extends Page implements HasForms
                             ->reactive(),
                         
                         Toggle::make('mostrar_direccion_centro')
-                            ->label('Mostrar Dirección')
+                            ->label('Mostrar DirecciÃ³n')
                             ->default(true)
                             ->visible(fn ($get) => $get('mostrar_info_centro')),
                         
                         Toggle::make('mostrar_telefono_centro')
-                            ->label('Mostrar Teléfono')
+                            ->label('Mostrar TelÃ©fono')
                             ->default(true)
                             ->visible(fn ($get) => $get('mostrar_info_centro')),
                     ]),
@@ -440,8 +432,8 @@ class DisenoFactura extends Page implements HasForms
                 ])
                 ->collapsible(),
 
-            Section::make('Información del Paciente')
-                ->description('Configurar qué información del paciente mostrar')
+            Section::make('InformaciÃ³n del Paciente')
+                ->description('Configurar quÃ© informaciÃ³n del paciente mostrar')
                 ->schema([
                     Grid::make(3)->schema([
                         Toggle::make('mostrar_info_paciente')
@@ -450,12 +442,12 @@ class DisenoFactura extends Page implements HasForms
                             ->reactive(),
                         
                         Toggle::make('mostrar_direccion_paciente')
-                            ->label('Mostrar Dirección')
+                            ->label('Mostrar DirecciÃ³n')
                             ->default(true)
                             ->visible(fn ($get) => $get('mostrar_info_paciente')),
                         
                         Toggle::make('mostrar_telefono_paciente')
-                            ->label('Mostrar Teléfono')
+                            ->label('Mostrar TelÃ©fono')
                             ->default(true)
                             ->visible(fn ($get) => $get('mostrar_info_paciente')),
                     ]),
@@ -467,14 +459,14 @@ class DisenoFactura extends Page implements HasForms
                             ->visible(fn ($get) => $get('mostrar_info_paciente')),
                         
                         Toggle::make('mostrar_medico')
-                            ->label('Mostrar Información del Médico')
+                            ->label('Mostrar InformaciÃ³n del MÃ©dico')
                             ->default(true),
                     ]),
                 ])
                 ->collapsible(),
 
             Section::make('Tabla de Servicios')
-                ->description('Configuración de la tabla de servicios/productos')
+                ->description('ConfiguraciÃ³n de la tabla de servicios/productos')
                 ->schema([
                     Toggle::make('mostrar_tabla_servicios')
                         ->label('Mostrar Tabla de Servicios')
@@ -488,7 +480,7 @@ class DisenoFactura extends Page implements HasForms
                             ->visible(fn ($get) => $get('mostrar_tabla_servicios')),
                         
                         Toggle::make('mostrar_columna_descripcion')
-                            ->label('Columna Descripción')
+                            ->label('Columna DescripciÃ³n')
                             ->default(true)
                             ->visible(fn ($get) => $get('mostrar_tabla_servicios')),
                         
@@ -523,8 +515,8 @@ class DisenoFactura extends Page implements HasForms
                 ])
                 ->collapsible(),
 
-            Section::make('Totales y Cálculos')
-                ->description('Configuración de la sección de totales')
+            Section::make('Totales y CÃ¡lculos')
+                ->description('ConfiguraciÃ³n de la secciÃ³n de totales')
                 ->schema([
                     Grid::make(4)->schema([
                         Toggle::make('mostrar_subtotal')
@@ -546,7 +538,7 @@ class DisenoFactura extends Page implements HasForms
                     
                     Grid::make(2)->schema([
                         Select::make('posicion_totales')
-                            ->label('Posición de Totales')
+                            ->label('PosiciÃ³n de Totales')
                             ->options([
                                 'derecha' => 'Derecha',
                                 'izquierda' => 'Izquierda',
@@ -562,23 +554,23 @@ class DisenoFactura extends Page implements HasForms
                 ])
                 ->collapsible(),
 
-            Section::make('Pie de Página')
-                ->description('Configuración del pie de página de la factura')
+            Section::make('Pie de PÃ¡gina')
+                ->description('ConfiguraciÃ³n del pie de pÃ¡gina de la factura')
                 ->schema([
                     Toggle::make('mostrar_pie_pagina')
-                        ->label('Mostrar Pie de Página')
+                        ->label('Mostrar Pie de PÃ¡gina')
                         ->default(true)
                         ->reactive(),
                     
                     Textarea::make('texto_pie_pagina')
-                        ->label('Texto del Pie de Página')
+                        ->label('Texto del Pie de PÃ¡gina')
                         ->default('Gracias por su preferencia')
                         ->rows(2)
                         ->visible(fn ($get) => $get('mostrar_pie_pagina')),
                     
                     Grid::make(2)->schema([
                         Toggle::make('mostrar_firma_medico')
-                            ->label('Mostrar Firma del Médico')
+                            ->label('Mostrar Firma del MÃ©dico')
                             ->default(false),
                         
                         Toggle::make('mostrar_sello_centro')
@@ -590,7 +582,7 @@ class DisenoFactura extends Page implements HasForms
 
 
             Section::make('Estados y Pagos')
-                ->description('Configuración para estados de factura y historial de pagos')
+                ->description('ConfiguraciÃ³n para estados de factura y historial de pagos')
                 ->schema([
                     Grid::make(3)->schema([
                         Toggle::make('mostrar_historial_pagos')
@@ -614,15 +606,11 @@ class DisenoFactura extends Page implements HasForms
     {
         try {
             $data = $this->form->getState();
-            
-            $centroId = session('current_centro_id') ?? Auth::user()->centro_id;
-            if (!$centroId) {
-                $centroId = Centros_Medico::first()?->id;
-            }
+            $centroId = $this->getCurrentTenantCentroId();
             
             $data['centro_id'] = $centroId;
             
-            // Buscar diseño existente
+            // Buscar diseÃ±o existente
             $diseno = FacturaDiseno::where('centro_id', $centroId)
                 ->where('activo', true)
                 ->first();
@@ -634,13 +622,13 @@ class DisenoFactura extends Page implements HasForms
             }
             
             Notification::make()
-                ->title('Diseño guardado exitosamente')
+                ->title('DiseÃ±o guardado exitosamente')
                 ->success()
                 ->send();
                 
         } catch (Exception $e) {
             Notification::make()
-                ->title('Error al guardar el diseño')
+                ->title('Error al guardar el diseÃ±o')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -654,13 +642,13 @@ class DisenoFactura extends Page implements HasForms
             $this->form->fill($this->data);
             
             Notification::make()
-                ->title('Diseño restaurado a valores por defecto')
+                ->title('DiseÃ±o restaurado a valores por defecto')
                 ->success()
                 ->send();
                 
         } catch (Exception $e) {
             Notification::make()
-                ->title('Error al restaurar diseño')
+                ->title('Error al restaurar diseÃ±o')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -689,9 +677,20 @@ class DisenoFactura extends Page implements HasForms
                 ->color('gray')
                 ->icon('heroicon-o-arrow-path')
                 ->requiresConfirmation()
-                ->modalHeading('Restaurar diseño por defecto')
-                ->modalDescription('¿Estás seguro de que quieres restaurar el diseño a los valores por defecto? Se perderán todos los cambios no guardados.')
-                ->modalSubmitActionLabel('Sí, restaurar'),
+                ->modalHeading('Restaurar diseÃ±o por defecto')
+                ->modalDescription('Â¿EstÃ¡s seguro de que quieres restaurar el diseÃ±o a los valores por defecto? Se perderÃ¡n todos los cambios no guardados.')
+                ->modalSubmitActionLabel('SÃ­, restaurar'),
         ];
     }
+    protected function getCurrentTenantCentroId(): int
+    {
+        $centroId = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
+
+        if (! $centroId) {
+            throw new \RuntimeException('No hay tenant inicializado para gestionar el diseno de factura.');
+        }
+
+        return (int) $centroId;
+    }
+
 }

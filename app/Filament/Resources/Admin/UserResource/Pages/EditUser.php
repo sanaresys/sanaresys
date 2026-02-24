@@ -6,6 +6,7 @@ use App\Filament\Resources\Admin\UserResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class EditUser extends EditRecord
 {
@@ -46,6 +47,11 @@ class EditUser extends EditRecord
         // Preparar datos del usuario
         $userData = collect($data)->except('persona')->toArray();
         $userData['updated_by'] = auth()->id();
+
+        // En tenant moderno users.centro_id no existe.
+        if (! $this->tableHasColumn('users', 'centro_id')) {
+            unset($userData['centro_id']);
+        }
         
         // Actualizar el usuario
         $record->update($userData);
@@ -56,5 +62,14 @@ class EditUser extends EditRecord
         }
         
         return $record;
+    }
+
+    protected function tableHasColumn(string $table, string $column): bool
+    {
+        try {
+            return Schema::hasColumn($table, $column);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

@@ -20,10 +20,17 @@ class Centros_Medico extends ModeloBase
 
     protected $fillable = [
         'nombre_centro',
+        'slug',
+        'tenancy_mode',
+        'onboarding_completed_at',
         'direccion',
         'telefono',
         'rtn',
         'fotografia',
+    ];
+
+    protected $casts = [
+        'onboarding_completed_at' => 'datetime',
     ];
 
     public function centro_medico_medico() {
@@ -42,6 +49,15 @@ class Centros_Medico extends ModeloBase
     public function getNombreAttribute()
     {
         return $this->nombre_centro ?? 'Sin nombre';
+    }
+
+    protected static function booted()
+    {
+        static::creating(function (self $centro) {
+            if (! $centro->tenancy_mode) {
+                $centro->tenancy_mode = 'legacy';
+            }
+        });
     }
 
     // Método para usar en selects de Filament

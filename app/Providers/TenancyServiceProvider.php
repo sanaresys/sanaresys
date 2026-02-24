@@ -25,7 +25,7 @@ class TenancyServiceProvider extends ServiceProvider
             Events\CreatingTenant::class => [],
             Events\TenantCreated::class => [
                 JobPipeline::make([
-                    Jobs\CreateDatabase::class,
+                    \App\Jobs\Tenancy\CreateDatabaseIfNotExists::class,
                     Jobs\MigrateDatabase::class,
                     // Jobs\SeedDatabase::class,
                 ])->send(function (Events\TenantCreated $event) {

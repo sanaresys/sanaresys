@@ -12,17 +12,16 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\CheckboxList;
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Centros_Medico;
 
 
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'Gestión de Seguridad';
+    protected static ?string $navigationGroup = 'GestiÃ³n de Seguridad';
     protected static ?string $navigationLabel = 'Roles';
     protected static ?string $label = 'Rol';
     protected static ?string $pluralLabel = 'Roles';
@@ -31,7 +30,7 @@ class RoleResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información Básica')
+                Forms\Components\Section::make('InformaciÃ³n BÃ¡sica')
                     ->schema([
                         TextInput::make('name')
                             ->label('Nombre del Rol')
@@ -40,7 +39,7 @@ class RoleResource extends Resource
                             ->rules([
                                 function() {
                                     return function($attribute, $value, $fail) {
-                                        // Multi-tenant: validación en el contexto del tenant
+                                        // Multi-tenant: validaciÃ³n en el contexto del tenant
                                         $exists = Role::where('name', $value)
                                             ->where('guard_name', 'web')
                                             ->where('id', '!=', request()->route('record'))
@@ -102,19 +101,11 @@ class RoleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Nombre')->searchable(),
-                TextColumn::make('centro_id')
-                    ->label('Centro Médico')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: false)
-                    ->formatStateUsing(function ($state) {
-                        $centro = Centros_Medico::find($state);
-                        return $centro ? $centro->nombre_centro : 'N/A';
-                    }),
                 TextColumn::make('guard_name')->label('Guard'),
                 TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y H:i'),
             ])
             ->filters([
-                // Puedes agregar filtros personalizados aquí
+                // Puedes agregar filtros personalizados aquÃ­
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

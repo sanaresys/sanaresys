@@ -8,6 +8,7 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Medico;
 use App\Models\ContabilidadMedica\ContratoMedico;
 
@@ -167,8 +168,11 @@ class EditMedico extends EditRecord
                 'fecha_fin' => isset($data['fecha_fin']) && $data['fecha_fin'] ? $data['fecha_fin'] : null,
                 'activo' => $data['activo'] ?? true,
                 'observaciones' => $data['observaciones_contrato'] ?? null,
-                'centro_id' => $record->centro_id,
             ];
+
+            if (Schema::hasColumn('contratos_medicos', 'centro_id')) {
+                $contratoData['centro_id'] = $record->centro_id ?? tenancy()->tenant?->centro_id;
+            }
 
             // Buscar contrato activo existente o crear uno nuevo
             $contrato = $record->contratoActivo;
@@ -189,14 +193,19 @@ class EditMedico extends EditRecord
             if (isset($data['username']) && isset($data['user_email']) && isset($data['user_password']) &&
                 !empty($data['username']) && !empty($data['user_email']) && !empty($data['user_password'])) {
                 try {
-                    $nuevoUsuario = \App\Models\User::create([
+                    $userData = [
                         'name' => $data['username'],
                         'email' => $data['user_email'],
                         'password' => Hash::make($data['user_password']),
                         'persona_id' => $record->persona->id,
-                        'centro_id' => $record->centro_id,
                         'email_verified_at' => $data['user_active'] ? now() : null,
-                    ]);
+                    ];
+
+                    if (Schema::hasColumn('users', 'centro_id')) {
+                        $userData['centro_id'] = $record->centro_id ?? tenancy()->tenant?->centro_id;
+                    }
+
+                    $nuevoUsuario = \App\Models\User::create($userData);
 
                     // Asignar rol
                     $nuevoUsuario->assignRole($data['user_role'] ?? 'medico');

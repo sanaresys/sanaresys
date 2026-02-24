@@ -32,9 +32,6 @@ class TestPermissionsFunctionality extends Command
             $q->where('name', 'medico');
         })->first();
 
-        // Establecer centro para evitar errores de tenant
-        session(['current_centro_id' => 1]);
-
         // Test para ROOT
         if ($root) {
             $this->info('1. PERMISOS DEL ROOT:');

@@ -23,6 +23,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'id',
         'centro_id',
         'data',
+        'tenancy_db_name',
+        'tenancy_primary_domain',
+        'tenancy_mode',
     ];
 
     /**
@@ -71,5 +74,22 @@ class Tenant extends BaseTenant implements TenantWithDatabase
      */
     public function getDatabaseName(): string
     {
-        return $this->id;    }
+        return $this->getInternal('db_name') ?? $this->id;
+    }
+
+    public function getPrimaryDomain(): ?string
+    {
+        return $this->getInternal('primary_domain')
+            ?? $this->domains()->orderBy('id')->value('domain');
+    }
+
+    public function isDomainMode(): bool
+    {
+        return $this->getTenancyMode() === 'domain';
+    }
+
+    public function getTenancyMode(): string
+    {
+        return (string) ($this->getInternal('mode') ?? 'legacy');
+    }
 }

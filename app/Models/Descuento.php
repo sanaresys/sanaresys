@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Descuento extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $fillable = [
         'nombre',
@@ -23,7 +23,7 @@ class Descuento extends ModeloBase
         'deleted_by',
     ];
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $dates = [
         'aplica_desde',
@@ -38,7 +38,7 @@ class Descuento extends ModeloBase
         return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
 
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected static function booted(): void
     {

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\TenantScoped;
 use App\Models\ModeloBase;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +14,6 @@ class Nomina extends ModeloBase
 {
     use HasFactory;
     use SoftDeletes;
-    use TenantScoped;
 
     protected $table = 'nominas';
 
@@ -156,9 +154,6 @@ class Nomina extends ModeloBase
         static::creating(function ($model) {
             if (!$model->created_by && Auth::check()) {
                 $model->created_by = Auth::id();
-            }
-            if (!$model->centro_id && Auth::check() && Auth::user()->centro) {
-                $model->centro_id = Auth::user()->centro->id;
             }
         });
     }

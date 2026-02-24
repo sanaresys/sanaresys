@@ -105,7 +105,7 @@ class PersonaResource extends Resource
     {
         return [
             'index' => Pages\ListPersonas::route('/'),
-            'create' => Pages\CreatePersona::route('/create'),
+            'create' => Pages\CreatePersonaTenant::route('/create'),
             'edit' => Pages\EditPersona::route('/{record}/edit'),
         ];
     }

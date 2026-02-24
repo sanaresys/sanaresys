@@ -12,7 +12,7 @@ class Consulta extends ModeloBase
     /** @use HasFactory<\Database\Factories\ConsultaFactory> */
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $table = 'consultas';
     protected $fillable = [
@@ -48,7 +48,7 @@ class Consulta extends ModeloBase
     {
         return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
-    // AGREGAR ESTA RELACIÓN:
+    // AGREGAR ESTA RELACIÃ“N:
     public function servicios(): HasMany
     {
         return $this->hasMany(FacturaDetalle::class, 'consulta_id')
@@ -71,3 +71,4 @@ class Consulta extends ModeloBase
         return $this->hasMany(Examenes::class, 'consulta_id');
     }
 }
+

@@ -13,7 +13,7 @@ class Factura extends ModeloBase
 {
     use HasFactory;
     use SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
 
     protected $fillable = [
         'paciente_id',
@@ -112,18 +112,18 @@ class Factura extends ModeloBase
         return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
 
-    // Accessor para número de factura
+    // Accessor para nÃºmero de factura
     public function getNumeroFacturaAttribute(): string
     {
         if ($this->usa_cai && $this->caiCorrelativo) {
             return $this->caiCorrelativo->numero_factura;
         }
         
-        // Para facturas sin CAI, generar número simple
+        // Para facturas sin CAI, generar nÃºmero simple
         return $this->generarNumeroSinCAI();
     }
 
-    // Accessor para código CAI
+    // Accessor para cÃ³digo CAI
     public function getCodigoCaiAttribute(): ?string
     {
         return $this->usa_cai && $this->caiAutorizacion 
@@ -133,7 +133,7 @@ class Factura extends ModeloBase
 
     public function generarNumeroSinCAI(): string
     {
-        // Obtener el último número de factura sin CAI del centro actual
+        // Obtener el Ãºltimo nÃºmero de factura sin CAI del centro actual
         $ultimaFactura = static::where('usa_cai', false)
             ->orderBy('id', 'desc')
             ->first();
@@ -159,7 +159,7 @@ class Factura extends ModeloBase
         parent::booted();
 
         static::creating(function (self $factura) {
-            // Establecer centro y auditoría
+            // Establecer centro y auditorÃ­a
             if (Auth::check()) {
                 $factura->centro_id ??= Auth::user()->centro_id;
                 $factura->created_by ??= Auth::id();
@@ -208,12 +208,12 @@ class Factura extends ModeloBase
         });
 
         static::created(function (self $factura) {
-            // NO crear cuenta por cobrar automáticamente
-            // Se creará después cuando sea necesario (si queda saldo pendiente)
+            // NO crear cuenta por cobrar automÃ¡ticamente
+            // Se crearÃ¡ despuÃ©s cuando sea necesario (si queda saldo pendiente)
         });
     }
 
-    // Métodos de pago
+    // MÃ©todos de pago
     public function montoPagado(): float
     {
         return $this->pagos()
@@ -327,7 +327,7 @@ class Factura extends ModeloBase
     }
 
     /**
-     * Verificar si la factura está completamente pagada
+     * Verificar si la factura estÃ¡ completamente pagada
      */
     public function estaPagada(): bool
     {

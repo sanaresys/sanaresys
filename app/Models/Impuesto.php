@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Impuesto extends ModeloBase
 {
     use HasFactory, SoftDeletes;
-    // TenantScoped NO se usa - el contexto del tenant define el centro
+    // El contexto tenant define el centro
     
     protected $fillable = [
         'nombre',

@@ -106,24 +106,10 @@ class User extends Authenticatable
         if ($this->hasRole('root')) {
             return true;
         }
-        
-        // Usuarios normales solo pueden acceder a su centro asignado
-        return $this->centro_id == $centroId;
-    }
 
-    /**
-     * Establece el tenant actual para el usuario
-     */
-    public function switchToTenant($centroId): bool
-    {
-        if (!$this->canAccessCentro($centroId)) {
-            return false;
-        }
-
-        $tenant = \App\Models\Tenant::where('centro_id', $centroId)->first();
-        if ($tenant) {
-            $tenant->makeCurrent();
-            return true;
+        // En modo domain-only solo existe acceso por tenant inicializado.
+        if (function_exists('tenancy') && tenancy()->initialized && tenancy()->tenant?->centro_id) {
+            return (int) tenancy()->tenant->centro_id === (int) $centroId;
         }
 
         return false;
@@ -135,10 +121,19 @@ class User extends Authenticatable
     public function getAccessibleCentros()
     {
         if ($this->hasRole('root')) {
-            return \App\Models\Centros_Medico::all();
+            return \App\Models\Centros_Medico::query()
+                ->where('tenancy_mode', 'domain')
+                ->orderBy('nombre_centro')
+                ->get();
         }
-        
-        return \App\Models\Centros_Medico::where('id', $this->centro_id)->get();
+
+        if (function_exists('tenancy') && tenancy()->initialized && tenancy()->tenant?->centro_id) {
+            return \App\Models\Centros_Medico::query()
+                ->where('id', tenancy()->tenant->centro_id)
+                ->get();
+        }
+
+        return collect();
     }
 
     /**
