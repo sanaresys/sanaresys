@@ -11,6 +11,9 @@ Route::middleware(['web', 'central.domain'])->group(function () {
     Route::post('/registro-clinica', [ClinicRegistrationController::class, 'store'])
         ->name('clinica.registro.store');
 
+    Route::get('/registro-clinica/exito', [ClinicRegistrationController::class, 'success'])
+        ->name('clinica.registro.exito');
+
     Route::middleware(['auth'])->group(function () {
         Route::get('/portal/root', [RootPortalController::class, 'index'])
             ->name('portal.root');

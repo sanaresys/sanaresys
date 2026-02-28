@@ -17,6 +17,19 @@ class ClinicRegistrationController extends Controller
         return view('registro-clinica');
     }
 
+    public function success(Request $request)
+    {
+        $domain   = $request->query('domain');
+        $clinic   = $request->query('clinic');
+        $redirect = $request->query('redirect');
+
+        if (!$domain || !$redirect) {
+            return redirect()->route('clinica.registro');
+        }
+
+        return view('registro-clinica-exito', compact('domain', 'clinic', 'redirect'));
+    }
+
     public function store(
         Request $request,
         TenantIdentityService $identityService,
@@ -75,7 +88,11 @@ class ClinicRegistrationController extends Controller
                 'admin_user_id' => $result->adminUserId,
             ]);
 
-            return redirect()->away($target);
+            return redirect()->route('clinica.registro.exito', [
+                'domain' => $result->primaryDomain,
+                'clinic'  => $validated['nombre_centro'],
+                'redirect' => $target,
+            ]);
         } catch (\Throwable $e) {
             Log::error('Error en onboarding de clinica.', [
                 'centro_id' => $centro->id,

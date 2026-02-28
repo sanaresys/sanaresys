@@ -177,6 +177,10 @@
                     <h1 class="text-2xl font-bold text-gray-800">Sanare</h1>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <a href="{{ route('clinica.registro') }}" 
+                       class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition duration-300 shadow-md hover:shadow-lg">
+                        <i class="fas fa-clinic-medical mr-2"></i>Registrar Clínica
+                    </a>
                     <a href="{{ route('filament.admin.auth.login') }}" 
                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition duration-300 shadow-md hover:shadow-lg">
                         <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
@@ -281,6 +285,13 @@
                    class="inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
                     <i class="fas fa-stethoscope mr-3"></i>
                     Acceder al Sistema
+                    <i class="fas fa-arrow-right ml-3"></i>
+                </a>
+
+                <a href="{{ route('clinica.registro') }}" 
+                   class="inline-flex items-center bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 mt-4 sm:mt-0 sm:ml-4">
+                    <i class="fas fa-clinic-medical mr-3"></i>
+                    Registrar mi Clínica
                     <i class="fas fa-arrow-right ml-3"></i>
                 </a>
             </div>

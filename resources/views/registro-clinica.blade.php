@@ -15,6 +15,8 @@
         .error { color: #b91c1c; font-size: 13px; margin-top: 4px; }
         .btn { border: 0; background: #0f766e; color: white; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .helper { color: #4b5563; font-size: 13px; margin-bottom: 16px; }
+        .btn-cancel { display: inline-block; text-decoration: none; background: #dc2626; color: #fff; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: background 0.2s; }
+        .btn-cancel:hover { background: #b91c1c; }
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -74,8 +76,9 @@
             </div>
         </div>
 
-        <div style="margin-top: 16px;">
+        <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
             <button class="btn" type="submit">Crear clínica</button>
+            <a href="{{ url('/') }}" class="btn-cancel">Cancelar</a>
         </div>
     </form>
 </div>
