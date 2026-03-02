@@ -89,7 +89,8 @@ class CuentasPorCobrar extends Model
         parent::booted();
 
         static::creating(function ($model) {
-            if (Auth::check() && empty($model->centro_id)) {
+            // Solo agregar centro_id si NO estamos en contexto de tenant
+            if (!tenancy()->initialized && Auth::check() && empty($model->centro_id)) {
                 $user = Auth::user();
                 if ($user && isset($user->centro_id)) {
                     $model->centro_id = $user->centro_id;

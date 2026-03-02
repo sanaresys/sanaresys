@@ -15,7 +15,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Registrar respuesta de login personalizada para Filament
+        $this->app->singleton(
+            \Filament\Http\Responses\Auth\Contracts\LoginResponse::class,
+            \App\Http\Responses\LoginResponse::class
+        );
     }
 
     /**

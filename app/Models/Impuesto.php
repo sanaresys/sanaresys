@@ -33,7 +33,8 @@ class Impuesto extends ModeloBase
         parent::booted();
 
         static::creating(function ($model) {
-            if (auth()->check() && empty($model->centro_id)) {
+            // Solo agregar centro_id si NO estamos en contexto de tenant
+            if (!tenancy()->initialized && auth()->check() && empty($model->centro_id)) {
                 $user = auth()->user();
                 if ($user && isset($user->centro_id)) {
                     $model->centro_id = $user->centro_id;

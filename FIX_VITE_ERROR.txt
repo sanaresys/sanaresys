@@ -1,0 +1,40 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                   🔧 ERROR DE VITE CORREGIDO                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PROBLEMA:
+─────────
+❌ ViteManifestNotFoundException
+   Archivo: resources/views/onboarding/layout.blade.php
+   Línea: @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+CAUSA:
+──────
+Las vistas del onboarding estaban intentando usar Vite para cargar
+assets (CSS/JS), pero no hay un build de Vite compilado en el proyecto.
+
+SOLUCIÓN:
+─────────
+✅ Reemplazado @vite con Tailwind CSS desde CDN
+   
+   Antes:
+   @vite(['resources/css/app.css', 'resources/js/app.js'])
+   
+   Ahora:
+   <script src="https://cdn.tailwindcss.com"></script>
+
+✅ Cache de vistas limpiado
+   php artisan view:clear
+
+ESTADO:
+───────
+✅ Corrección aplicada
+✅ Sin más referencias a @vite en vistas de onboarding
+✅ Ready para testing
+
+PRÓXIMO PASO:
+─────────────
+Recarga la página en el navegador:
+http://localhost:8000/onboarding
+
+El wizard debería cargarse correctamente ahora.

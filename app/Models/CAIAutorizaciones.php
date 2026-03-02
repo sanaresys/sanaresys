@@ -156,8 +156,10 @@ class CAIAutorizaciones extends ModeloBase
             $model->refrescarEstado();   // mÃ©todo nuevo que vemos abajo
         });
 
-                static::creating(function ($model) {
-            if (auth()->check() && empty($model->centro_id)) {
+        static::creating(function ($model) {
+            // Solo agregar centro_id si NO estamos en contexto de tenant
+            // (las bases de tenants no tienen columna centro_id)
+            if (!tenancy()->initialized && auth()->check() && empty($model->centro_id)) {
                 $user = auth()->user();
                 if ($user && isset($user->centro_id)) {
                     $model->centro_id = $user->centro_id;

@@ -1,0 +1,361 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║        🧪 GUÍA DE TESTING - SISTEMA ONBOARDING SANARESYS        ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ✅ SERVIDOR ACTIVO                                               │
+├──────────────────────────────────────────────────────────────────┤
+│  http://127.0.0.1:8000                                           │
+│  Estado: ● RUNNING                                               │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 👤 USUARIOS DE PRUEBA DISPONIBLES                                │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Usuario ROOT (NO será redirigido al onboarding):            │
+│     📧 Email: root@example.com                                   │
+│     🔑 Password: (tu contraseña configurada)                     │
+│     ⚙️  Uso: Administración del sistema                          │
+│                                                                  │
+│  2. Usuario ADMIN TESTING (SÍ será redirigido al onboarding):   │
+│     📧 Email: admin@testing.com                                  │
+│     🔑 Password: password123                                     │
+│     ⚙️  Uso: TESTING DEL ONBOARDING ⭐                            │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🎯 FLUJO DE TESTING PASO A PASO                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 1: LOGIN ──────────────────────────────────────────────────┐
+│                                                                  │
+│  1. Abre el navegador                                            │
+│  2. Navega a: http://localhost:8000/admin/login                  │
+│  3. Ingresa:                                                     │
+│     Email: admin@testing.com                                     │
+│     Password: password123                                        │
+│  4. Click en "Iniciar sesión"                                    │
+│                                                                  │
+│  ✓ RESULTADO ESPERADO:                                           │
+│    • Autenticación exitosa                                       │
+│    • Flash message: "Por favor completa la configuración..."     │
+│    • Redirección automática a /onboarding                        │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 2: PÁGINA DE BIENVENIDA ───────────────────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/onboarding                           │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Fondo con gradiente azul-índigo                             │
+│    • Logo de Sanaresys en header                                 │
+│    • Título: "¡Bienvenido a Sanaresys!"                          │
+│    • Grid de 4 características                                   │
+│    • Lista de beneficios con checkmarks                          │
+│    • Botón "Comenzar Configuración"                              │
+│                                                                  │
+│  ► Acción: Click en "Comenzar Configuración"                     │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 3: CONFIGURACIÓN - DATOS DEL CENTRO ───────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/onboarding/step-1                    │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Barra de progreso: Paso 1 de 4 activo                       │
+│    • Formulario con 5 campos                                     │
+│    • Botón "Siguiente"                                           │
+│                                                                  │
+│  📋 DATOS SUGERIDOS (copiar/pegar):                              │
+│    ┌────────────────────────────────────────────────────────┐    │
+│    │ Nombre: Clínica de Pruebas Sanaresys                  │    │
+│    │ RTN: 0801199901234                                     │    │
+│    │ Dirección: Av. Principal #123, Col. Kennedy           │    │
+│    │ Teléfono: 2222-3333                                    │    │
+│    │ Email: contacto@clinicapruebas.hn                      │    │
+│    └────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  ► Acción: Llenar formulario + Click "Siguiente"                 │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 4: CONFIGURACIÓN CAI (CRÍTICO) ────────────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/onboarding/step-2                    │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Barra de progreso: Paso 2 de 4 activo                       │
+│    • Explicación "¿Qué es el CAI?"                               │
+│    • Advertencia de importancia fiscal                           │
+│    • 4 campos del formulario                                     │
+│    • Botón "Configurar después" (gris)                           │
+│    • Botón "Guardar y Continuar" (azul)                          │
+│                                                                  │
+│  🧾 OPCIÓN A - CONFIGURAR CAI (copiar/pegar):                    │
+│    ┌────────────────────────────────────────────────────────┐    │
+│    │ Código CAI: A1B2-C3D4-E5F6-G7H8-I9J0                  │    │
+│    │ Rango inicial: 1                                       │    │
+│    │ Rango final: 1000                                      │    │
+│    │ Fecha límite: 2026-12-31                               │    │
+│    └────────────────────────────────────────────────────────┘    │
+│    ► Acción: Llenar + Click "Guardar y Continuar"               │
+│                                                                  │
+│  🔄 OPCIÓN B - OMITIR CAI:                                       │
+│    ► Acción: Click "Configurar después"                          │
+│    • Debe aparecer modal de confirmación                         │
+│    • Confirmar omisión                                           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 5: CATÁLOGO DE SERVICIOS ──────────────────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/onboarding/step-3                    │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Barra de progreso: Paso 3 de 4 activo                       │
+│    • Formulario con 1 servicio inicial                           │
+│    • Botón "+ Agregar otro servicio"                             │
+│    • Botón "×" para eliminar servicios                           │
+│    • Lista de servicios sugeridos                                │
+│    • Botón "Continuar"                                           │
+│                                                                  │
+│  💼 SERVICIOS SUGERIDOS:                                          │
+│    ┌─────────────────────────────────────────────────────────┐   │
+│    │ Servicio 1:                                             │   │
+│    │   Nombre: Consulta General                              │   │
+│    │   Precio: 500                                           │   │
+│    │   Descripción: Consulta médica general                  │   │
+│    │                                                         │   │
+│    │ [+ Agregar otro servicio]                               │   │
+│    │                                                         │   │
+│    │ Servicio 2:                                             │   │
+│    │   Nombre: Laboratorio Clínico                           │   │
+│    │   Precio: 350                                           │   │
+│    │   Descripción: Análisis de sangre básico                │   │
+│    │                                                         │   │
+│    │ [+ Agregar otro servicio]                               │   │
+│    │                                                         │   │
+│    │ Servicio 3:                                             │   │
+│    │   Nombre: Rayos X                                       │   │
+│    │   Precio: 800                                           │   │
+│    │   Descripción: Radiografía simple                       │   │
+│    └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ► Acción: Agregar servicios + Click "Continuar"                 │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 6: PÁGINA DE COMPLETADO ───────────────────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/onboarding/completed                 │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Mensaje de celebración 🎉                                   │
+│    • 3 tarjetas de resumen:                                      │
+│      - Información del Centro                                    │
+│      - Estado del CAI (Configurado / Pendiente)                  │
+│      - Servicios Creados (cantidad)                              │
+│    • Si omitiste CAI: Banner amarillo de advertencia             │
+│    • Grid de 6 funcionalidades disponibles                       │
+│    • Botón "Ir al Dashboard"                                     │
+│                                                                  │
+│  ► Acción: Click "Ir al Dashboard"                               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ PASO 7: DASHBOARD FILAMENT ─────────────────────────────────────┐
+│                                                                  │
+│  URL: http://localhost:8000/admin                                │
+│                                                                  │
+│  ✓ VERIFICAR:                                                    │
+│    • Acceso exitoso al dashboard                                 │
+│    • Widget "¡Bienvenido a Sanaresys!" visible                   │
+│    • Checklist con 4 tareas opcionales:                          │
+│      ☐ Agregar médicos/personal                                  │
+│      ☐ Registrar pacientes                                       │
+│      ☐ Personalizar facturación                                  │
+│      ☐ Configurar roles y permisos                               │
+│    • Barra de progreso del widget (inicialmente 0%)              │
+│    • Botón "×" para descartar widget                             │
+│                                                                  │
+│  🎯 ACCIÓN OPCIONAL: Click en tareas del checklist               │
+│     (Verifica que los enlaces funcionen correctamente)           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🔄 TESTING ADICIONAL                                             │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ TEST A: PROTECCIÓN DE RUTAS ────────────────────────────────────┐
+│                                                                  │
+│  1. Logout del usuario actual                                    │
+│  2. Resetear onboarding del centro:                              │
+│     UPDATE centros_medicos SET onboarding_completed_at = NULL    │
+│     WHERE id = 1;                                                │
+│  3. Login nuevamente con admin@testing.com                       │
+│  4. Intentar acceder directamente a:                             │
+│     http://localhost:8000/admin                                  │
+│                                                                  │
+│  ✓ RESULTADO ESPERADO:                                           │
+│    • Redirección automática a /onboarding                        │
+│    • NO permite acceder al dashboard                             │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ TEST B: USUARIO ROOT ───────────────────────────────────────────┐
+│                                                                  │
+│  1. Logout del usuario de prueba                                 │
+│  2. Login con root@example.com                                   │
+│  3. Intentar acceder a /admin                                    │
+│                                                                  │
+│  ✓ RESULTADO ESPERADO:                                           │
+│    • Acceso directo al dashboard                                 │
+│    • NO redirección al onboarding                                │
+│    • Root bypasses el onboarding                                 │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ TEST C: VALIDACIONES DE FORMULARIOS ────────────────────────────┐
+│                                                                  │
+│  Paso 1 - Datos del Centro:                                     │
+│    • Dejar campo vacío → Debe mostrar error                      │
+│    • RTN con menos de 14 caracteres → Error                      │
+│    • Email inválido → Error de formato                           │
+│                                                                  │
+│  Paso 2 - CAI:                                                   │
+│    • Rango final < Rango inicial → Error                         │
+│    • Fecha límite en el pasado → Error                           │
+│    • Campos vacíos → Error                                       │
+│                                                                  │
+│  Paso 3 - Servicios:                                             │
+│    • No agregar ningún servicio → Error                          │
+│    • Precio negativo → Error                                     │
+│    • Nombre vacío → Error                                        │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ TEST D: PERSISTENCIA DE DATOS ──────────────────────────────────┐
+│                                                                  │
+│  1. Completar solo el Paso 1                                     │
+│  2. Cerrar navegador / Hacer logout                              │
+│  3. Login nuevamente                                             │
+│  4. Verificar que puedes retomar desde Paso 2                    │
+│                                                                  │
+│  ✓ RESULTADO ESPERADO:                                           │
+│    • Los datos del Paso 1 están guardados                        │
+│    • El campo onboarding_current_step = 1                        │
+│    • Puedes continuar sin perder progreso                        │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🗄️  VERIFICACIÓN EN BASE DE DATOS                                │
+└──────────────────────────────────────────────────────────────────┘
+
+  📊 Verificar tabla centros_medicos:
+  
+  SELECT id, nombre, rtn, 
+         onboarding_current_step,
+         onboarding_skipped_cai,
+         onboarding_completed_at
+  FROM centros_medicos 
+  WHERE id = 1;
+  
+  ✓ Esperado después de completar:
+    • onboarding_current_step = 3
+    • onboarding_skipped_cai = 0 (o 1 si omitiste CAI)
+    • onboarding_completed_at = [timestamp actual]
+
+  📊 Verificar CAI en tenant (si lo configuraste):
+  
+  USE centro_1;  -- Asegúrate de que exista
+  SELECT * FROM cai_autorizaciones ORDER BY id DESC LIMIT 1;
+  
+  ✓ Esperado:
+    • 1 registro con el CAI configurado
+    • centro_id = 1
+
+  📊 Verificar servicios en tenant:
+  
+  USE centro_1;
+  SELECT * FROM servicios;
+  
+  ✓ Esperado:
+    • 3 registros (o la cantidad que agregaste)
+    • Nombres, precios y descripciones correctas
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🐛 TROUBLESHOOTING                                               │
+└──────────────────────────────────────────────────────────────────┘
+
+  ❌ Error: "No se puede conectar"
+  ✓ Solución: Verificar que el servidor esté corriendo
+              php artisan serve
+
+  ❌ Error: "Tenant database does not exist"
+  ✓ Solución: Verificar que el tenant se creó correctamente
+              php artisan tenants:list
+              Si no existe, el sistema lo creará en saveStepTwo()
+
+  ❌ Error: "No redirige al onboarding"
+  ✓ Solución: Verificar que onboarding_completed_at sea NULL
+              UPDATE centros_medicos SET onboarding_completed_at = NULL
+              WHERE id = 1;
+
+  ❌ Error: "Widget no aparece"
+  ✓ Solución: Verificar que completaste el onboarding hace menos de 7 días
+              El widget solo se muestra durante 7 días
+
+  ❌ Error: 404 en rutas de onboarding
+  ✓ Solución: Limpiar caché de rutas
+              php artisan route:clear
+              php artisan config:clear
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 📝 CHECKLIST DE TESTING COMPLETO                                 │
+└──────────────────────────────────────────────────────────────────┘
+
+  ☐ Login con usuario de prueba
+  ☐ Redirección automática a onboarding
+  ☐ Página de bienvenida se muestra correctamente
+  ☐ Paso 1: Guardar datos del centro
+  ☐ Paso 2: Configurar CAI (o omitir)
+  ☐ Paso 3: Agregar múltiples servicios
+  ☐ Paso 4: Ver resumen y completar
+  ☐ Dashboard: Acceso exitoso
+  ☐ Widget: Se muestra correctamente
+  ☐ Widget: Enlaces funcionan
+  ☐ Widget: Botón descartar funciona
+  ☐ Database: onboarding_completed_at tiene timestamp
+  ☐ Database: CAI guardado en DB tenant
+  ☐ Database: Servicios guardados en DB tenant
+  ☐ Protección: Usuario sin onboarding no accede a dashboard
+  ☐ Bypass: Usuario root accede sin onboarding
+  ☐ Validaciones: Errores se muestran correctamente
+  ☐ Persistencia: Progreso se guarda entre sesiones
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🎉 ¡TESTING EXITOSO!                                             │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Si todos los checkboxes están marcados, el sistema de          │
+│  onboarding está funcionando perfectamente y está listo         │
+│  para producción. 🚀                                             │
+│                                                                  │
+│  Próximo paso: Deploy a producción o presentación al cliente    │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Documentado por: GitHub Copilot                                 ║
+║  Sistema: Sanaresys Multi-Tenant                                 ║
+║  Feature: Onboarding Wizard                                      ║
+║  Fecha: 2 de marzo de 2026                                       ║
+╚══════════════════════════════════════════════════════════════════╝

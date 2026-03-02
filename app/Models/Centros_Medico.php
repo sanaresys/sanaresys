@@ -23,6 +23,8 @@ class Centros_Medico extends ModeloBase
         'slug',
         'tenancy_mode',
         'onboarding_completed_at',
+        'onboarding_current_step',
+        'onboarding_skipped_cai',
         'direccion',
         'telefono',
         'rtn',
@@ -31,6 +33,8 @@ class Centros_Medico extends ModeloBase
 
     protected $casts = [
         'onboarding_completed_at' => 'datetime',
+        'onboarding_current_step' => 'integer',
+        'onboarding_skipped_cai' => 'boolean',
     ];
 
     public function centro_medico_medico() {

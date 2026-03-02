@@ -1,0 +1,224 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║                  ✅ CORRECCIÓN APLICADA EXITOSAMENTE             ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🐛 PROBLEMA IDENTIFICADO                                         │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Error: TypeError en CustomLogin::authenticate()                 │
+│  Causa: El método retornaba redirect() en lugar de LoginResponse │
+│                                                                  │
+│  Stack trace mostraba:                                           │
+│  > Return value must be of type ?LoginResponse                   │
+│  > Redirector returned                                           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🔧 SOLUCIÓN IMPLEMENTADA                                         │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ CAMBIO 1: LoginResponse Personalizado ──────────────────────────┐
+│                                                                  │
+│  Archivo: app/Http/Responses/LoginResponse.php (NUEVO)          │
+│                                                                  │
+│  Clase que implementa LoginResponseContract y maneja:           │
+│  • Verificación de onboarding pendiente                          │
+│  • Redirección a wizard si es necesario                          │
+│  • Bypass para usuarios root                                     │
+│  • Mensaje flash informativo                                     │
+│                                                                  │
+│  ✅ CORRECTO: Retorna RedirectResponse (tipo válido)             │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ CAMBIO 2: Registro en AppServiceProvider ───────────────────────┐
+│                                                                  │
+│  Archivo: app/Providers/AppServiceProvider.php                   │
+│                                                                  │
+│  Agregado en register():                                         │
+│  ```php                                                          │
+│  $this->app->singleton(                                          │
+│      \Filament\Http\Responses\Auth\Contracts\LoginResponse,      │
+│      \App\Http\Responses\LoginResponse::class                    │
+│  );                                                              │
+│  ```                                                             │
+│                                                                  │
+│  ✅ Filament ahora usa nuestra respuesta personalizada           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ CAMBIO 3: Limpieza de CustomLogin ──────────────────────────────┐
+│                                                                  │
+│  Archivo: app/Filament/Pages/CustomLogin.php                     │
+│                                                                  │
+│  ELIMINADO: Lógica de redirect dentro de authenticate()         │
+│                                                                  │
+│  Antes (❌ INCORRECTO):                                          │
+│  ```php                                                          │
+│  if ($centro && !$centro->onboarding_completed_at) {            │
+│      return redirect()->route('onboarding.welcome'); // Error!   │
+│  }                                                               │
+│  ```                                                             │
+│                                                                  │
+│  Ahora: Simplemente retorna $response del padre                  │
+│                                                                  │
+│  ✅ Delegación correcta a LoginResponse personalizado            │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ CAMBIO 4: Optimización de RequireOnboarding ────────────────────┐
+│                                                                  │
+│  Archivo: app/Http/Middleware/RequireOnboarding.php              │
+│                                                                  │
+│  Mejoras:                                                        │
+│  • Removida exclusión de livewire/* (ya no es necesaria)        │
+│  • Agregado select(['id', 'onboarding_completed_at']) para      │
+│    optimizar query                                               │
+│  • Mensaje flash de tipo 'warning' en lugar de sin tipo         │
+│  • Uso de on('mysql') para asegurar conexión correcta           │
+│                                                                  │
+│  ✅ Middleware más eficiente y claro                             │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🔄 FLUJO CORRECTO AHORA                                          │
+└──────────────────────────────────────────────────────────────────┘
+
+  1. Usuario envía formulario de login
+     └─> Petición POST /livewire/update
+
+  2. CustomLogin::authenticate() se ejecuta
+     └─> Valida credenciales con parent::authenticate()
+     └─> Retorna LoginResponse del padre
+
+  3. Filament resuelve LoginResponse
+     └─> Usa nuestra clase personalizada (registrada en container)
+
+  4. LoginResponse::toResponse() se ejecuta
+     └─> Verifica si $user->hasRole('root') ✓ Bypass
+     └─> Verifica si tiene $user->centro_id
+     └─> Consulta onboarding_completed_at del centro
+     └─> SI es NULL:
+         ├─> session()->flash('info', 'mensaje')
+         └─> return redirect()->route('onboarding.welcome')
+     └─> SI no es NULL:
+         └─> return redirect()->intended(Filament::getUrl())
+
+  5. Usuario es redirigido correctamente
+     └─> Con onboarding pendiente: /onboarding
+     └─> Sin onboarding pendiente: /admin
+
+  6. RequireOnboarding middleware protege rutas subsecuentes
+     └─> Si intenta acceder a /admin/* sin completar
+     └─> Redirige nuevamente a /onboarding
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ✅ VERIFICACIONES REALIZADAS                                     │
+└──────────────────────────────────────────────────────────────────┘
+
+  ☑ Cachés limpiados (config, routes, views)
+  ☑ Servidor reiniciado
+  ☑ LoginResponse implementa interfaz correcta
+  ☑ LoginResponse registrado en container
+  ☑ Tipos de retorno correctos (RedirectResponse|Redirector)
+  ☑ Middleware optimizado
+  ☑ Sin conflictos de tipos
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🧪 INSTRUCCIONES DE TESTING                                      │
+└──────────────────────────────────────────────────────────────────┘
+
+  Servidor activo en: http://localhost:8000
+
+  1. Cierra la pestaña del navegador (forzar nueva sesión)
+  
+  2. Abre nueva ventana en modo incógnito (recomendado)
+  
+  3. Navega a: http://localhost:8000/admin/login
+  
+  4. Ingresa credenciales:
+     📧 Email: admin@testing.com
+     🔑 Password: password123
+  
+  5. Click en "Iniciar sesión"
+  
+  ✅ RESULTADO ESPERADO:
+     • Login exitoso sin errores
+     • Flash message: "Por favor completa la configuración..."
+     • Redirección a: http://localhost:8000/onboarding
+     • Página de bienvenida del wizard visible
+  
+  6. Completa el wizard y verifica acceso al dashboard
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🎯 TESTING ADICIONAL                                             │
+└──────────────────────────────────────────────────────────────────┘
+
+  TEST A: Usuario root
+  ────────────────────
+  1. Login con: root@example.com
+  2. Verificar: Acceso directo a /admin (sin onboarding)
+  
+  TEST B: Usuario con onboarding completado
+  ──────────────────────────────────────────
+  1. Completar wizard con admin@testing.com
+  2. Logout
+  3. Login nuevamente
+  4. Verificar: Acceso directo a /admin (sin redirección)
+  
+  TEST C: Protección de rutas
+  ───────────────────────────
+  1. Con onboarding pendiente, intentar:
+     - http://localhost:8000/admin
+     - http://localhost:8000/admin/centros-medicos
+  2. Verificar: Redirección automática a /onboarding
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 📝 RESUMEN DE ARCHIVOS MODIFICADOS                               │
+└──────────────────────────────────────────────────────────────────┘
+
+  [NUEVO]     app/Http/Responses/LoginResponse.php
+  [MODIFICADO] app/Providers/AppServiceProvider.php
+  [MODIFICADO] app/Filament/Pages/CustomLogin.php
+  [MODIFICADO] app/Http/Middleware/RequireOnboarding.php
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 💡 EXPLICACIÓN TÉCNICA                                           │
+└──────────────────────────────────────────────────────────────────┘
+
+  El error ocurrió porque:
+  
+  ❌ redirect()->route() retorna: Illuminate\Http\RedirectResponse
+  ✅ Método debe retornar: Filament\...\Contracts\LoginResponse
+  
+  Solución:
+  
+  En lugar de hacer redirect() directamente en authenticate(),
+  creamos una clase que implementa LoginResponseContract.
+  
+  Filament automáticamente llama a toResponse() después de un
+  login exitoso, y AHORA SÍ podemos retornar RedirectResponse
+  porque está dentro del contexto correcto.
+  
+  LoginResponseContract::toResponse() acepta:
+  • RedirectResponse
+  • Redirector
+  • Response
+  
+  Por eso funciona ahora. ✅
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🎉 SISTEMA CORREGIDO Y LISTO PARA USAR                          ║
+║                                                                  ║
+║  El onboarding ahora funcionará correctamente después del login. ║
+║  Puedes proceder con el testing siguiendo las instrucciones.    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Fecha: 2 de marzo de 2026
+Sistema: Sanaresys Multi-Tenant
+Feature: Onboarding Wizard - Login Integration Fix

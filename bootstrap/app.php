@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.maintenance' => \App\Http\Middleware\EnsureTenantNotInMaintenance::class,
             'tenant.initialized' => \App\Http\Middleware\EnsureTenantInitialized::class,
             'central.domain' => \App\Http\Middleware\EnsureCentralDomain::class,
+            'require.onboarding' => \App\Http\Middleware\RequireOnboarding::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
