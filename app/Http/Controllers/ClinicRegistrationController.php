@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Centros_Medico;
+use App\Support\CentralUrl;
 use App\Services\TenantIdentityService;
 use App\Services\TenantProvisioningService;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ class ClinicRegistrationController extends Controller
         $redirect = $request->query('redirect');
 
         if (!$domain || !$redirect) {
-            return redirect()->route('clinica.registro');
+            return redirect()->away(CentralUrl::route('clinica.registro'));
         }
 
         return view('registro-clinica-exito', compact('domain', 'clinic', 'redirect'));
@@ -92,11 +93,11 @@ class ClinicRegistrationController extends Controller
                 'admin_user_id' => $result->adminUserId,
             ]);
 
-            return redirect()->route('clinica.registro.exito', [
+            return redirect()->away(CentralUrl::route('clinica.registro.exito', [
                 'domain' => $result->primaryDomain,
                 'clinic'  => $validated['nombre_centro'],
                 'redirect' => $target,
-            ]);
+            ]));
         } catch (\Throwable $e) {
             Log::error('Error en onboarding de clinica.', [
                 'centro_id' => $centro->id,
