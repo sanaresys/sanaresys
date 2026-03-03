@@ -18,17 +18,29 @@ class OnboardingController extends Controller
     ) {}
 
     /**
+     * Obtener el centro médico del tenant actual
+     */
+    protected function getCentroFromTenant()
+    {
+        $tenant = tenancy()->tenant;
+        
+        if (!$tenant || !$tenant->centro_id) {
+            return null;
+        }
+        
+        return Centros_Medico::on('mysql')->find($tenant->centro_id);
+    }
+
+    /**
      * Pantalla de bienvenida
      */
     public function welcome()
     {
-        $user = auth()->user();
+        $centro = $this->getCentroFromTenant();
         
-        if (!$user || !$user->centro_id) {
+        if (!$centro) {
             return redirect()->route('filament.admin.pages.dashboard');
         }
-
-        $centro = Centros_Medico::find($user->centro_id);
 
         // Si ya completó, redirigir al dashboard
         if ($centro && $centro->onboarding_completed_at) {
@@ -43,8 +55,7 @@ class OnboardingController extends Controller
      */
     public function stepOne()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         return view('onboarding.step-1', compact('centro'));
     }
@@ -62,8 +73,7 @@ class OnboardingController extends Controller
             'email' => 'nullable|email|max:255',
         ]);
 
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return back()->withErrors(['error' => 'Centro médico no encontrado.']);
@@ -74,6 +84,7 @@ class OnboardingController extends Controller
             'rtn' => $validated['rtn'],
             'direccion' => $validated['direccion'],
             'telefono' => $validated['telefono'],
+            'email' => $validated['email'] ?? null,
             'onboarding_current_step' => 2,
         ]);
 
@@ -85,8 +96,7 @@ class OnboardingController extends Controller
      */
     public function stepTwo()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         // Verificar que completó el paso anterior
         if ($centro->onboarding_current_step < 1) {
@@ -108,45 +118,30 @@ class OnboardingController extends Controller
             'fecha_limite' => 'required|date|after_or_equal:today',
         ]);
 
-        $user = auth()->user();
-        $centro = Centros_Medico::on('mysql')->find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return back()->withErrors(['error' => 'Centro médico no encontrado.']);
         }
 
         try {
-            DB::beginTransaction();
-
-            // Asegurar que el tenant existe y está creado
+            // Asegurar que el tenant existe
             $tenant = \App\Models\Tenant::where('centro_id', $centro->id)->first();
             
             if (!$tenant) {
-                // Si no existe tenant, crearlo usando el servicio de provisioning
-                Log::info("Creando tenant para centro {$centro->id} durante onboarding");
-                
-                // Crear el tenant
-                $tenant = \App\Models\Tenant::create([
-                    'id' => 'centro_' . $centro->id,
-                    'centro_id' => $centro->id,
-                ]);
-                
-                // Crear base de datos del tenant
-                $tenant->createDatabase();
-                
-                // Ejecutar migraciones en el tenant
-                $tenant->run(function () {
-                    artisan()->call('tenants:migrate', ['--tenants' => [tenant()->id]]);
-                });
+                Log::error('Tenant no encontrado para centro', ['centro_id' => $centro->id]);
+                throw new \Exception('No se encontró el tenant. Por favor contacta al soporte.');
             }
 
-            // Inicializar el contexto del tenant
+            // Inicializar el contexto del tenant ANTES de iniciar transacción
             tenancy()->initialize($tenant);
 
-            // Verificar que estamos en el contexto correcto
             if (!tenancy()->initialized) {
                 throw new \Exception('No se pudo inicializar el tenant');
             }
+
+            // Ahora la transacción será en la BD del tenant
+            DB::beginTransaction();
 
             // Crear autorización CAI en la BD del tenant
             $cai = CAIAutorizaciones::create([
@@ -160,6 +155,7 @@ class OnboardingController extends Controller
                 'estado' => 'ACTIVA',
             ]);
 
+            DB::commit();
             tenancy()->end();
 
             // Actualizar progreso en base de datos central
@@ -167,8 +163,6 @@ class OnboardingController extends Controller
                 'onboarding_current_step' => 2,
                 'onboarding_skipped_cai' => false,
             ]);
-
-            DB::commit();
 
             return redirect()->route('onboarding.step-3')
                 ->with('success', 'CAI configurado correctamente');
@@ -198,8 +192,7 @@ class OnboardingController extends Controller
      */
     public function skipCai()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return back()->withErrors(['error' => 'Centro médico no encontrado.']);
@@ -219,8 +212,7 @@ class OnboardingController extends Controller
      */
     public function stepThree()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         // Verificar que completó el paso anterior
         if ($centro->onboarding_current_step < 2) {
@@ -242,59 +234,47 @@ class OnboardingController extends Controller
             'servicios.*.descripcion' => 'nullable|string|max:500',
         ]);
 
-        $user = auth()->user();
-        $centro = Centros_Medico::on('mysql')->find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return back()->withErrors(['error' => 'Centro médico no encontrado.']);
         }
 
         try {
-            DB::beginTransaction();
-
             // Asegurar que el tenant existe
             $tenant = \App\Models\Tenant::where('centro_id', $centro->id)->first();
             
             if (!$tenant) {
-                // Crear tenant si fue omitido el CAI
-                Log::info("Creando tenant para centro {$centro->id} en paso de servicios");
-                
-                $tenant = \App\Models\Tenant::create([
-                    'id' => 'centro_' . $centro->id,
-                    'centro_id' => $centro->id,
-                ]);
-                
-                $tenant->createDatabase();
-                
-                $tenant->run(function () {
-                    artisan()->call('tenants:migrate', ['--tenants' => [tenant()->id]]);
-                });
+                Log::error('Tenant no encontrado para centro', ['centro_id' => $centro->id]);
+                throw new \Exception('No se encontró el tenant. Por favor contacta al soporte.');
             }
 
-            // Inicializar tenant
+            // Inicializar tenant ANTES de la transacción
             tenancy()->initialize($tenant);
 
             if (!tenancy()->initialized) {
                 throw new \Exception('No se pudo inicializar el tenant');
             }
 
+            // Transacción en la BD del tenant
+            DB::beginTransaction();
+
             // Crear servicios en la BD del tenant
             foreach ($validated['servicios'] as $servicioData) {
                 Servicio::create([
                     'nombre' => $servicioData['nombre'],
-                    'precio_unitario' => $servicioData['precio'], // Mapear 'precio' a 'precio_unitario'
+                    'precio_unitario' => $servicioData['precio'],
                     'descripcion' => $servicioData['descripcion'] ?? null,
                 ]);
             }
 
+            DB::commit();
             tenancy()->end();
 
-            // Actualizar progreso
+            // Actualizar progreso en BD central
             $centro->update([
                 'onboarding_current_step' => 3,
             ]);
-
-            DB::commit();
 
             return redirect()->route('onboarding.complete')
                 ->with('success', 'Servicios creados correctamente');
@@ -324,8 +304,7 @@ class OnboardingController extends Controller
      */
     public function complete()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         // Verificar que completó todos los pasos
         if ($centro->onboarding_current_step < 3) {
@@ -340,8 +319,7 @@ class OnboardingController extends Controller
      */
     public function markCompleted()
     {
-        $user = auth()->user();
-        $centro = Centros_Medico::find($user->centro_id);
+        $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return redirect()->route('filament.admin.pages.dashboard');
@@ -354,7 +332,7 @@ class OnboardingController extends Controller
 
         Log::info('Onboarding completado', [
             'centro_id' => $centro->id,
-            'user_id' => $user->id,
+            'user_id' => auth()->id(),
         ]);
 
         return redirect()->route('filament.admin.pages.dashboard')

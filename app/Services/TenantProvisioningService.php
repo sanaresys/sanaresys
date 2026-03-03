@@ -70,10 +70,12 @@ class TenantProvisioningService
 
         $adminUserId = $this->createTenantAdminUser($tenant, $creatorPayload);
 
-        $centro->forceFill([
-            'onboarding_completed_at' => now(),
-        ]);
-        $centro->save();
+        // ⚠️ NO marcar onboarding como completado aquí
+        // El onboarding_completed_at debe permanecer NULL hasta que el usuario complete el wizard
+        // $centro->forceFill([
+        //     'onboarding_completed_at' => now(),
+        // ]);
+        // $centro->save();
 
         Log::info('Tenant provisionado para centro en modo domain.', [
             'centro_id' => $centro->id,

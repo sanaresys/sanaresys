@@ -32,15 +32,17 @@ class RequireOnboarding
             return $next($request);
         }
 
-        // Verificar si tiene centro asignado
-        if (!$user->centro_id) {
+        // Verificar si estamos en contexto de tenant
+        $tenant = tenancy()->tenant;
+        
+        if (!$tenant || !$tenant->centro_id) {
             return $next($request);
         }
 
-        // Obtener el centro médico del usuario
+        // Obtener el centro médico del tenant actual
         $centro = \App\Models\Centros_Medico::on('mysql')
             ->select(['id', 'onboarding_completed_at'])
-            ->find($user->centro_id);
+            ->find($tenant->centro_id);
 
         // Si no existe el centro o ya completó onboarding, continuar
         if (!$centro || $centro->onboarding_completed_at) {

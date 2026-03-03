@@ -27,6 +27,7 @@ class Centros_Medico extends ModeloBase
         'onboarding_skipped_cai',
         'direccion',
         'telefono',
+        'email',
         'rtn',
         'fotografia',
     ];

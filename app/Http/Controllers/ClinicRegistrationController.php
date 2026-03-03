@@ -61,6 +61,10 @@ class ClinicRegistrationController extends Controller
             'rtn' => $validated['rtn'],
             'slug' => $slug,
             'tenancy_mode' => 'domain',
+            // Configurar onboarding pendiente
+            'onboarding_current_step' => 0,
+            'onboarding_skipped_cai' => false,
+            'onboarding_completed_at' => null,
         ]);
 
         try {

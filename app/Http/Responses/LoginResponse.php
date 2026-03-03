@@ -19,11 +19,14 @@ class LoginResponse implements LoginResponseContract
             return redirect()->intended(Filament::getUrl());
         }
 
-        // Verificar si el usuario necesita completar el onboarding
-        if ($user && $user->centro_id) {
+        // Verificar si estamos en contexto de tenant
+        $tenant = tenancy()->tenant;
+        
+        if ($tenant && $tenant->centro_id) {
+            // Buscar el centro asociado al tenant actual
             $centro = Centros_Medico::on('mysql')
                 ->select(['id', 'onboarding_completed_at'])
-                ->find($user->centro_id);
+                ->find($tenant->centro_id);
 
             if ($centro && !$centro->onboarding_completed_at) {
                 // Redirigir al wizard de onboarding con mensaje informativo
