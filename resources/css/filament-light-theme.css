@@ -1,0 +1,247 @@
+/* Tema claro personalizado para Filament */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables del tema claro */
+:root {
+    --primary-50: #ecfdf5;
+    --primary-100: #d1fae5;
+    --primary-200: #a7f3d0;
+    --primary-300: #6ee7b7;
+    --primary-400: #34d399;
+    --primary-500: #10b981;
+    --primary-600: #059669;
+    --primary-700: #047857;
+    --primary-800: #065f46;
+    --primary-900: #064e3b;
+    --primary-950: #022c22;
+}
+
+/* Forzar tema claro */
+.dark {
+    color-scheme: light !important;
+}
+
+/* Fondo principal más claro */
+.fi-sidebar,
+.fi-topbar,
+.fi-main {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+}
+
+/* Navegación lateral clara */
+.fi-sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-sidebar-nav {
+    background: transparent !important;
+}
+
+/* Items de navegación */
+.fi-sidebar-item {
+    color: #374151 !important;
+    border-radius: 8px !important;
+    margin: 2px 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-sidebar-item:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    transform: translateX(4px) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.fi-sidebar-item[aria-current="page"] {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Área de contenido principal */
+.fi-main-content {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+    border-radius: 12px !important;
+    margin: 1rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Header de la página */
+.fi-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Botones principales */
+.fi-btn-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+.fi-btn-primary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Botones secundarios */
+.fi-btn-secondary {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+    color: #374151 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+}
+
+.fi-btn-secondary:hover {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Tarjetas y paneles */
+.fi-section,
+.fi-card {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-section:hover,
+.fi-card:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Tablas */
+.fi-ta-table {
+    background: white !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-ta-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.fi-ta-row {
+    background: white !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-ta-row:hover {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%) !important;
+    transform: scale(1.01) !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Formularios */
+.fi-input,
+.fi-select-input,
+.fi-textarea {
+    background: white !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Badges */
+.fi-badge {
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    padding: 4px 12px !important;
+}
+
+/* Modales */
+.fi-modal {
+    border-radius: 16px !important;
+    background: white !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.fi-modal-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Notificaciones */
+.fi-notification {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Overrides para el modo oscuro forzado */
+html.dark,
+.dark {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+    color: #111827 !important;
+}
+
+.dark .fi-main {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+}
+
+/* Efectos de animación */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fi-page {
+    animation: fadeInUp 0.5s ease-out !important;
+}
+
+.fi-sidebar-item {
+    animation: slideInLeft 0.3s ease-out !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .fi-main-content {
+        margin: 0.5rem !important;
+        border-radius: 8px !important;
+    }
+    
+    .fi-sidebar {
+        box-shadow: none !important;
+    }
+}

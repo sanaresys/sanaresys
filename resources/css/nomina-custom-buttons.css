@@ -1,0 +1,369 @@
+/* Estilos personalizados para el módulo de nóminas */
+
+/* Colores principales del tema */
+:root {
+    --nomina-primary: #10b981;
+    --nomina-secondary: #0ea5e9;
+    --nomina-accent: #f59e0b;
+    --nomina-danger: #ef4444;
+    --nomina-success: #22c55e;
+    --nomina-warning: #f97316;
+    --nomina-info: #3b82f6;
+}
+
+/* Botones principales mejorados */
+.fi-btn-primary,
+.fi-btn[data-color="primary"] {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-btn-primary:hover,
+.fi-btn[data-color="primary"]:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Botón de crear/guardar */
+.fi-btn[type="submit"],
+.fi-ac-btn-action[data-action="create"],
+button[type="submit"] {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.fi-btn[type="submit"]:hover,
+button[type="submit"]:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Botón de cancelar */
+.fi-btn-secondary,
+.fi-btn[data-color="gray"] {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    color: white !important;
+    border: 1px solid #4b5563 !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-btn-secondary:hover,
+.fi-btn[data-color="gray"]:hover {
+    background: linear-gradient(135deg, #4b5563, #374151) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3) !important;
+}
+
+/* Botones de acción en tablas */
+.fi-ac-btn-action {
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+}
+
+/* Botón Ver (azul) */
+.fi-ac-btn-action[data-color="sky"],
+.fi-btn[data-color="sky"] {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.fi-ac-btn-action[data-color="sky"]:hover,
+.fi-btn[data-color="sky"]:hover {
+    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* Botón Editar (ámbar) */
+.fi-ac-btn-action[data-color="amber"],
+.fi-btn[data-color="amber"] {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.fi-ac-btn-action[data-color="amber"]:hover,
+.fi-btn[data-color="amber"]:hover {
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Botón PDF (verde) */
+.fi-ac-btn-action[data-color="emerald"],
+.fi-btn[data-color="emerald"] {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.fi-ac-btn-action[data-color="emerald"]:hover,
+.fi-btn[data-color="emerald"]:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Botón Eliminar (rosa) */
+.fi-ac-btn-action[data-color="rose"],
+.fi-btn[data-color="rose"] {
+    background: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.fi-ac-btn-action[data-color="rose"]:hover,
+.fi-btn[data-color="rose"]:hover {
+    background: linear-gradient(135deg, #e11d48, #be123c) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Botón Cerrar (naranja) */
+.fi-ac-btn-action[data-color="orange"],
+.fi-btn[data-color="orange"] {
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.fi-ac-btn-action[data-color="orange"]:hover,
+.fi-btn[data-color="orange"]:hover {
+    background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* Botón "Agregar Médico" */
+.fi-fo-repeater-add-item-btn,
+button[x-on\\:click*="addItem"] {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+}
+
+.fi-fo-repeater-add-item-btn:hover,
+button[x-on\\:click*="addItem"]:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Botones de reordenar */
+.fi-fo-repeater-move-item-btn {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+}
+
+.fi-fo-repeater-move-item-btn:hover {
+    background: linear-gradient(135deg, #4b5563, #374151) !important;
+    transform: scale(1.1) !important;
+}
+
+/* Botón eliminar item del repeater */
+.fi-fo-repeater-delete-item-btn {
+    background: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+}
+
+.fi-fo-repeater-delete-item-btn:hover {
+    background: linear-gradient(135deg, #e11d48, #be123c) !important;
+    transform: scale(1.1) !important;
+}
+
+/* Mejorar selects */
+.fi-select-input {
+    background-color: #374151 !important;
+    border: 2px solid #4b5563 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-select-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Mejorar inputs */
+.fi-input {
+    background-color: #374151 !important;
+    border: 2px solid #4b5563 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Mejorar textareas */
+.fi-textarea {
+    background-color: #374151 !important;
+    border: 2px solid #4b5563 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Estilos para las secciones del formulario */
+.fi-section {
+    border-radius: 12px;
+    border: 1px solid #4b5563;
+    transition: all 0.3s ease;
+    background-color: #1f2937 !important;
+}
+
+.fi-section:hover {
+    border-color: var(--nomina-primary);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+/* Estilos para los badges */
+.fi-badge {
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+/* Colores personalizados para badges */
+.fi-color-emerald .fi-badge {
+    background: linear-gradient(135deg, #10b981, #22c55e);
+    color: white;
+}
+
+.fi-color-sky .fi-badge {
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+    color: white;
+}
+
+.fi-color-amber .fi-badge {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+}
+
+.fi-color-rose .fi-badge {
+    background: linear-gradient(135deg, #f43f5e, #ef4444);
+    color: white;
+}
+
+/* Estilos para las tablas */
+.fi-ta-table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.fi-ta-row:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Estilos para los iconos */
+.fi-icon {
+    transition: all 0.3s ease;
+}
+
+.fi-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Animaciones suaves */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fi-page {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .fi-section {
+        margin-bottom: 1rem;
+    }
+    
+    .fi-ta-table {
+        font-size: 14px;
+    }
+}
+
+/* Estilos para el repeater */
+.fi-fo-repeater-item {
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background-color: #374151 !important;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.fi-fo-repeater-item:hover {
+    border-color: var(--nomina-secondary);
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+}
+
+/* Mejoras en la tipografía */
+.fi-section-header-heading {
+    font-weight: 700;
+    color: #f9fafb;
+}
+
+.fi-section-header-description {
+    color: #d1d5db;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Efectos de hover para las filas de la tabla */
+.fi-ta-row {
+    transition: all 0.3s ease;
+}
+
+.fi-ta-row:hover .fi-ta-cell {
+    color: #f9fafb;
+}
