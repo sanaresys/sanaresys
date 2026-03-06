@@ -23,7 +23,7 @@
 <body>
 <div class="card">
     <h1>Registro de Clínica</h1>
-    <p class="helper">Al enviar el formulario se creará tu subdominio y base de datos dedicados.</p>
+    <p class="helper">Al enviar el formulario te enviaremos un enlace de verificacion. La clinica se creara cuando confirmes el correo.</p>
 
     <form method="POST" action="{{ route('clinica.registro.store') }}">
         @csrf
@@ -84,4 +84,3 @@
 </div>
 </body>
 </html>
-
