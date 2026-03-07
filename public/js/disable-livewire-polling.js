@@ -9,11 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const origSetInterval = window.setInterval;
             window.setInterval = function(fn, delay) {
                 const stack = new Error().stack || '';
+                const fnStr = fn.toString();
                 
-                // Permitir que el calendario se cargue correctamente
+                // Permitir que el calendario y charts se carguen correctamente
                 if (stack.includes('livewire') && delay < 10000 && 
-                    fn.toString().includes('livewireId') &&
-                    !fn.toString().includes('calendario')) {
+                    fnStr.includes('livewireId') &&
+                    !fnStr.includes('calendario') &&
+                    !fnStr.includes('chart') &&
+                    !fnStr.includes('Chart') &&
+                    !fnStr.includes('updateChartData')) {
                     console.log('Bloqueando intervalo de polling Livewire:', delay + 'ms');
                     return null; // No crear el intervalo
                 }

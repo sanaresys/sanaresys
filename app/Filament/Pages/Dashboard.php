@@ -6,6 +6,7 @@ use Filament\Pages\Dashboard as BaseDashboard;
 use App\Filament\Widgets\CentroStatsWidget;
 use App\Filament\Widgets\CalendarioCitasWidget;
 use App\Filament\Widgets\CitasPieChart;
+use App\Filament\Widgets\CuentasPorCobrarStatsWidget;
 use App\Filament\Widgets\RecetarioStatsOverview;
 
 class Dashboard extends BaseDashboard
@@ -15,16 +16,21 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        return [
-            RecetarioStatsOverview::class,
-            CentroStatsWidget::class,
-            CalendarioCitasWidget::class,
-            CitasPieChart::class,
-        ];
+        return [];
+    }
+
+    public function getVisibleWidgets(): array
+    {
+        return [];
+    }
+
+    public function getHeading(): string
+    {
+        return '';
     }
 
     public function getColumns(): int|string|array
     {
-        return 1; // Una sola columna para mejor control del layout
+        return 1;
     }
 }
