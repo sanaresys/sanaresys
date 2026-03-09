@@ -5,204 +5,118 @@
 @endphp
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg overflow-hidden">
-    <!-- Header -->
-    <div class="bg-[#22C55E] p-12 text-white text-center">
-        <div class="w-24 h-24 mx-auto mb-6 bg-white/20 rounded-full flex items-center justify-center">
-            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-        <h1 class="text-4xl font-bold mb-3">¡Felicidades!</h1>
-        <p class="text-xl text-white/90">Tu centro médico está configurado y listo para usar</p>
-    </div>
-
-    <div class="p-8 md:p-12">
-        <!-- Resumen de configuración -->
-        <div class="mb-10">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Configuración Completada</h2>
-            
-            <div class="grid md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-blue-50 border-2 border-[#2563EB] rounded-lg p-6 text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-[#2563EB] rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Datos del Centro</h3>
-                    <p class="text-sm text-gray-700 font-medium">{{ $centro->nombre_centro }}</p>
-                    <p class="text-xs text-gray-500 mt-1">RTN: {{ $centro->rtn }}</p>
+<div class="card-premium overflow-hidden min-h-[88vh]" style="background: radial-gradient(circle at 12% 8%, rgba(15,138,141,0.09), transparent 36%), radial-gradient(circle at 88% 22%, rgba(198,140,47,0.08), transparent 34%), linear-gradient(180deg, #f1f5f7 0%, #eef3f6 100%);">
+    <div class="px-5 md:px-10 py-8 md:py-10">
+        <div class="max-w-5xl mx-auto rounded-2xl" style="background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%); border: 1px solid #dbe4ea; box-shadow: 0 18px 38px rgba(16, 33, 42, 0.1);">
+            <div class="px-6 md:px-10 pt-8 md:pt-10 pb-7 border-b text-center" style="border-color: #e8edf1;">
+                <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style="background: rgba(15,138,141,0.12); box-shadow: 0 6px 14px rgba(15,138,141,0.18);">
+                    <svg class="w-7 h-7" style="color: var(--onb-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0"/>
+                    </svg>
                 </div>
+                <h1 class="text-3xl font-extrabold" style="color: #0f2230;">Configuración Completa!</h1>
+                <div class="max-w-md mx-auto mt-4 p-2 rounded-md" style="background: #f7fbfc; border: 1px solid #e3ecef;">
+                    <div class="flex justify-between text-[11px] font-semibold mb-1" style="color: #3f5661;">
+                        <span>Completado</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="h-2 rounded-full" style="background: #dcecef;">
+                        <div class="h-2 rounded-full" style="width: 100%; background: linear-gradient(90deg, #0f8a8d 0%, #17a2a5 100%);"></div>
+                    </div>
+                </div>
+                <p class="text-sm mt-4" style="color: #5f727d;">Sistema listo. Ya puedes ir a tu panel y empezar a trabajar con operación diaria.</p>
+            </div>
 
-                <div class="bg-cyan-50 border-2 border-[#0EA5E9] rounded-lg p-6 text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-[#0EA5E9] rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="px-6 md:px-10 py-7 md:py-8 space-y-7" style="background: linear-gradient(180deg, rgba(15,138,141,0.02) 0%, rgba(255,255,255,0) 30%);">
+                <div class="grid md:grid-cols-3 gap-4 md:gap-5">
+                    <article class="rounded-xl overflow-hidden" style="border: 1px solid #d0dde6; background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%); box-shadow: 0 6px 18px rgba(16,33,42,0.06);">
+                        <div class="h-14" style="background: linear-gradient(120deg, #8bc7d9 0%, #6fb0c6 45%, #4a8ca7 100%);"></div>
+                        <div class="p-4">
+                            <p class="text-[11px] font-extrabold uppercase tracking-wide" style="color: #0f8a8d;">Centro</p>
+                            <h3 class="font-bold text-lg mt-1" style="color: #182c39;">{{ $centro->nombre_centro }}</h3>
+                            <p class="text-xs mt-1" style="color: #647985;">RTN: {{ $centro->rtn }}</p>
+                        </div>
+                    </article>
+
+                    <article class="rounded-xl overflow-hidden" style="border: 1px solid #d0dde6; background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%); box-shadow: 0 6px 18px rgba(16,33,42,0.06);">
+                        <div class="h-14" style="background: linear-gradient(120deg, #9fd5e3 0%, #82bdcf 50%, #5c9cb2 100%);"></div>
+                        <div class="p-4">
+                            <p class="text-[11px] font-extrabold uppercase tracking-wide" style="color: #0f8a8d;">Facturación</p>
                             @if($centro->onboarding_skipped_cai)
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <h3 class="font-bold text-lg mt-1" style="color: #182c39;">Pendiente</h3>
+                                <p class="text-xs mt-1" style="color: #647985;">CAI se configurará después.</p>
                             @else
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                <h3 class="font-bold text-lg mt-1" style="color: #182c39;">Activa</h3>
+                                <p class="text-xs mt-1" style="color: #647985;">CAI configurado correctamente.</p>
                             @endif
-                        </svg>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Facturación CAI</h3>
-                    <p class="text-sm text-gray-700">
-                        @if($centro->onboarding_skipped_cai)
-                            Configurar después
-                        @else
-                            Configurado correctamente
-                        @endif
-                    </p>
+                        </div>
+                    </article>
+
+                    <article class="rounded-xl overflow-hidden" style="border: 1px solid #d0dde6; background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%); box-shadow: 0 6px 18px rgba(16,33,42,0.06);">
+                        <div class="h-14" style="background: linear-gradient(120deg, #8ad0ce 0%, #73bcbc 50%, #4b9ea0 100%);"></div>
+                        <div class="p-4">
+                            <p class="text-[11px] font-extrabold uppercase tracking-wide" style="color: #0f8a8d;">Servicios</p>
+                            <h3 class="font-bold text-lg mt-1" style="color: #182c39;">Catálogo Inicial</h3>
+                            <p class="text-xs mt-1" style="color: #647985;">Listo para asignar en citas.</p>
+                        </div>
+                    </article>
                 </div>
 
-                <div class="bg-green-50 border-2 border-[#22C55E] rounded-lg p-6 text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-[#22C55E] rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Servicios</h3>
-                    <p class="text-sm text-gray-700">Catálogo creado</p>
+                <div class="grid md:grid-cols-2 gap-4 md:gap-5">
+                    <section class="rounded-xl p-5" style="border: 1px solid #d0dde6; background: linear-gradient(135deg, rgba(15,138,141,0.06) 0%, #f8fbfd 55%); box-shadow: 0 6px 16px rgba(16,33,42,0.05);">
+                        <div class="flex items-center gap-2.5 mb-3">
+                            <div class="w-7 h-7 rounded-md flex items-center justify-center" style="background: #0f8a8d;">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-extrabold uppercase tracking-wide" style="color: #1a303d;">Próximos Pasos</h3>
+                        </div>
+                        <ul class="space-y-2.5 text-sm">
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Registrar médicos y personal de apoyo.</span></li>
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Crear pacientes y expedientes iniciales.</span></li>
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Configurar horarios y disponibilidad de citas.</span></li>
+                        </ul>
+                    </section>
+
+                    <section class="rounded-xl p-5" style="border: 1px solid #d0dde6; background: linear-gradient(135deg, rgba(15,138,141,0.06) 0%, #f8fbfd 55%); box-shadow: 0 6px 16px rgba(16,33,42,0.05);">
+                        <div class="flex items-center gap-2.5 mb-3">
+                            <div class="w-7 h-7 rounded-md flex items-center justify-center" style="background: #0f8a8d;">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-extrabold uppercase tracking-wide" style="color: #1a303d;">Valor Inmediato</h3>
+                        </div>
+                        <ul class="space-y-2.5 text-sm">
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Agenda ordenada y control de flujo diario.</span></li>
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Base administrativa unificada y trazable.</span></li>
+                            <li class="flex items-start gap-2"><span style="color: #0f8a8d;">•</span><span style="color: #4f6672;">Preparado para reportes y facturación.</span></li>
+                        </ul>
+                    </section>
                 </div>
+
+                <form action="{{ route('onboarding.mark-completed') }}" method="POST" class="pt-3 text-center">
+                    @csrf
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-7 py-3 text-sm rounded-lg font-bold text-white transition-all"
+                            style="background: linear-gradient(90deg, #0f8a8d 0%, #167f92 100%); box-shadow: 0 6px 16px rgba(15,138,141,0.28);"
+                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 10px 20px rgba(15,138,141,0.35)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(15,138,141,0.28)'">
+                        Ir al Panel de Administración
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </button>
+                </form>
             </div>
         </div>
-
-        <!-- Próximos pasos -->
-        <div class="bg-blue-50 border-l-4 border-[#2563EB] rounded-r-lg p-8 mb-10">
-            <div class="flex items-center mb-6">
-                <div class="w-10 h-10 bg-[#2563EB] rounded-lg flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">Próximos Pasos (Opcionales)</h3>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-semibold">1</div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-1">Agregar Médicos</h4>
-                        <p class="text-sm text-gray-600">Registra al personal médico de tu clínica</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#0EA5E9] text-white flex items-center justify-center font-semibold">2</div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-1">Registrar Pacientes</h4>
-                        <p class="text-sm text-gray-600">Crea el perfil de tus pacientes</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#22C55E] text-white flex items-center justify-center font-semibold">3</div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-1">Personalizar Facturas</h4>
-                        <p class="text-sm text-gray-600">Diseña el formato de tus facturas</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-semibold">4</div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-1">Configurar Especialidades</h4>
-                        <p class="text-sm text-gray-600">Define las especialidades que ofreces</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if($centro->onboarding_skipped_cai)
-        <!-- Advertencia CAI -->
-        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-lg mb-10">
-            <div class="flex items-start">
-                <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900">Recuerda configurar el CAI</h3>
-                    <p class="text-sm text-gray-700 mt-1">
-                        No podrás emitir facturas fiscales hasta que configures tu autorización CAI. 
-                        Puedes hacerlo desde el menú <strong>Facturación > CAI Autorizaciones</strong>.
-                    </p>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Características disponibles -->
-        <div class="mb-10">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 text-center">Todo lo que Puedes Hacer Ahora</h3>
-            
-            <div class="grid md:grid-cols-3 gap-4">
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Gestionar Citas</h4>
-                </div>
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-cyan-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#0EA5E9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Consultas Médicas</h4>
-                </div>
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Recetas Médicas</h4>
-                </div>
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Exámenes de Laboratorio</h4>
-                </div>
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Facturación Fiscal</h4>
-                </div>
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-[#2563EB] hover:shadow-md transition-all text-center">
-                    <div class="w-12 h-12 mx-auto mb-3 bg-cyan-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#0EA5E9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900 text-sm">Reportes y Estadísticas</h4>
-                </div>
-            </div>
-        </div>
-
-        <!-- Botón principal -->
-        <form action="{{ route('onboarding.mark-completed') }}" method="POST">
-            @csrf
-            <div class="text-center">
-                <button type="submit" 
-                        class="inline-flex items-center px-12 py-5 bg-[#2563EB] text-white font-semibold text-lg rounded-lg hover:bg-[#1D4ED8] transition-all shadow-xl hover:shadow-2xl">
-                    Ir al Panel de Administración
-                    <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                    </svg>
-                </button>
-                
-                <p class="mt-4 text-sm text-gray-600">
-                    ¡Estás a punto de comenzar una nueva era en la gestión de tu clínica!
-                </p>
-            </div>
-        </form>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Intentionally left minimal to avoid distracting effects on completion page.
+</script>
+@endpush
