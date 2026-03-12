@@ -16,8 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.canonical' => \App\Http\Middleware\EnforceCanonicalTenantDomain::class,
             'tenant.maintenance' => \App\Http\Middleware\EnsureTenantNotInMaintenance::class,
             'tenant.initialized' => \App\Http\Middleware\EnsureTenantInitialized::class,
+            'tenant.subscription.active' => \App\Http\Middleware\EnsureTenantSubscriptionActive::class,
             'central.domain' => \App\Http\Middleware\EnsureCentralDomain::class,
             'require.onboarding' => \App\Http\Middleware\RequireOnboarding::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/paypal',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

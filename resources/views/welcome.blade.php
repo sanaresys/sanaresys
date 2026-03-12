@@ -279,7 +279,7 @@
                 </span>
             </a>
             <div class="flex items-center gap-2">
-                <a href="{{ \App\Support\CentralUrl::route('clinica.registro') }}" class="btn-primary px-4 py-2 text-sm sm:text-base">Registrar Clinica</a>
+                <a href="{{ \App\Support\CentralUrl::route('clinica.registro', ['plan' => 'monthly']) }}" class="btn-primary px-4 py-2 text-sm sm:text-base">Registrar Clinica</a>
                 <a href="{{ \App\Support\CentralUrl::route('filament.admin.auth.login') }}" class="btn-secondary px-4 py-2 text-sm sm:text-base">
                     <span data-lucide="log-in" class="h-4 w-4" aria-hidden="true"></span>
                     Iniciar Sesion
@@ -447,79 +447,45 @@
                 <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">Comienza facil y escala a tu ritmo.</h2>
                  </div>
 
-            <div class="grid gap-6 lg:grid-cols-3">
-                <article class="surface-card p-7">
-                    <p class="text-sm font-semibold uppercase tracking-[0.12em] text-emerald-700">Gratis 15 dias</p>
-                    <h3 class="mt-3 text-2xl font-bold">Plan de inicio</h3>
-                    <p class="mt-2 text-slate-600">Prueba completa para empezar sin compromiso.</p>
-                    <p class="mt-6 text-4xl font-extrabold text-slate-900">$0 <span class="text-lg font-semibold text-slate-500">/15 dias</span></p>
-                    <ul class="mt-6 space-y-3 text-slate-700">
-                        <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Hasta 50 pacientes</span></li>
-                        <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Agenda basica de citas</span></li>
-                        <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>1 medico con historial clinico digital</span></li>
-                    </ul>
-                    <a href="{{ \App\Support\CentralUrl::route('clinica.registro') }}" class="btn-primary mt-7 w-full px-4 py-3 text-base">Registrar Clinica</a>
-                    <div class="paypal-note mt-3" aria-label="PayPal proximamente">
-                        <span data-lucide="credit-card" class="h-4 w-4"></span>
-                        PayPal proximamente
-                    </div>
-                    <p class="mt-2 text-center text-xs font-semibold text-sky-700">Pagos con PayPal proximamente.</p>
-                </article>
-
+            <div class="grid gap-6 lg:grid-cols-2">
                 <article class="surface-card pricing-recommended p-7">
                     <p class="text-sm font-semibold uppercase tracking-[0.12em] text-sky-700">Mensual</p>
                     <h3 class="mt-3 text-2xl font-bold">Plan mensual</h3>
                     <p class="mt-2 text-slate-600">Flexibilidad mes a mes. Ideal para clinicas en crecimiento.</p>
-                    <p class="mt-6 text-4xl font-extrabold text-slate-900">$89.99 <span class="text-lg font-semibold text-slate-500">/mes</span></p>
+                    <p class="mt-6 text-4xl font-extrabold text-slate-900">$89.90 <span class="text-lg font-semibold text-slate-500">/mes</span></p>
                     <ul class="mt-6 space-y-3 text-slate-700">
                         <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Pacientes ilimitados</span></li>
                         <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Multiples medicos y recepcion</span></li>
                         <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Reportes operativos y recetas digitales</span></li>
                     </ul>
-                    <div class="paypal-note mt-3" aria-label="PayPal proximamente">
+                    <a href="{{ \App\Support\CentralUrl::route('clinica.registro', ['plan' => 'monthly']) }}" class="btn-primary mt-12 w-full px-4 py-3 text-base">Seleccionar mensual</a>
+                    <div class="paypal-note mt-3" aria-label="PayPal disponible">
                         <span data-lucide="credit-card" class="h-4 w-4"></span>
-                        PayPal proximamente
+                        Pago recurrente con PayPal
                     </div>
-                    <p class="mt-2 text-center text-xs font-semibold text-sky-700">Pagos con PayPal proximamente.</p>
+                    <p class="mt-2 text-center text-xs font-semibold text-sky-700">Activa tu clinica luego de verificar correo y aprobar el pago.</p>
                 </article>
 
                 <article class="surface-card p-7">
                     <p class="text-sm font-semibold uppercase tracking-[0.12em] text-amber-700">Anual</p>
                     <h3 class="mt-3 text-2xl font-bold">Plan anual</h3>
-                    <p class="mt-2 text-slate-600">Mejor valor. Ahorra 44% y despreocupate todo el ano.</p>
-                    <p class="mt-6 text-4xl font-extrabold text-slate-900">$599 <span class="text-lg font-semibold text-slate-500">/ano</span></p>
-                    <p class="mt-1 text-sm font-semibold text-emerald-700">Equivale a $49.92/mes</p>
+                    <p class="mt-2 text-slate-600">Mejor valor. Ahorra 10% y despreocupa el ano.</p>
+                    <p class="mt-6 text-4xl font-extrabold text-slate-900">$919 <span class="text-lg font-semibold text-slate-500">/año</span></p>
+                    <p class="mt-1 text-sm font-semibold text-emerald-700">Equivale a $76.58/mes</p>
                     <ul class="mt-5 space-y-3 text-slate-700">
                         <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Todo lo del plan mensual</span></li>
                         <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>2 meses incluidos sin costo adicional</span></li>
-                        <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Prioridad en acompanamiento y soporte</span></li>
+                        <li class="flex items-start gap-2"><span data-lucide="check" class="mt-0.5 h-4 w-4 text-emerald-700"></span><span>Prioridad en acompañamiento y soporte</span></li>
                     </ul>
-                    
-                    <div class="paypal-note mt-3" aria-label="PayPal proximamente">
+                    <a href="{{ \App\Support\CentralUrl::route('clinica.registro', ['plan' => 'annual']) }}" class="btn-primary mt-7 w-full px-4 py-3 text-base">Seleccionar anual</a>
+                    <div class="paypal-note mt-3" aria-label="PayPal disponible">
                         <span data-lucide="credit-card" class="h-4 w-4"></span>
-                        PayPal proximamente
+                        Pago recurrente con PayPal
                     </div>
-                    <p class="mt-2 text-center text-xs font-semibold text-sky-700">Pagos con PayPal proximamente.</p>
+                    <p class="mt-2 text-center text-xs font-semibold text-sky-700">Mejor costo anual con renovacion automatica.</p>
                 </article>
             </div>
 
-            <div class="surface-card mt-7 flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <p class="font-semibold text-slate-700">Estados visuales de pago (solo referencia UI):</p>
-                <div class="flex flex-wrap gap-2">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        <span data-lucide="loader-circle" class="h-3.5 w-3.5 animate-spin"></span>
-                        Procesando
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                        <span data-lucide="check-circle-2" class="h-3.5 w-3.5"></span>
-                        Exito
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
-                        <span data-lucide="x-circle" class="h-3.5 w-3.5"></span>
-                        Fallo
-                    </span>
-                </div>
-            </div>
         </section>
 
         <section id="seguridad" class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
@@ -572,7 +538,7 @@
                 </details>
                 <details class="faq-item">
                     <summary>Ya se puede pagar con PayPal?</summary>
-                    <p>No todavia. La experiencia visual de pago ya esta preparada, pero la integracion de cobro se activara en una fase posterior.</p>
+                    <p>Si. El flujo actual valida correo, envía al checkout de PayPal y activa la clinica al confirmar la suscripcion.</p>
                 </details>
                 <details class="faq-item">
                     <summary>Como ingreso si ya tengo cuenta?</summary>
@@ -585,9 +551,9 @@
             <div class="surface-card overflow-hidden border-sky-100 bg-gradient-to-br from-cyan-50 via-white to-emerald-50 p-8 text-center sm:p-12">
                 <p class="text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">Listo para comenzar</p>
                 <h2 class="mx-auto mt-3 max-w-3xl text-3xl font-extrabold sm:text-4xl">Dale a tu equipo una plataforma clara para atender mejor desde hoy.</h2>
-                <p class="mx-auto mt-3 max-w-2xl text-lg text-slate-600">Empieza con el plan gratuito y valida el flujo completo en tu propia clinica.</p>
+                <p class="mx-auto mt-3 max-w-2xl text-lg text-slate-600">Empieza con plan mensual o anual y activa tu tenant con suscripcion segura en PayPal.</p>
                 <div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-                    <a href="{{ \App\Support\CentralUrl::route('clinica.registro') }}" class="btn-primary px-6 py-3 text-base">
+                    <a href="{{ \App\Support\CentralUrl::route('clinica.registro', ['plan' => 'monthly']) }}" class="btn-primary px-6 py-3 text-base">
                         Registrar Clinica
                         <span data-lucide="arrow-right" class="h-4 w-4"></span>
                     </a>

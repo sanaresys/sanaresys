@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Centros_Medico;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Billing\BillingStateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,14 +13,26 @@ use Illuminate\Validation\ValidationException;
 
 class RootPortalController extends Controller
 {
+    public function __construct(
+        protected BillingStateService $billingStateService,
+    ) {
+    }
+
     public function index()
     {
         $this->assertRoot();
 
         $centros = Centros_Medico::query()
             ->where('tenancy_mode', 'domain')
+            ->with('tenant')
             ->orderBy('id')
             ->get();
+
+        $centros->load([
+            'billingSubscriptions' => fn ($query) => $query
+                ->orderByDesc('last_synced_at')
+                ->orderByDesc('id'),
+        ]);
 
         return view('root-portal', compact('centros'));
     }
@@ -85,6 +98,31 @@ class RootPortalController extends Controller
 
         $scheme = (string) config('tenancy.tenant_scheme', 'https');
         return redirect()->away("{$scheme}://{$domain}/tenant/impersonate/{$token->token}");
+    }
+
+    public function setBillingOverride(Request $request, Centros_Medico $centro): RedirectResponse
+    {
+        $this->assertRoot();
+
+        $validated = $request->validate([
+            'override' => ['required', 'in:force_active,force_inactive,none'],
+            'reason' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
+        $newOverride = $validated['override'] === 'none'
+            ? null
+            : $validated['override'];
+
+        $this->billingStateService->applyOverride(
+            centro: $centro,
+            newOverride: $newOverride,
+            reason: (string) $validated['reason'],
+            performedBy: auth()->user()
+        );
+
+        return redirect()
+            ->route('portal.root')
+            ->with('status', 'Estado de facturacion actualizado correctamente.');
     }
 
     protected function assertRoot(): void

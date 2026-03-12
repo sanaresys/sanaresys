@@ -22,6 +22,11 @@ class Centros_Medico extends ModeloBase
         'nombre_centro',
         'slug',
         'tenancy_mode',
+        'billing_status',
+        'billing_plan_code',
+        'billing_renews_at',
+        'billing_last_sync_at',
+        'billing_override',
         'onboarding_completed_at',
         'onboarding_current_step',
         'onboarding_skipped_cai',
@@ -34,6 +39,8 @@ class Centros_Medico extends ModeloBase
 
     protected $casts = [
         'onboarding_completed_at' => 'datetime',
+        'billing_renews_at' => 'datetime',
+        'billing_last_sync_at' => 'datetime',
         'onboarding_current_step' => 'integer',
         'onboarding_skipped_cai' => 'boolean',
     ];
@@ -50,6 +57,16 @@ class Centros_Medico extends ModeloBase
         );
     }
 
+    public function billingSubscriptions(): HasMany
+    {
+        return $this->hasMany(BillingSubscription::class, 'centro_id');
+    }
+
+    public function tenant()
+    {
+        return $this->hasOne(Tenant::class, 'centro_id');
+    }
+
     // Accesores
     public function getNombreAttribute()
     {
@@ -62,7 +79,16 @@ class Centros_Medico extends ModeloBase
             if (! $centro->tenancy_mode) {
                 $centro->tenancy_mode = 'legacy';
             }
+
+            if (! $centro->billing_status) {
+                $centro->billing_status = 'inactive';
+            }
         });
+    }
+
+    public function isBillingActive(): bool
+    {
+        return $this->billing_status === 'active';
     }
 
     // Método para usar en selects de Filament

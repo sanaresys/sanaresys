@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClinicRegistrationController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\RootPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,8 +23,20 @@ Route::middleware(['web', 'central.domain'])->group(function () {
         ->middleware(['signed', 'throttle:20,1'])
         ->name('clinica.registro.verify');
 
+    Route::post('/registro-clinica/{publicId}/pago', [ClinicRegistrationController::class, 'startPayment'])
+        ->name('clinica.registro.payment.start');
+
+    Route::get('/registro-clinica/{publicId}/pago/retorno', [ClinicRegistrationController::class, 'paymentReturn'])
+        ->name('clinica.registro.payment.return');
+
+    Route::get('/registro-clinica/{publicId}/pago/cancelar', [ClinicRegistrationController::class, 'paymentCancel'])
+        ->name('clinica.registro.payment.cancel');
+
     Route::get('/registro-clinica/exito', [ClinicRegistrationController::class, 'success'])
         ->name('clinica.registro.exito');
+
+    Route::post('/webhooks/paypal', PayPalWebhookController::class)
+        ->name('webhooks.paypal');
 
     Route::middleware(['auth'])->group(function () {
         Route::get('/portal/root', [RootPortalController::class, 'index'])
@@ -31,5 +44,8 @@ Route::middleware(['web', 'central.domain'])->group(function () {
 
         Route::post('/portal/root/tenant/{centro}/entrar', [RootPortalController::class, 'enterTenant'])
             ->name('portal.root.enter-tenant');
+
+        Route::post('/portal/root/tenant/{centro}/billing-override', [RootPortalController::class, 'setBillingOverride'])
+            ->name('portal.root.billing-override');
     });
 });
