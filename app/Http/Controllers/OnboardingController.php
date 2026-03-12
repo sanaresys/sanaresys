@@ -112,16 +112,27 @@ class OnboardingController extends Controller
     public function saveStepTwo(Request $request)
     {
         $validated = $request->validate([
-            'cai_codigo' => 'required|string|max:50',
-            'rango_inicial' => 'required|integer|min:1',
-            'rango_final' => 'required|integer|gt:rango_inicial',
-            'fecha_limite' => 'required|date|after_or_equal:today',
+            'cai_codigo' => 'nullable|string|max:50',
+            'rango_inicial' => 'nullable|integer|min:1',
+            'rango_final' => 'nullable|integer|gt:rango_inicial',
+            'fecha_limite' => 'nullable|date|after_or_equal:today',
         ]);
 
         $centro = $this->getCentroFromTenant();
 
         if (!$centro) {
             return back()->withErrors(['error' => 'Centro médico no encontrado.']);
+        }
+
+        // Si no se proporciona ningún dato del CAI, marcar como omitido y continuar
+        if (empty($validated['cai_codigo'])) {
+            $centro->update([
+                'onboarding_current_step' => 2,
+                'onboarding_skipped_cai' => true,
+            ]);
+
+            return redirect()->route('onboarding.step-3')
+                ->with('info', 'Configuración CAI omitida. Puedes configurarlo más adelante.');
         }
 
         try {

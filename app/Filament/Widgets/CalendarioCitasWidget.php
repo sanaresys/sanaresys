@@ -110,7 +110,7 @@ class CalendarioCitasWidget extends Widget
             'Confirmado' => '#3b82f6', // blue-500
             'Pendiente' => '#f97316',  // orange-500
             'Cancelado' => '#ef4444',  // red-500
-            'Realizada' => '#22c55e',  // green-500
+            'Realizado' => '#22c55e',  // green-500
             default => '#6b7280',      // gray-500
         };
     }
@@ -367,6 +367,8 @@ class CalendarioCitasWidget extends Widget
             $this->diaSeleccionado = null;
             $this->citaSeleccionadaId = null;
             
+            $this->dispatch('refreshChart');
+
             Notification::make()
                 ->title('Cita cancelada')
                 ->body('La cita ha sido cancelada correctamente')
@@ -421,6 +423,8 @@ class CalendarioCitasWidget extends Widget
             // Recargar las citas
             $this->cargarCitas();
             
+            $this->dispatch('refreshChart');
+
             Notification::make()
                 ->title('Cita confirmada')
                 ->body('La cita ha sido confirmada correctamente')
@@ -444,15 +448,17 @@ class CalendarioCitasWidget extends Widget
             $cita = Citas::find($citaId);
             
             if ($cita) {
-                $cita->estado = 'Realizada';
+                $cita->estado = 'Realizado';
                 $cita->save();
                 
                 // Actualizar en memoria
-                $this->actualizarEstadoCitaEnMemoria($citaId, 'Realizada');
+                $this->actualizarEstadoCitaEnMemoria($citaId, 'Realizado');
                 
                 // Recargar las citas
                 $this->cargarCitas();
                 
+                $this->dispatch('refreshChart');
+
                 Notification::make()
                     ->title('Cita marcada como realizada')
                     ->body('La cita ha sido marcada como realizada correctamente')
