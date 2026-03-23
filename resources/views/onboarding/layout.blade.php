@@ -4,123 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Configuracion inicial | Sanaresys</title>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <title>Configuración Inicial - Sanaresys</title>
-    
-    <!-- Google Fonts - Inter (moderna y profesional) -->
+    <link rel="stylesheet" href="{{ asset('css/onboarding-premium.css') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --ink: #10212a;
+            --ink-soft: #48606f;
+            --paper: #f6f1e7;
+            --paper-strong: #fffaf1;
+            --accent: #0f8a8d;
+            --accent-strong: #0a5f61;
+            --gold: #c68c2f;
+            --line: #d8cab4;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+        }
+
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: #F8FAFC;
+            font-family: 'Public Sans', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(15, 138, 141, 0.08), transparent 35%),
+                radial-gradient(circle at 92% 18%, rgba(198, 140, 47, 0.12), transparent 26%),
+                linear-gradient(180deg, var(--paper-strong) 0%, var(--paper) 100%);
             min-height: 100vh;
+        }
+
+        .brand-title,
+        .display-title {
+            font-family: 'Fraunces', serif;
+            letter-spacing: -0.02em;
+        }
+
+        .card-premium {
+            background: rgba(255, 251, 242, 0.84);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-2xl);
+            box-shadow: 0 12px 35px rgba(16, 33, 42, 0.08);
+            backdrop-filter: blur(6px);
         }
     </style>
 </head>
-<body class="antialiased">
+<body>
     <div class="min-h-screen flex flex-col">
-        <!-- Header limpio y profesional -->
-        <header class="bg-white border-b border-gray-200 shadow-sm">
-            <div class="container mx-auto px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-11 h-11 bg-medical-blue rounded-xl flex items-center justify-center shadow-sm">
-                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 class="text-medical-dark font-bold text-xl tracking-tight">Sanaresys</h1>
-                            <p class="text-gray-500 text-sm font-medium">Sistema de Gestión Médica</p>
-                        </div>
+        <header class="border-b" style="border-color: var(--line); background: rgba(255, 250, 241, 0.9); backdrop-filter: blur(4px);">
+            <div class="w-full px-4 md:px-6 lg:px-8 py-4 md:py-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); box-shadow: 0 8px 20px rgba(10,95,97,.25);">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="brand-title text-xl font-extrabold">Sanaresys</h1>
+                        <p class="text-sm" style="color: var(--ink-soft);">Implementacion inicial</p>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Barra de progreso elegante -->
-        @if(isset($currentStep))
-        <div class="bg-white border-b border-gray-200">
-            <div class="container mx-auto px-6 py-8">
-                <div class="flex items-center justify-center space-x-3">
-                    @foreach([1, 2, 3, 4] as $step)
-                    <div class="flex items-center">
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm
-                                {{ $currentStep >= $step ? 'bg-medical-green text-white shadow-lg shadow-medical-green/30' : 'bg-gray-100 text-gray-400 border-2 border-gray-200' }}
-                                transition-all duration-300">
-                                @if($currentStep > $step)
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                @else
-                                    {{ $step }}
-                                @endif
-                            </div>
-                            <span class="mt-3 text-xs font-medium
-                                {{ $currentStep >= $step ? 'text-medical-dark' : 'text-gray-400' }}">
-                                @if($step === 1) Datos básicos
-                                @elseif($step === 2) Facturación
-                                @elseif($step === 3) Servicios
-                                @else ¡Listo!
-                                @endif
-                            </span>
-                        </div>
-                        @if($step < 4)
-                        <div class="w-20 h-0.5 mx-2 rounded-full
-                            {{ $currentStep > $step ? 'bg-medical-green' : 'bg-gray-200' }}
-                            transition-all duration-300"></div>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Contenido principal -->
-        <main class="flex-1 container mx-auto px-4 py-8">
-            <div class="max-w-4xl mx-auto">
+        <main class="flex-1 w-full px-2 md:px-4 lg:px-6 py-4 md:py-6">
+            <div class="max-w-[1760px] mx-auto">
                 @if(session('success'))
-                <div class="mb-6 bg-green-50 border-l-4 border-[#22C55E] rounded-r-lg p-4">
-                    <div class="flex items-center">
-                        <svg class="w-6 h-6 text-[#22C55E] mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <p class="text-gray-900 font-medium">{{ session('success') }}</p>
-                    </div>
+                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #ecfdf5; border-color: #10b981;">
+                    <p class="font-semibold" style="color: #065f46;">{{ session('success') }}</p>
                 </div>
                 @endif
 
                 @if(session('warning'))
-                <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg p-4">
-                    <div class="flex items-center">
-                        <svg class="w-6 h-6 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                        <p class="text-gray-900 font-medium">{{ session('warning') }}</p>
-                    </div>
+                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #fff7ed; border-color: #f59e0b;">
+                    <p class="font-semibold" style="color: #9a3412;">{{ session('warning') }}</p>
                 </div>
                 @endif
 
                 @if($errors->any())
-                <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4">
-                    <div class="flex items-start">
-                        <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        <div>
-                            <p class="font-semibold text-gray-900 mb-2">Por favor corrige los siguientes errores:</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-700">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
+                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #fef2f2; border-color: #ef4444;">
+                    <p class="font-semibold mb-2" style="color: #991b1b;">Corrige estos errores:</p>
+                    <ul class="list-disc list-inside text-sm" style="color: #7f1d1d;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
                 @endif
 
@@ -128,14 +99,14 @@
             </div>
         </main>
 
-        <!-- Footer -->
-        <footer class="bg-white/10 backdrop-blur-md border-t border-white/20 py-4 mt-auto">
-            <div class="container mx-auto px-4 text-center text-white/60 text-sm">
-                <p>© {{ date('Y') }} Sanaresys. Sistema de Gestión para Clínicas Médicas.</p>
+        <footer class="py-4 border-t" style="border-color: var(--line);">
+            <div class="w-full px-4 md:px-6 lg:px-8 text-center text-sm" style="color: var(--ink-soft);">
+                <p>© {{ date('Y') }} Sanaresys. Plataforma de gestion para clinicas medicas.</p>
             </div>
         </footer>
     </div>
 
+    <script src="{{ asset('js/onboarding-effects.js') }}"></script>
     @stack('scripts')
 </body>
 </html>
