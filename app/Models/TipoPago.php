@@ -17,24 +17,5 @@ class TipoPago extends ModeloBase
         'deleted_by',   
     ];
 
-    public function centro(): BelongsTo
-    {
-        return $this->belongsTo(Centros_Medico::class, 'centro_id');
-    }
-
-    protected static function booted(): void
-    {
-        parent::booted();
-
-        static::creating(function ($model) {
-            // Solo agregar centro_id si NO estamos en contexto de tenant
-            if (!tenancy()->initialized && auth()->check() && empty($model->centro_id)) {
-                $user = auth()->user();
-                if ($user && isset($user->centro_id)) {
-                    $model->centro_id = $user->centro_id;
-                }
-            }
-        });
-    }
 }
 

@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Auth;
 
 class FacturaPdfController extends Controller
 {
+    private function obtenerNumeroFacturaParaArchivo(Factura $factura): string
+    {
+        $numeroFactura = $factura->usa_cai && $factura->caiCorrelativo
+            ? $factura->caiCorrelativo->numero_factura
+            : $factura->generarNumeroSinCAI();
+
+        return str_replace(['/', '-', ' '], '_', $numeroFactura);
+    }
+
     /**
      * Generar PDF de la factura
      */
@@ -39,10 +48,6 @@ class FacturaPdfController extends Controller
                 throw new \Exception('La factura no tiene información del paciente');
             }
 
-            if (!$factura->centro) {
-                throw new \Exception('La factura no tiene información del centro médico');
-            }
-
             // Configurar opciones del PDF con configuración optimizada
             $pdf = Pdf::loadView('pdf.factura', compact('factura'))
                 ->setPaper('letter', 'portrait')
@@ -58,9 +63,7 @@ class FacturaPdfController extends Controller
                 ]);
 
             // Generar nombre del archivo más descriptivo
-            $numeroFactura = $factura->usa_cai && $factura->caiCorrelativo 
-                ? str_replace(['/', '-', ' '], '_', $factura->caiCorrelativo->numero_factura)
-                : "PROV-{$factura->centro_id}-{$factura->fecha_emision->year}-" . str_pad($factura->id, 6, '0', STR_PAD_LEFT);
+            $numeroFactura = $this->obtenerNumeroFacturaParaArchivo($factura);
                 
             $pacienteNombre = $factura->paciente && $factura->paciente->persona
                 ? str_replace([' ', '.'], '_', $factura->paciente->persona->nombre_completo) 
@@ -127,9 +130,7 @@ class FacturaPdfController extends Controller
                 ]);
 
             // Generar nombre para preview
-            $numeroFactura = $factura->usa_cai && $factura->caiCorrelativo 
-                ? str_replace(['/', '-', ' '], '_', $factura->caiCorrelativo->numero_factura)
-                : "PROV-{$factura->centro_id}-{$factura->fecha_emision->year}-" . str_pad($factura->id, 6, '0', STR_PAD_LEFT);
+            $numeroFactura = $this->obtenerNumeroFacturaParaArchivo($factura);
             $nombreArchivo = "Preview_Factura_{$numeroFactura}.pdf";
 
             // Mostrar en el navegador
@@ -183,9 +184,7 @@ class FacturaPdfController extends Controller
                 ]);
 
             // Generar nombre del archivo y ruta
-            $numeroFactura = $factura->usa_cai && $factura->caiCorrelativo 
-                ? str_replace(['/', '-', ' '], '_', $factura->caiCorrelativo->numero_factura)
-                : "PROV-{$factura->centro_id}-{$factura->fecha_emision->year}-" . str_pad($factura->id, 6, '0', STR_PAD_LEFT);
+            $numeroFactura = $this->obtenerNumeroFacturaParaArchivo($factura);
             $nombreArchivo = "facturas/Factura_{$numeroFactura}_{$factura->fecha_emision->format('Y-m-d')}.pdf";
             
             // Guardar usando Storage facade
@@ -278,9 +277,7 @@ class FacturaPdfController extends Controller
                             'isFontSubsettingEnabled' => true,
                         ]);
 
-                    $numeroFactura = $factura->usa_cai && $factura->caiCorrelativo 
-                        ? str_replace(['/', '-', ' '], '_', $factura->caiCorrelativo->numero_factura)
-                        : "PROV-{$factura->centro_id}-{$factura->fecha_emision->year}-" . str_pad($factura->id, 6, '0', STR_PAD_LEFT);
+                    $numeroFactura = $this->obtenerNumeroFacturaParaArchivo($factura);
                         
                     $pacienteNombre = $factura->paciente && $factura->paciente->persona
                         ? str_replace([' ', '.'], '_', $factura->paciente->persona->nombre_completo) 

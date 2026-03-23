@@ -28,6 +28,7 @@ class FacturasResource extends Resource
     protected static ?string $model = Factura::class;
     protected static ?string $slug = 'facturas';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Gestión de Facturación';
 
     protected static function esFacturaSoloLectura(?Factura $record): bool
     {
@@ -40,7 +41,6 @@ class FacturasResource extends Resource
             ->schema([
                 Forms\Components\Hidden::make('consulta_id'),
                 Forms\Components\Hidden::make('paciente_id'),
-                Forms\Components\Hidden::make('medico_id'),
                 Forms\Components\Hidden::make('cita_id'),
                 Forms\Components\Hidden::make('subtotal'),
                 Forms\Components\Hidden::make('impuesto_total'),
@@ -53,8 +53,6 @@ class FacturasResource extends Resource
                     ->default('PENDIENTE'),
                 Forms\Components\Hidden::make('created_by')
                     ->default(Auth::id()),
-                Forms\Components\Hidden::make('centro_id')
-                    ->default(Auth::user()->centro_id ?? 1),
                 Forms\Components\Hidden::make('usa_cai')
                     ->default(false),
 
@@ -179,14 +177,12 @@ class FacturasResource extends Resource
                         Repeater::make('pagos')
                             ->label('Métodos de Pago')
                             ->dehydrated()
-                            ->defaultItems(3)
+                            ->defaultItems(1)
                             ->addActionLabel('Agregar Método de Pago')
                             
                             // ✅ VALORES POR DEFECTO SIMPLIFICADOS
                             ->default([
                                 ['tipo_pago_id' => 1, 'monto_recibido' => ''], // Efectivo
-                                ['tipo_pago_id' => 2, 'monto_recibido' => ''], // Tarjeta
-                                ['tipo_pago_id' => 3, 'monto_recibido' => ''], // POS
                             ])
                             
                             ->collapsed(false)
@@ -283,9 +279,6 @@ class FacturasResource extends Resource
                                         }
                                     }),
                                     
-                                Forms\Components\Hidden::make('centro_id')
-                                    ->default(Auth::user()->centro_id),
-                                    
                                 
                                 Forms\Components\Hidden::make('fecha_pago')
                                     ->default(now()),
@@ -379,10 +372,10 @@ class FacturasResource extends Resource
                     ->searchable()
                     ->sortable(),
                     
-                TextColumn::make('medico.persona.nombre_completo')
+                TextColumn::make('medico_display')
                     ->label('Médico')
-                    ->searchable()
-                    ->sortable(),
+                    ->getStateUsing(fn (Factura $record): string => $record->consulta?->medico?->persona?->nombre_completo ?? 'N/A')
+                    ->wrap(),
                     
                 TextColumn::make('fecha_emision')
                     ->label('Fecha')
@@ -423,7 +416,7 @@ class FacturasResource extends Resource
                         if ($saldo <= 0) {
                             return 'Totalmente pagada';
                         } elseif ($pagado > 0) {
-                            return 'Saldo: L. ' . number_format($saldo, 2);
+                            return 'Saldo Pendiente: L. ' . number_format($saldo, 2);
                         }
                         
                         return 'Sin pagos';

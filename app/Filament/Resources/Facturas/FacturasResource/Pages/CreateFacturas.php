@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\DB;
 class CreateFacturas extends CreateRecord
 {
     protected static string $resource = FacturasResource::class;
+    
+    /**
+     * Pagos capturados antes de crear el record.
+     * Se usan en afterCreate() porque el form state puede perder el repeater
+     * cuando la factura queda en modo solo lectura (estado PAGADA).
+     */
+    protected array $pagosCapturados = [];
 
     protected function getHeaderActions(): array
     {
@@ -86,7 +93,6 @@ class CreateFacturas extends CreateRecord
                 $this->form->fill([
                     'consulta_id' => $consultaId,
                     'paciente_id' => $consulta->paciente_id,
-                    'medico_id' => $consulta->medico_id,
                     'cita_id' => $consulta->cita_id,
                     'subtotal' => $subtotal,
                     'descuento_total' => $descuentoTotal,
@@ -137,7 +143,6 @@ class CreateFacturas extends CreateRecord
             
             if ($consulta) {
                 $data['paciente_id'] = $consulta->paciente_id;
-                $data['medico_id'] = $consulta->medico_id;
                 $data['cita_id'] = $consulta->cita_id;
                 
                 // Obtener totales desde FacturaDetalle (servicios actualizados)
@@ -181,7 +186,6 @@ class CreateFacturas extends CreateRecord
                 $data['fecha_emision'] = now();
                 $data['usuario_id'] = Auth::id();
                 $data['created_by'] = Auth::id();
-                // Multi-tenant: centro_id no es necesario
                 $data['estado'] = $data['estado'] ?? 'PENDIENTE';
                 
                 // Asegurar usa_cai con múltiples fuentes
@@ -213,6 +217,10 @@ class CreateFacturas extends CreateRecord
                     })->values()->toArray();
                 }
 
+                // Guardar una copia para usar en afterCreate(), evitando perderlos
+                // cuando Filament rehidrata el formulario tras crear la factura.
+                $this->pagosCapturados = $data['pagos'] ?? [];
+
             }
         }
 
@@ -221,15 +229,26 @@ class CreateFacturas extends CreateRecord
     
     protected function afterCreate(): void
     {
+        $formState = $this->form->getState();
+
         Log::info('📥 Pagos recibidos en afterCreate()', [
-            'formState' => $this->form->getState()
+            'formState' => $formState,
+            'pagos_capturados_count' => count($this->pagosCapturados),
         ]);
 
         // ============= SECCIÓN CRÍTICA: PROCESAMIENTO DE PAGOS =============
         
-        // Obtener los datos del formulario
-        $formData = $this->form->getState();
-        $pagos = $formData['pagos'] ?? [];
+        // Prioridad: pagos capturados en mutateFormDataBeforeCreate.
+        // Fallbacks por si el estado cambia después de crear el record.
+        $pagos = $this->pagosCapturados;
+
+        if (empty($pagos)) {
+            $pagos = $formState['pagos'] ?? [];
+        }
+
+        if (empty($pagos) && !empty($this->data['pagos']) && is_array($this->data['pagos'])) {
+            $pagos = $this->data['pagos'];
+        }
         
         Log::info('💰 INICIANDO PROCESAMIENTO DE PAGOS', [
             'factura_id' => $this->record->id,
@@ -302,7 +321,6 @@ class CreateFacturas extends CreateRecord
                         'tipo_pago_id' => $pagoValido['tipo_pago_id'],
                         'monto_recibido' => $pagoValido['monto_recibido'],
                         'paciente_id' => $this->record->paciente_id,
-                        'centro_id' => $this->record->centro_id,
                         'fecha_pago' => now(),
                         'created_by' => Auth::id(),
                         'monto_devolucion' => 0,
@@ -370,9 +388,15 @@ class CreateFacturas extends CreateRecord
                 'saldo_pendiente' => max(0, $totalFactura - $totalPagado)
             ]);
         } else {
+            $this->record->update([
+                'estado' => 'PENDIENTE',
+                'saldo_pendiente' => $this->record->total,
+            ]);
+
             Log::info('📄 FACTURA SIN PAGOS', [
                 'factura_id' => $this->record->id,
-                'estado' => 'PENDIENTE'
+                'estado' => 'PENDIENTE',
+                'saldo_pendiente' => $this->record->total,
             ]);
         }
 
@@ -402,7 +426,7 @@ class CreateFacturas extends CreateRecord
                     $caiService = app(\App\Services\CaiNumerador::class);
                     
                     // Asignar número de CAI a la factura
-                    $correlativo = $caiService->asignarNumeroFactura($record->centro_id, $record->id);
+                    $correlativo = $caiService->asignarNumeroFactura($record->id);
                     
                     if ($correlativo) {
                         // Actualizar la factura con la información del CAI
@@ -420,7 +444,6 @@ class CreateFacturas extends CreateRecord
                     } else {
                         Log::warning('⚠️ No se pudo asignar CAI - sin autorizaciones disponibles', [
                             'factura_id' => $record->id,
-                            'centro_id' => $record->centro_id
                         ]);
                     }
                 } catch (\Exception $e) {

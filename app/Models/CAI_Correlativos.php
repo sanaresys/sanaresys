@@ -19,7 +19,6 @@ class CAI_Correlativos extends Model
         'numero_factura',
         'fecha_emision',
         'usuario_id',
-        'centro_id',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -39,11 +38,6 @@ class CAI_Correlativos extends Model
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'usuario_id');
-    }
-
-    public function centro(): BelongsTo
-    {
-        return $this->belongsTo(Centros_Medico::class, 'centro_id');
     }
 
     public function factura(): BelongsTo
@@ -66,10 +60,5 @@ class CAI_Correlativos extends Model
     public function scopeActivos($query)
     {
         return $query->whereNull('deleted_at');
-    }
-
-    public function scopePorCentro($query, $centroId)
-    {
-        return $query->where('centro_id', $centroId);
     }
 }

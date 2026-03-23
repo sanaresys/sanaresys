@@ -67,7 +67,7 @@ class PagosFacturasResource extends Resource
                 TextColumn::make('factura_numero')
                     ->label('Factura')
                     ->searchable()
-                    ->sortable()
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('factura_id', $direction))
                     ->getStateUsing(function (PagosFactura $record): string {
                         if ($record->factura->usa_cai && $record->factura->caiCorrelativo) {
                             return $record->factura->caiCorrelativo->numero_factura;
@@ -142,7 +142,7 @@ class PagosFacturasResource extends Resource
                     ->extraAttributes(['style' => 'white-space: pre-line; font-size: 0.85em;'])
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('fecha_pago', 'desc')
+            ->defaultSort('factura_id', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('tipo_pago_id')
                     ->label('Tipo de Pago')

@@ -276,7 +276,7 @@
         <!-- Header -->
         <div class="header">
             <div class="logo-section">
-                <div class="logo">{{ $factura->centro->nombre_centro ?? 'Centro Médico' }}</div>
+                <div class="logo">{{ $factura->centro?->nombre_centro ?? 'Centro Médico' }}</div>
                 <div class="company-info">
                     @if($factura->centro)
                         <div>{{ $factura->centro->direccion ?? 'Dirección no disponible' }}</div>
@@ -296,7 +296,7 @@
                     @if($factura->usa_cai && $factura->caiCorrelativo)
                         {{ $factura->caiCorrelativo->numero_factura }}
                     @else
-                        PROV-{{ $factura->centro_id }}-{{ $factura->fecha_emision->year }}-{{ str_pad($factura->fecha_emision->month, 2, '0', STR_PAD_LEFT) }}-{{ str_pad($factura->id, 6, '0', STR_PAD_LEFT) }}
+                        {{ $factura->generarNumeroSinCAI() }}
                     @endif
                 </div>
                 
@@ -398,7 +398,36 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $subtotalDetalles = (float) ($factura->detalles->sum('subtotal') ?? 0);
+                    $descuentoGlobalFactura = (float) ($factura->descuento_total ?? 0);
+                    $descuentoDistribuido = 0.0;
+                @endphp
                 @forelse($factura->detalles as $detalle)
+                    @php
+                        $cantidad = (float) ($detalle->cantidad ?? 1);
+                        $subtotalLinea = (float) ($detalle->subtotal ?? 0);
+                        $impuestoLinea = (float) ($detalle->impuesto_monto ?? 0);
+
+                        $precioUnitario = $detalle->precio_unitario
+                            ?? ($cantidad > 0 ? ($subtotalLinea / $cantidad) : null)
+                            ?? ($detalle->servicio->precio_unitario ?? 0);
+
+                        $descuentoLinea = (float) ($detalle->descuento_monto ?? 0);
+
+                        // Si no hay descuento por línea, distribuir el descuento global de la factura
+                        // proporcionalmente al subtotal de cada detalle (solo para visualización del PDF).
+                        if ($descuentoLinea <= 0 && $descuentoGlobalFactura > 0 && $subtotalDetalles > 0) {
+                            if ($loop->last) {
+                                $descuentoLinea = max(0, $descuentoGlobalFactura - $descuentoDistribuido);
+                            } else {
+                                $descuentoLinea = round(($descuentoGlobalFactura * $subtotalLinea) / $subtotalDetalles, 2);
+                                $descuentoDistribuido += $descuentoLinea;
+                            }
+                        }
+
+                        $totalLineaMostrado = max(0, $subtotalLinea + $impuestoLinea - $descuentoLinea);
+                    @endphp
                     <tr>
                         <td>
                             <strong>{{ $detalle->servicio->nombre ?? 'Consulta Médica' }}</strong>
@@ -407,13 +436,9 @@
                             @endif
                         </td>
                         <td class="text-center">{{ $detalle->cantidad ?? 1 }}</td>
-                        <td class="text-right">L. {{ number_format($detalle->precio_unitario ?? 0, 2) }}</td>
+                        <td class="text-right">L. {{ number_format((float) $precioUnitario, 2) }}</td>
                         <td class="text-right">
-                            @if(isset($detalle->descuento_monto) && $detalle->descuento_monto > 0)
-                                L. {{ number_format($detalle->descuento_monto, 2) }}
-                            @else
-                                -
-                            @endif
+                            L. {{ number_format((float) $descuentoLinea, 2) }}
                         </td>
                         <td class="text-right">
                             @if(isset($detalle->impuesto_monto) && $detalle->impuesto_monto > 0)
@@ -422,7 +447,7 @@
                                 -
                             @endif
                         </td>
-                        <td class="text-right currency">L. {{ number_format($detalle->total_linea ?? 0, 2) }}</td>
+                        <td class="text-right currency">L. {{ number_format((float) $totalLineaMostrado, 2) }}</td>
                     </tr>
                 @empty
                     <tr>

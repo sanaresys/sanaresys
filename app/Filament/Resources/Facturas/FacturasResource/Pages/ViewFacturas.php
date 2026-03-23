@@ -21,7 +21,7 @@ class ViewFacturas extends ViewRecord
         // Cargar las relaciones necesarias para el infolist
         $this->record->load([
             'paciente.persona',
-            'medico.persona', 
+                'consulta.medico.persona', 
             'centro',
             'detalles.servicio',
             'caiCorrelativo.caiAutorizacion',
@@ -87,23 +87,19 @@ class ViewFacturas extends ViewRecord
                     ->schema([
                         Infolists\Components\Grid::make(2)
                             ->schema([
-                                Infolists\Components\TextEntry::make('paciente.persona.nombre_completo')
+                                Infolists\Components\TextEntry::make('paciente_display')
                                     ->label('Paciente')
+                                    ->getStateUsing(function (Factura $record): string {
+                                        $nombre = $record->paciente?->persona?->nombre_completo ?? 'N/A';
+                                        $dni = $record->paciente?->persona?->dni;
+
+                                        return $dni ? "{$nombre} - {$dni}" : $nombre;
+                                    })
                                     ->icon('heroicon-m-user'),
                                     
-                                Infolists\Components\TextEntry::make('medico.persona.nombre_completo')
+                                Infolists\Components\TextEntry::make('consulta.medico.persona.nombre_completo')
                                     ->label('Médico Tratante')
                                     ->icon('heroicon-m-user-circle'),
-                            ]),
-                            
-                        Infolists\Components\Grid::make(2)
-                            ->schema([
-                                Infolists\Components\TextEntry::make('paciente.persona.identidad')
-                                    ->label('Identidad del Paciente'),
-                                    
-                                Infolists\Components\TextEntry::make('centro.nombre_centro')
-                                    ->label('Centro Médico')
-                                    ->icon('heroicon-m-building-office-2'),
                             ]),
                     ])
                     ->columns(1),
@@ -123,8 +119,15 @@ class ViewFacturas extends ViewRecord
                                             ->label('Cantidad')
                                             ->numeric(),
                                             
-                                        Infolists\Components\TextEntry::make('precio_unitario')
+                                        Infolists\Components\TextEntry::make('precio_unitario_calculado')
                                             ->label('Precio Unitario')
+                                            ->getStateUsing(function (FacturaDetalle $record): float {
+                                                if (($record->cantidad ?? 0) > 0) {
+                                                    return (float) $record->subtotal / (float) $record->cantidad;
+                                                }
+
+                                                return (float) ($record->servicio?->precio_unitario ?? 0);
+                                            })
                                             ->money('HNL'),
                                             
                                         Infolists\Components\TextEntry::make('subtotal')
@@ -135,11 +138,11 @@ class ViewFacturas extends ViewRecord
                                     
                                 Infolists\Components\Grid::make(2)
                                     ->schema([
-                                        Infolists\Components\TextEntry::make('impuesto_unitario')
+                                        Infolists\Components\TextEntry::make('impuesto_monto')
                                             ->label('Impuesto')
                                             ->money('HNL'),
                                             
-                                        Infolists\Components\TextEntry::make('total')
+                                        Infolists\Components\TextEntry::make('total_linea')
                                             ->label('Total')
                                             ->money('HNL')
                                             ->weight('bold')

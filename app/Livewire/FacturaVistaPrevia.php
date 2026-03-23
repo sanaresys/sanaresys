@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\FacturaDiseno;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class FacturaVistaPrevia extends Component
@@ -175,10 +176,9 @@ class FacturaVistaPrevia extends Component
 
     private function cargarDatosGenericos(): void
     {
-        $centroId = $this->getCurrentTenantCentroId();
-        $centro = \App\Models\Centros_Medico::on('mysql')->find($centroId);
+        $centro = \App\Models\Centros_Medico::on('mysql')->first();
 
-        $usuario = auth()->user();
+        $usuario = Auth::user();
         $medico = null;
         $especialidad = 'Medicina General';
 
@@ -406,15 +406,5 @@ class FacturaVistaPrevia extends Component
         ];
     }
 
-    private function getCurrentTenantCentroId(): int
-    {
-        $centroId = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
-
-        if (! $centroId) {
-            throw new \RuntimeException('No hay tenant inicializado para la vista previa de factura.');
-        }
-
-        return (int) $centroId;
-    }
 }
 

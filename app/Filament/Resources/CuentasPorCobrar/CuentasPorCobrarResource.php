@@ -44,9 +44,7 @@ class CuentasPorCobrarResource extends Resource
                                 return \App\Models\Factura::with(['caiCorrelativo', 'paciente.persona'])
                                     ->get()
                                     ->mapWithKeys(function ($factura) {
-                                        $numero = $factura->usa_cai && $factura->caiCorrelativo 
-                                            ? $factura->caiCorrelativo->numero_factura
-                                            : "PROF-{$factura->id}";
+                                        $numero = $factura->numero_factura;
                                         $paciente = $factura->paciente->persona->nombre_completo ?? 'Sin paciente';
                                         $total = 'L.' . number_format($factura->total, 2);
                                         
@@ -115,10 +113,8 @@ class CuentasPorCobrarResource extends Resource
                     ->formatStateUsing(function ($state, $record) {
                         $factura = $record->factura;
                         if (!$factura) return "Factura #{$state}";
-                        
-                        return $factura->usa_cai && $factura->caiCorrelativo 
-                            ? $factura->caiCorrelativo->numero_factura
-                            : "PROF-{$factura->id}";
+
+                        return $factura->numero_factura;
                     })
                     ->searchable()
                     ->sortable(),
@@ -142,7 +138,12 @@ class CuentasPorCobrarResource extends Resource
                 TextColumn::make('pagos_realizados')
                     ->label('Pagado')
                     ->formatStateUsing(function ($state, $record) {
-                        $totalPagado = \App\Models\PagosFactura::where('factura_id', $record->factura_id)->sum('monto_recibido');
+                        // Mostrar pagos aplicados DESPUÉS de abrir esta cuenta por cobrar.
+                        // Así una cuenta recién creada inicia en 0 aunque la factura tenga pagos previos.
+                        $totalPagado = \App\Models\PagosFactura::where('factura_id', $record->factura_id)
+                            ->where('created_at', '>=', $record->created_at)
+                            ->sum('monto_recibido');
+
                         return 'L.' . number_format($totalPagado, 2);
                     })
                     ->alignEnd()
@@ -178,11 +179,10 @@ class CuentasPorCobrarResource extends Resource
                                 Forms\Components\Placeholder::make('factura_info')
                                     ->label('Factura')
                                     ->content(function ($record) {
-                                        $numero = $record->factura->usa_cai && $record->factura->caiCorrelativo 
-                                            ? $record->factura->caiCorrelativo->numero_factura
-                                            : "PROF-{$record->factura->id}";
+                                        $numero = $record->factura->numero_factura;
                                         return "{$numero} - {$record->factura->paciente->persona->nombre_completo}";
-                                    }),
+                                    })
+                                    ->columnSpan(1),
                                 Forms\Components\Placeholder::make('montos_info')
                                     ->label('Montos')
                                     ->content(function ($record) {
@@ -192,57 +192,86 @@ class CuentasPorCobrarResource extends Resource
                                         return "Total: L." . number_format($total, 2) . 
                                                " | Pagado: L." . number_format($pagado, 2) . 
                                                " | Pendiente: L." . number_format($pendiente, 2);
-                                    }),
-                            ]),
+                                    })
+                                    ->columnSpan(1),
+                            ])
+                            ->columns(2)
+                            ->compact(),
                         Forms\Components\Section::make('Procesar Pago')
                             ->schema([
-                                Forms\Components\Select::make('tipo_pago_id')
-                                    ->label('Tipo de Pago')
-                                    ->options(\App\Models\TipoPago::all()->pluck('nombre', 'id'))
-                                    ->required()
-                                    ->searchable()
-                                    ->default(1),
-                                Forms\Components\TextInput::make('monto_recibido')
-                                    ->label('Monto a Pagar')
-                                    ->prefix('L.')
-                                    ->numeric()
-                                    ->step(0.01)
-                                    ->required()
-                                    ->default(fn ($record) => $record->saldo_pendiente)
-                                    ->rules(['min:0.01'])
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, $set, $get, $record) {
-                                        if ($state > $record->saldo_pendiente) {
-                                            $set('monto_recibido', $record->saldo_pendiente);
-                                        }
-                                    })
-                                    ->helperText(fn ($record) => "Máximo: L." . number_format($record->saldo_pendiente, 2)),
-                                Forms\Components\DatePicker::make('fecha_pago')
-                                    ->label('Fecha de Pago')
-                                    ->default(now())
-                                    ->required(),
+                                Forms\Components\Repeater::make('pagos')
+                                    ->label('Métodos de Pago')
+                                    ->defaultItems(1)
+                                    ->addActionLabel('Agregar otro método de pago')
+                                    ->minItems(1)
+                                    ->schema([
+                                        Forms\Components\Select::make('tipo_pago_id')
+                                            ->label('Tipo de Pago')
+                                            ->options(\App\Models\TipoPago::query()->pluck('nombre', 'id'))
+                                            ->required()
+                                            ->searchable()
+                                            ->default(1),
+                                        Forms\Components\TextInput::make('monto_recibido')
+                                            ->label('Monto a Pagar')
+                                            ->prefix('L.')
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->required()
+                                            ->rules(['min:0.01']),
+                                        Forms\Components\DatePicker::make('fecha_pago')
+                                            ->label('Fecha de Pago')
+                                            ->default(now())
+                                            ->required(),
+                                    ])
+                                    ->columns(3)
+                                    ->columnSpanFull()
+                                    ->helperText(fn ($record) => "Saldo pendiente: L." . number_format((float) $record->saldo_pendiente, 2)),
                             ])
                     ])
                     ->action(function (array $data, $record): void {
                         try {
-                            // Crear el pago
-                            \App\Models\PagosFactura::create([
-                                'factura_id' => $record->factura_id,
-                                'paciente_id' => $record->factura->paciente_id,
-                                'centro_id' => $record->factura->centro_id,
-                                'tipo_pago_id' => $data['tipo_pago_id'],
-                                'monto_recibido' => $data['monto_recibido'],
-                                'monto_devolucion' => 0,
-                                'fecha_pago' => $data['fecha_pago'],
-                                'created_by' => \Illuminate\Support\Facades\Auth::id(),
-                            ]);
+                            $pagos = collect($data['pagos'] ?? [])
+                                ->filter(fn ($pago) => !empty($pago['tipo_pago_id']) && (float) ($pago['monto_recibido'] ?? 0) > 0)
+                                ->values();
+
+                            if ($pagos->isEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Sin métodos de pago válidos')
+                                    ->body('Agrega al menos un método de pago con monto mayor a 0.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            $totalRecibido = (float) $pagos->sum(fn ($pago) => (float) $pago['monto_recibido']);
+
+                            if ($totalRecibido > (float) $record->saldo_pendiente) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Monto excede el saldo pendiente')
+                                    ->body('El total recibido no puede ser mayor al saldo pendiente de la cuenta.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            foreach ($pagos as $pago) {
+                                \App\Models\PagosFactura::create([
+                                    'factura_id' => $record->factura_id,
+                                    'paciente_id' => $record->factura->paciente_id,
+                                    'tipo_pago_id' => $pago['tipo_pago_id'],
+                                    'monto_recibido' => (float) $pago['monto_recibido'],
+                                    'monto_devolucion' => 0,
+                                    'fecha_pago' => $pago['fecha_pago'] ?? now(),
+                                    'created_by' => \Illuminate\Support\Facades\Auth::id(),
+                                ]);
+                            }
                             
                             // El observer de Pagos_Factura se encarga de actualizar automáticamente
                             // el estado de la factura y la cuenta por cobrar
                             
                             \Filament\Notifications\Notification::make()
                                 ->title('Pago procesado exitosamente')
-                                ->body("Pago de L." . number_format($data['monto_recibido'], 2) . " procesado correctamente.")
+                                ->body('Se procesaron ' . $pagos->count() . ' método(s). Total: L.' . number_format($totalRecibido, 2))
                                 ->success()
                                 ->send();
                                 
@@ -257,6 +286,7 @@ class CuentasPorCobrarResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Procesar Pago')
                     ->modalDescription(fn ($record) => "Procesar pago para la factura de {$record->factura->paciente->persona->nombre_completo}")
+                    ->modalWidth('5xl')
                     ->modalSubmitActionLabel('Procesar Pago'),
                     
                 Tables\Actions\ViewAction::make(),

@@ -14,9 +14,9 @@ class CaiNumerador
     /**
      * Genera un nuevo correlativo CAI para una factura
      */
-    public static function generar(int $caiId, int $usuarioId, int $centroId, ?int $facturaId = null): CAI_Correlativos
+    public static function generar(int $caiId, int $usuarioId, ?int $facturaId = null): CAI_Correlativos
     {
-        return DB::transaction(function () use ($caiId, $usuarioId, $centroId, $facturaId) {
+        return DB::transaction(function () use ($caiId, $usuarioId, $facturaId) {
             // Obtener CAI con bloqueo para evitar concurrencia
             $cai = CAIAutorizaciones::where('id', $caiId)
                 ->where('estado', 'ACTIVA')
@@ -64,7 +64,6 @@ class CaiNumerador
                 'fecha_emision' => now(),
                 'factura_id' => $facturaId,
                 'usuario_id' => $usuarioId,
-                'centro_id' => $centroId,
                 'created_by' => $usuarioId,
             ]);
 
@@ -86,10 +85,10 @@ class CaiNumerador
      */
     public static function generarParaFactura(Factura $factura): ?CAI_Correlativos
     {
-        $cai = self::obtenerCAIDisponible($factura->centro_id);
+        $cai = self::obtenerCAIDisponible();
         
         if (!$cai) {
-            Log::warning("No hay CAI disponible para centro {$factura->centro_id}");
+            Log::warning('No hay CAI disponible');
             return null;
         }
 
@@ -97,7 +96,6 @@ class CaiNumerador
             return self::generar(
                 $cai->id, 
                 $factura->created_by ?? Auth::id() ?? 1,
-                $factura->centro_id,
                 $factura->id
             );
         } catch (\Exception $e) {
@@ -121,11 +119,11 @@ class CaiNumerador
     }
 
     /**
-     * Obtener CAI disponible para un centro
+     * Obtener CAI disponible en el tenant actual
      */
-    public static function obtenerCAIDisponible($centroId)
+    public static function obtenerCAIDisponible()
     {
-        $cai = CAIAutorizaciones::where('centro_id', $centroId)
+        $cai = CAIAutorizaciones::query()
             ->where('fecha_limite', '>', now()) // No vencido
             ->where(function($query) {
                 $query->where('estado', 'ACTIVA')
@@ -155,11 +153,10 @@ class CaiNumerador
     /**
      * Asignar número de factura con CAI
      */
-    public function asignarNumeroFactura($centroId, $facturaId)
+    public function asignarNumeroFactura($facturaId)
     {
         try {
             Log::info('🏷️ Iniciando asignación de número CAI', [
-                'centro_id' => $centroId,
                 'factura_id' => $facturaId
             ]);
 
@@ -175,17 +172,15 @@ class CaiNumerador
             }
 
             // Buscar CAI disponible
-            $cai = self::obtenerCAIDisponible($centroId);
+            $cai = self::obtenerCAIDisponible();
             
             if (!$cai) {
-                Log::warning('⚠️ No hay CAI disponible', [
-                    'centro_id' => $centroId
-                ]);
+                Log::warning('⚠️ No hay CAI disponible');
                 return null;
             }
 
             // Usar transacción para evitar problemas de concurrencia
-            return DB::transaction(function () use ($cai, $facturaId, $centroId) {
+            return DB::transaction(function () use ($cai, $facturaId) {
                 // Bloquear el registro CAI para evitar duplicados
                 $caiLocked = CAIAutorizaciones::where('id', $cai->id)
                     ->lockForUpdate()
@@ -221,8 +216,7 @@ class CaiNumerador
                     'numero_correlativo' => $proximoNumero,
                     'numero_factura' => $numeroFactura,
                     'fecha_emision' => now(),
-                    'usuario_id' => auth()->id(),
-                    'centro_id' => $centroId,
+                    'usuario_id' => Auth::id(),
                 ]);
 
                 // Actualizar el número actual en la autorización
@@ -251,7 +245,6 @@ class CaiNumerador
 
         } catch (\Exception $e) {
             Log::error('❌ Error al asignar número CAI', [
-                'centro_id' => $centroId,
                 'factura_id' => $facturaId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -301,9 +294,9 @@ class CaiNumerador
     /**
      * Obtener estadísticas de uso de CAI
      */
-    public static function obtenerEstadisticas($centroId): array
+    public static function obtenerEstadisticas(): array
     {
-        $cais = CAIAutorizaciones::where('centro_id', $centroId)->get();
+        $cais = CAIAutorizaciones::all();
         
         $estadisticas = [
             'total_cais' => $cais->count(),

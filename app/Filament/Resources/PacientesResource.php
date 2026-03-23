@@ -20,9 +20,11 @@ use Filament\Forms\Components\Section;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique; // Importación añadida
+use Carbon\Carbon;
 
 class PacientesResource extends Resource
 {
@@ -128,6 +130,10 @@ class PacientesResource extends Resource
                                         } else {
                                             $set('persona_id', null);
                                             $set('fotografia', null);
+
+                                            // Autocompletar desde API externa por número de identidad
+                                            // (solo cuando no existe una persona local con ese DNI).
+                                            self::autocompletarDesdeApiIdentidad($state, $set);
                                         }
                                     }
                                 }),
@@ -457,6 +463,88 @@ class PacientesResource extends Resource
     protected static function checkPersonExists($state, callable $set)
     {
         // Lógica de verificación si es necesario
+    }
+
+    protected static function autocompletarDesdeApiIdentidad(?string $dniInput, callable $set): void
+    {
+        $dni = preg_replace('/\D+/', '', (string) $dniInput);
+
+        if (!$dni || strlen($dni) < 13) {
+            return;
+        }
+
+        try {
+            $response = Http::timeout(8)
+                ->acceptJson()
+                ->get('https://1ug1cfi3ua.execute-api.us-east-2.amazonaws.com/persona', [
+                    'numero_identidad' => $dni,
+                ]);
+
+            if (!$response->successful()) {
+                return;
+            }
+
+            $payload = $response->json();
+
+            if (isset($payload['data']) && is_array($payload['data'])) {
+                $payload = $payload['data'];
+            }
+
+            if (isset($payload[0]) && is_array($payload[0])) {
+                $payload = $payload[0];
+            }
+
+            if (!is_array($payload) || empty($payload)) {
+                return;
+            }
+
+            $set('primer_nombre', $payload['primer_nombre'] ?? null);
+            $set('segundo_nombre', $payload['segundo_nombre'] ?? null);
+            $set('primer_apellido', $payload['primer_apellido'] ?? null);
+            $set('segundo_apellido', $payload['segundo_apellido'] ?? null);
+
+            $sexoApi = strtoupper(trim((string) ($payload['sexo'] ?? '')));
+            if (str_starts_with($sexoApi, 'M')) {
+                $set('sexo', 'M');
+            } elseif (str_starts_with($sexoApi, 'F')) {
+                $set('sexo', 'F');
+            }
+
+            $fechaNacimiento = $payload['fecha_nacimiento'] ?? null;
+            if (!empty($fechaNacimiento)) {
+                try {
+                    $set('fecha_nacimiento', Carbon::parse($fechaNacimiento)->format('Y-m-d'));
+                } catch (\Throwable $e) {
+                    // Mantener flujo actual si la fecha no puede parsearse.
+                }
+            }
+
+            // Si existe en API, se asume nacionalidad hondureña.
+            $nacionalidadHondurenaId = Nacionalidad::query()
+                ->where('nacionalidad', 'like', 'Hondur%')
+                ->value('id');
+
+            if ($nacionalidadHondurenaId) {
+                $set('nacionalidad_id', $nacionalidadHondurenaId);
+            }
+
+            // Dirección: lugar_poblado, aldea, municipio, departamento.
+            $direccion = collect([
+                $payload['lugar_poblado'] ?? null,
+                $payload['aldea'] ?? null,
+                $payload['municipio'] ?? null,
+                $payload['departamento'] ?? null,
+            ])
+                ->filter(fn ($item) => filled($item))
+                ->map(fn ($item) => trim((string) $item))
+                ->implode(', ');
+
+            if (!empty($direccion)) {
+                $set('direccion', $direccion);
+            }
+        } catch (\Throwable $e) {
+            // Falla silenciosa para no cambiar el comportamiento actual.
+        }
     }
 
     public static function generateAvatar($nombre, $apellido)

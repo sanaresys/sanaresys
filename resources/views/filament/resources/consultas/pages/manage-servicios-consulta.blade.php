@@ -23,8 +23,7 @@
             }
 
             // CAI disponible
-            $centroId = auth()->user()->centro_id;
-            $cai = \App\Services\CaiNumerador::obtenerCAIDisponible($centroId);
+            $cai = \App\Services\CaiNumerador::obtenerCAIDisponible();
         @endphp
 
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-700">
@@ -148,7 +147,7 @@
     {{-- Panel de resumen --}}
     @php($subtotal = $this->getServiciosSubtotal())
     @php($impuestos = $this->getServiciosImpuesto())
-    @php($total = $this->getServiciosTotal())
+    @php($total = $subtotal + $impuestos)
     @php($cantidad = $this->getCantidadServicios())
 
     @if ($subtotal > 0)
@@ -173,7 +172,7 @@
                             name="descuento_aplicado"
                             class="w-full max-w-xs rounded border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 text-sm">
                         <option value="">Sin descuento</option>
-                        @foreach(\App\Models\Descuento::where('centro_id', Auth::user()->centro_id)->get() as $descuento)
+                        @foreach(\App\Models\Descuento::query()->get() as $descuento)
                             <option value="{{ $descuento->id }}"
                                     data-tipo="{{ $descuento->tipo }}"
                                     data-valor="{{ $descuento->valor }}"
@@ -254,9 +253,9 @@
             const DESCUENTO_KEY = `selected_descuento_${CONSULTA_ID}`;
 
             const totalesBase = {
-                subtotal: {{ $subtotal }},
-                impuestos: {{ $impuestos }},
-                total: {{ $total }}
+                subtotal: Number('{{ (float) $subtotal }}'),
+                impuestos: Number('{{ (float) $impuestos }}'),
+                total: Number('{{ (float) $total }}'),
             };
 
             let isInitialized = false;
@@ -283,17 +282,18 @@
                 let descuento = 0;
 
                 if (selectedOption && selectedOption.value) {
-                    const tipo = selectedOption.getAttribute('data-tipo');
+                    const tipo = String(selectedOption.getAttribute('data-tipo') || '').toUpperCase();
                     const valor = parseFloat(selectedOption.getAttribute('data-valor') || 0);
 
-                    if (tipo === 'PORCENTAJE' && valor > 0) {
+                    if (tipo.includes('PORCENTAJE') && valor > 0) {
                         descuento = totalesBase.subtotal * (valor / 100);
-                    } else if (tipo === 'MONTO' && valor > 0) {
+                    } else if (tipo.includes('MONTO') && valor > 0) {
                         descuento = valor;
                     }
                 }
 
-                const totalFinal = totalesBase.subtotal + totalesBase.impuestos - descuento;
+                const totalSinDescuento = totalesBase.subtotal + totalesBase.impuestos;
+                const totalFinal = Math.max(0, totalSinDescuento - descuento);
 
                 const descuentosDisplay = document.getElementById('descuentos_display');
                 const totalDisplay = document.getElementById('total_final_display');
@@ -364,7 +364,9 @@
                 const descuentoSelect = document.getElementById('descuento_select');
                 if (descuentoSelect) {
                     descuentoSelect.removeEventListener('change', calcularDescuento);
+                    descuentoSelect.removeEventListener('input', calcularDescuento);
                     descuentoSelect.addEventListener('change', calcularDescuento);
+                    descuentoSelect.addEventListener('input', calcularDescuento);
                 }
 
                 setTimeout(() => {
