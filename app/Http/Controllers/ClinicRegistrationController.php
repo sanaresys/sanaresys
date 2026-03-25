@@ -272,12 +272,24 @@ class ClinicRegistrationController extends Controller
                 'password' => $password,
             ]);
 
+            tenancy()->end();
+
+            if (tenancy()->initialized){
+                tenancy()->end();
+            }
+
             $token = tenancy()->impersonate(
                 tenant: $result->tenant,
                 userId: (string) $result->adminUserId,
                 redirectUrl: '/admin',
                 authGuard: 'web'
             );
+
+            Log::info('Token de impersonación generado y guardado', [
+                'token' => $token->token,
+                'tenant_id' => $token->tenant_id,
+                'tabla_tokens_check' => \Stancl\Tenancy\Database\Models\ImpersonationToken::count(),
+            ]);
 
             $scheme = (string) config('tenancy.tenant_scheme', 'https');
             $target = "{$scheme}://{$result->primaryDomain}/tenant/impersonate/{$token->token}";
