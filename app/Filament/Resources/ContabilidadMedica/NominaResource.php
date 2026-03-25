@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ContabilidadMedica;
 use App\Filament\Resources\ContabilidadMedica\NominaResource\Pages;
 use App\Models\ContabilidadMedica\Nomina;
 use App\Models\Medico;
+use App\Services\Billing\TenantModuleAccessService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -34,6 +35,22 @@ class NominaResource extends Resource
     protected static ?string $modelLabel = 'Nómina';
     protected static ?string $pluralModelLabel = 'Nóminas';
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationBadge(): ?string
+    {
+        if (! tenancy()->initialized || auth()->user()?->hasRole('root')) {
+            return null;
+        }
+
+        return app(TenantModuleAccessService::class)->isModuleActive('nomina')
+            ? null
+            : 'DEMO';
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getNavigationBadge() ? 'warning' : null;
+    }
 
     public static function form(Form $form): Form
     {
@@ -318,13 +335,13 @@ class NominaResource extends Resource
                 EditAction::make()
                     ->icon('heroicon-o-pencil-square')
                     ->color('amber')
-                    ->visible(fn (Nomina $record): bool => !$record->cerrada),
+                    ->visible(fn (Nomina $record): bool => static::allowsRealActions() && !$record->cerrada),
 
                 Tables\Actions\Action::make('cerrar')
                     ->label('Cerrar')
                     ->icon('heroicon-o-lock-closed')
                     ->color('orange')
-                    ->visible(fn (Nomina $record): bool => !$record->cerrada)
+                    ->visible(fn (Nomina $record): bool => static::allowsRealActions() && !$record->cerrada)
                     ->requiresConfirmation()
                     ->modalHeading('🔒 Cerrar Nómina')
                     ->modalDescription('Una vez cerrada la nómina, no podrás editarla ni eliminarla. ¿Estás seguro?')
@@ -339,11 +356,12 @@ class NominaResource extends Resource
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('emerald')
                     ->url(fn (Nomina $record) => route('nomina.pdf', $record))
-                    ->openUrlInNewTab(),
+                    ->openUrlInNewTab()
+                    ->visible(fn (): bool => static::allowsRealActions()),
 
                 DeleteAction::make()
                     ->color('rose')
-                    ->visible(fn (Nomina $record): bool => !$record->cerrada),
+                    ->visible(fn (Nomina $record): bool => static::allowsRealActions() && !$record->cerrada),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -355,8 +373,41 @@ class NominaResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['detalles.medico.persona']);
+
+        if (static::isDemoMode()) {
+            $query->whereRaw('1 = 0');
+        }
+
+        return $query;
+    }
+
+    public static function canCreate(): bool
+    {
+        return parent::canCreate() && static::allowsRealActions();
+    }
+
+    protected static function isDemoMode(): bool
+    {
+        if (! tenancy()->initialized) {
+            return false;
+        }
+
+        if (auth()->user()?->hasRole('root')) {
+            return false;
+        }
+
+        return ! app(TenantModuleAccessService::class)->isModuleActive('nomina');
+    }
+
+    protected static function allowsRealActions(): bool
+    {
+        if (! tenancy()->initialized) {
+            return true;
+        }
+
+        return app(TenantModuleAccessService::class)->isModuleActive('nomina');
     }
 
     public static function getPages(): array

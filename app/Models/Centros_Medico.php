@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Centros_Medico extends ModeloBase
@@ -62,6 +63,36 @@ class Centros_Medico extends ModeloBase
         return $this->hasMany(BillingSubscription::class, 'centro_id');
     }
 
+    public function billingTenantSubscription(): HasOne
+    {
+        return $this->hasOne(BillingTenantSubscription::class, 'centro_id');
+    }
+
+    public function billingModuleSubscriptions(): HasMany
+    {
+        return $this->hasMany(BillingModuleSubscription::class, 'centro_id');
+    }
+
+    public function billingInvoices(): HasMany
+    {
+        return $this->hasMany(BillingInvoice::class, 'centro_id');
+    }
+
+    public function billingChargeAttempts(): HasMany
+    {
+        return $this->hasMany(BillingChargeAttempt::class, 'centro_id');
+    }
+
+    public function billingAudits(): HasMany
+    {
+        return $this->hasMany(BillingAudit::class, 'centro_id');
+    }
+
+    public function billingModuleOrders(): HasMany
+    {
+        return $this->hasMany(BillingModuleOrder::class, 'centro_id');
+    }
+
     public function tenant()
     {
         return $this->hasOne(Tenant::class, 'centro_id');
@@ -88,7 +119,12 @@ class Centros_Medico extends ModeloBase
 
     public function isBillingActive(): bool
     {
-        return $this->billing_status === 'active';
+        return in_array($this->billing_status, ['active', 'past_due', 'grace'], true);
+    }
+
+    public function isBillingBlocked(): bool
+    {
+        return in_array($this->billing_status, ['suspended', 'canceled'], true);
     }
 
     // Método para usar en selects de Filament

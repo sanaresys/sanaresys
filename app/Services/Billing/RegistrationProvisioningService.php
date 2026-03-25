@@ -4,6 +4,8 @@ namespace App\Services\Billing;
 
 use App\Models\Centros_Medico;
 use App\Models\ClinicRegistrationRequest;
+use App\Models\Tenant;
+use App\Models\User;
 use App\Services\TenantIdentityService;
 use App\Services\TenantProvisioningService;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -30,11 +32,11 @@ class RegistrationProvisioningService
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($locked->isProvisioned() && $locked->onboarding_redirect_url) {
-                    return $locked->onboarding_redirect_url;
+                if ($locked->isProvisioned()) {
+                    return $this->issueTenantAccessUrl($locked) ?: $locked->onboarding_redirect_url;
                 }
 
-                if ($locked->payment_status !== 'active') {
+                if (! in_array($locked->payment_status, ['paid', 'active'], true)) {
                     return null;
                 }
 
@@ -67,16 +69,19 @@ class RegistrationProvisioningService
 
                 $this->identityService->validateSlugAvailable($locked->slug);
 
+                $billingInvoice = $locked->billingInvoice()->first();
+
                 $centro = Centros_Medico::query()->create([
                     'nombre_centro' => $locked->nombre_centro,
                     'direccion' => $locked->direccion,
                     'telefono' => $locked->telefono,
+                    'email' => $locked->owner_email,
                     'rtn' => $locked->rtn,
                     'slug' => $locked->slug,
                     'tenancy_mode' => 'domain',
                     'billing_status' => 'active',
                     'billing_plan_code' => $locked->plan_code,
-                    'billing_renews_at' => null,
+                    'billing_renews_at' => $billingInvoice?->billing_renews_at,
                     'billing_last_sync_at' => now(),
                     'billing_override' => null,
                     'onboarding_current_step' => 0,
@@ -90,22 +95,12 @@ class RegistrationProvisioningService
                     'password' => $password,
                 ]);
 
-                $token = tenancy()->impersonate(
-                    tenant: $result->tenant,
-                    userId: (string) $result->adminUserId,
-                    redirectUrl: '/admin',
-                    authGuard: 'web'
-                );
-
-                $scheme = (string) config('tenancy.tenant_scheme', 'https');
-                $target = "{$scheme}://{$result->primaryDomain}/tenant/impersonate/{$token->token}";
-
                 $locked->forceFill([
                     'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
                     'centro_id' => $centro->id,
                     'tenant_id' => $result->tenant->id,
                     'primary_domain' => $result->primaryDomain,
-                    'onboarding_redirect_url' => $target,
+                    'onboarding_redirect_url' => null,
                     'provisioned_at' => now(),
                     'password_encrypted' => null,
                     'failure_code' => null,
@@ -127,7 +122,7 @@ class RegistrationProvisioningService
                     'domain' => $result->primaryDomain,
                 ]);
 
-                return $target;
+                return $this->issueTenantAccessUrl($locked->fresh());
             });
         } catch (\Throwable $e) {
             // Recovery path for central transaction state lost during tenant bootstrapping.
@@ -136,16 +131,80 @@ class RegistrationProvisioningService
                     ->whereKey($registration->id)
                     ->first();
 
-                if ($fresh?->isProvisioned() && $fresh->onboarding_redirect_url) {
+                if ($fresh?->isProvisioned()) {
                     Log::warning('Provision termino correctamente pero la transaccion central se cerro antes de commit.', [
                         'registration_public_id' => $fresh->public_id,
                     ]);
 
-                    return $fresh->onboarding_redirect_url;
+                    return $this->issueTenantAccessUrl($fresh) ?: $fresh->onboarding_redirect_url;
                 }
             }
 
             throw $e;
         }
+    }
+
+    public function issueTenantAccessUrl(ClinicRegistrationRequest $registration, string $redirectUrl = '/admin'): ?string
+    {
+        if (! $registration->isProvisioned()) {
+            return null;
+        }
+
+        $tenant = null;
+
+        if ($registration->tenant_id) {
+            $tenant = Tenant::query()->find($registration->tenant_id);
+        }
+
+        if (! $tenant && $registration->centro_id) {
+            $tenant = Tenant::query()->where('centro_id', $registration->centro_id)->first();
+        }
+
+        if (! $tenant) {
+            return null;
+        }
+
+        $domain = $registration->primary_domain ?: $tenant->getPrimaryDomain();
+        if (! $domain) {
+            return null;
+        }
+
+        $targetUserId = null;
+
+        try {
+            tenancy()->initialize($tenant);
+
+            $targetUser = User::query()
+                ->where('email', $registration->owner_email)
+                ->first()
+                ?? User::role('administrador')->first()
+                ?? User::query()->first();
+
+            if (! $targetUser) {
+                return null;
+            }
+
+            $targetUserId = $targetUser->id;
+        } finally {
+            tenancy()->end();
+        }
+
+        $token = tenancy()->impersonate(
+            tenant: $tenant,
+            userId: (string) $targetUserId,
+            redirectUrl: $redirectUrl,
+            authGuard: 'web'
+        );
+
+        $scheme = (string) config('tenancy.tenant_scheme', 'https');
+        $target = "{$scheme}://{$domain}/tenant/impersonate/{$token->token}";
+
+        $registration->forceFill([
+            'tenant_id' => $tenant->id,
+            'primary_domain' => $domain,
+            'onboarding_redirect_url' => $target,
+        ])->save();
+
+        return $target;
     }
 }

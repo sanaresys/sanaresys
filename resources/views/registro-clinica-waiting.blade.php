@@ -43,7 +43,9 @@
             \App\Models\ClinicRegistrationRequest::STATUS_FAILED, \App\Models\ClinicRegistrationRequest::STATUS_EXPIRED => 'bad',
             default => 'pending',
         };
-        $paymentClass = $registration->payment_status === 'active' ? 'ok' : ($registration->payment_status === 'failed' ? 'bad' : 'pending');
+        $paymentClass = in_array($registration->payment_status, ['active', 'paid'], true)
+            ? 'ok'
+            : ($registration->payment_status === 'failed' ? 'bad' : 'pending');
     @endphp
 
     <div class="status-grid">
@@ -63,14 +65,14 @@
     </div>
 
     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-        @if($registration->isProvisioned() && $registration->onboarding_redirect_url)
-            <a class="btn-secondary" href="{{ $registration->onboarding_redirect_url }}">Entrar al tenant</a>
+        @if($registration->isProvisioned())
+            <a class="btn-secondary" href="{{ route('clinica.registro.tenant.enter', ['publicId' => $registration->public_id]) }}">Entrar al tenant</a>
         @endif
 
         @if($canStartPayment)
             <form method="POST" action="{{ route('clinica.registro.payment.start', ['publicId' => $registration->public_id]) }}">
                 @csrf
-                <button class="btn" type="submit">Ir a PayPal</button>
+                <button class="btn" type="submit">Ir a billing</button>
             </form>
         @endif
 

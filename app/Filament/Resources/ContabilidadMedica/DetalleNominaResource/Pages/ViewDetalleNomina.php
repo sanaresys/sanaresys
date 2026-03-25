@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ContabilidadMedica\DetalleNominaResource\Pages;
 
 use App\Filament\Resources\ContabilidadMedica\DetalleNominaResource;
+use App\Services\Billing\TenantModuleAccessService;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
@@ -11,6 +12,22 @@ use Filament\Infolists\Components\TextEntry;
 class ViewDetalleNomina extends ViewRecord
 {
     protected static string $resource = DetalleNominaResource::class;
+
+    public function mount(int | string $record): void
+    {
+        if (! app(TenantModuleAccessService::class)->isModuleActive('nomina')) {
+            \Filament\Notifications\Notification::make()
+                ->title('Modulo no activo')
+                ->body('Debes adquirir o renovar el modulo de nomina para usar esta funcionalidad.')
+                ->warning()
+                ->send();
+
+            $this->redirect(route('tenant.billing.modules.index'));
+            return;
+        }
+
+        parent::mount($record);
+    }
 
     public function infolist(Infolist $infolist): Infolist
     {

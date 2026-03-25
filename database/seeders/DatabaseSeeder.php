@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         // Crear roles y permisos primero
         $this->call([
             RolesAndPermissionsSeeder::class,
+            BillingModulesSeeder::class,
             CentrosMedicoSeeder::class, // Crear centros antes de asignar usuarios
             EspecialidadSeeder::class,
             NacionalidadSeeder::class,

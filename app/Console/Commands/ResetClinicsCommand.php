@@ -3,6 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\BillingOverrideAudit;
+use App\Models\BillingModuleOrder;
+use App\Models\BillingModuleReminderLog;
+use App\Models\BillingModuleSubscription;
 use App\Models\BillingSubscription;
 use App\Models\BillingWebhookEvent;
 use App\Models\Centros_Medico;
@@ -41,6 +44,9 @@ class ResetClinicsCommand extends Command
                 'tenants',
                 'clinic_registration_requests',
                 'billing_subscriptions',
+                'billing_module_subscriptions',
+                'billing_module_orders',
+                'billing_module_reminder_logs',
                 'billing_override_audits',
                 'users',
             ], true))
@@ -69,6 +75,15 @@ class ResetClinicsCommand extends Command
             : 0));
         $this->line(' - billing_webhook_events: ' . (Schema::connection($connection)->hasTable('billing_webhook_events')
             ? BillingWebhookEvent::query()->count()
+            : 0));
+        $this->line(' - billing_module_subscriptions: ' . (Schema::connection($connection)->hasTable('billing_module_subscriptions')
+            ? BillingModuleSubscription::query()->count()
+            : 0));
+        $this->line(' - billing_module_orders: ' . (Schema::connection($connection)->hasTable('billing_module_orders')
+            ? BillingModuleOrder::query()->count()
+            : 0));
+        $this->line(' - billing_module_reminder_logs: ' . (Schema::connection($connection)->hasTable('billing_module_reminder_logs')
+            ? BillingModuleReminderLog::query()->count()
             : 0));
         $this->line(' - billing_override_audits: ' . (Schema::connection($connection)->hasTable('billing_override_audits')
             ? BillingOverrideAudit::query()->count()
@@ -127,6 +142,18 @@ class ResetClinicsCommand extends Command
         if (Schema::connection($connection)->hasTable('billing_subscriptions')) {
             BillingSubscription::query()->whereIn('centro_id', $centroIds)->delete();
             BillingSubscription::query()->whereIn('clinic_registration_request_id', $registrationIds)->delete();
+        }
+
+        if (Schema::connection($connection)->hasTable('billing_module_reminder_logs')) {
+            BillingModuleReminderLog::query()->whereIn('centro_id', $centroIds)->delete();
+        }
+
+        if (Schema::connection($connection)->hasTable('billing_module_orders')) {
+            BillingModuleOrder::query()->whereIn('centro_id', $centroIds)->delete();
+        }
+
+        if (Schema::connection($connection)->hasTable('billing_module_subscriptions')) {
+            BillingModuleSubscription::query()->whereIn('centro_id', $centroIds)->delete();
         }
 
         if (Schema::connection($connection)->hasTable('billing_webhook_events')) {

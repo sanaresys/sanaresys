@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Centros_Medico;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Billing\BillingAdminService;
 use App\Services\Billing\BillingStateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class RootPortalController extends Controller
 {
     public function __construct(
         protected BillingStateService $billingStateService,
+        protected BillingAdminService $billingAdminService,
     ) {
     }
 
@@ -24,7 +27,7 @@ class RootPortalController extends Controller
 
         $centros = Centros_Medico::query()
             ->where('tenancy_mode', 'domain')
-            ->with('tenant')
+            ->with(['tenant', 'billingTenantSubscription', 'billingInvoices' => fn ($query) => $query->latest('id')->limit(5)])
             ->orderBy('id')
             ->get();
 
@@ -33,6 +36,20 @@ class RootPortalController extends Controller
                 ->orderByDesc('last_synced_at')
                 ->orderByDesc('id'),
         ]);
+
+        $hasModuleTables = Schema::connection('mysql')->hasTable('billing_module_subscriptions')
+            && Schema::connection('mysql')->hasTable('billing_modules');
+
+        if ($hasModuleTables) {
+            $centros->load([
+                'billingModuleSubscriptions' => fn ($query) => $query
+                    ->with('module')
+                    ->orderByDesc('renews_at')
+                    ->orderByDesc('id'),
+            ]);
+        } else {
+            $centros->each(fn (Centros_Medico $centro) => $centro->setRelation('billingModuleSubscriptions', collect()));
+        }
 
         return view('root-portal', compact('centros'));
     }
@@ -123,6 +140,91 @@ class RootPortalController extends Controller
         return redirect()
             ->route('portal.root')
             ->with('status', 'Estado de facturacion actualizado correctamente.');
+    }
+
+    public function markInvoicePaid(Request $request, Centros_Medico $centro): RedirectResponse
+    {
+        $this->assertRoot();
+
+        $validated = $request->validate([
+            'invoice_id' => ['nullable', 'integer'],
+        ]);
+        $invoiceId = (int) ($validated['invoice_id'] ?? 0);
+
+        $invoice = $centro->billingInvoices()
+            ->when($invoiceId > 0, fn ($query) => $query->whereKey($invoiceId))
+            ->whereIn('status', ['open', 'past_due'])
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->billingAdminService->markInvoicePaid(
+            invoice: $invoice,
+            actor: auth()->user(),
+            reason: 'Pago manual marcado desde root.',
+        );
+
+        return redirect()->route('portal.root')
+            ->with('status', 'Factura marcada como pagada manualmente.');
+    }
+
+    public function extendBilling(Request $request, Centros_Medico $centro): RedirectResponse
+    {
+        $this->assertRoot();
+
+        $validated = $request->validate([
+            'days' => ['required', 'integer', 'min:1', 'max:365'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $this->billingAdminService->extendTenantPeriod(
+            centro: $centro,
+            days: (int) $validated['days'],
+            actor: auth()->user(),
+            reason: (string) $validated['reason'],
+        );
+
+        return redirect()->route('portal.root')
+            ->with('status', 'Vigencia extendida correctamente.');
+    }
+
+    public function setTenantStatus(Request $request, Centros_Medico $centro): RedirectResponse
+    {
+        $this->assertRoot();
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,past_due,grace,suspended,canceled'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $this->billingAdminService->setTenantStatus(
+            centro: $centro,
+            status: (string) $validated['status'],
+            actor: auth()->user(),
+            reason: (string) $validated['reason'],
+        );
+
+        return redirect()->route('portal.root')
+            ->with('status', 'Estado del tenant actualizado.');
+    }
+
+    public function toggleCancelAtPeriodEnd(Request $request, Centros_Medico $centro): RedirectResponse
+    {
+        $this->assertRoot();
+
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $this->billingAdminService->setCancelAtPeriodEnd(
+            centro: $centro,
+            enabled: (bool) $validated['enabled'],
+            actor: auth()->user(),
+            reason: (string) $validated['reason'],
+        );
+
+        return redirect()->route('portal.root')
+            ->with('status', 'Politica de cancelacion actualizada.');
     }
 
     protected function assertRoot(): void

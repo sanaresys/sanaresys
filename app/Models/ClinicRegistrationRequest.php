@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClinicRegistrationRequest extends Model
@@ -40,9 +41,13 @@ class ClinicRegistrationRequest extends Model
         'resend_count',
         'centro_id',
         'tenant_id',
+        'billing_invoice_id',
         'paypal_subscription_id',
         'paypal_plan_id',
         'payment_approved_at',
+        'consent_at',
+        'consent_text_version',
+        'consent_ip',
         'primary_domain',
         'onboarding_redirect_url',
         'failure_code',
@@ -58,6 +63,7 @@ class ClinicRegistrationRequest extends Model
             'provisioned_at' => 'datetime',
             'failed_at' => 'datetime',
             'payment_approved_at' => 'datetime',
+            'consent_at' => 'datetime',
             'resend_count' => 'integer',
             'centro_id' => 'integer',
         ];
@@ -87,5 +93,10 @@ class ClinicRegistrationRequest extends Model
     public function billingSubscriptions(): HasMany
     {
         return $this->hasMany(BillingSubscription::class, 'clinic_registration_request_id');
+    }
+
+    public function billingInvoice(): BelongsTo
+    {
+        return $this->belongsTo(BillingInvoice::class, 'billing_invoice_id');
     }
 }

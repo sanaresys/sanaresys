@@ -24,8 +24,8 @@ class LoginResponse implements LoginResponseContract
                 ->select(['id', 'billing_status', 'onboarding_completed_at'])
                 ->find($tenant->centro_id);
 
-            if ($centro && $centro->billing_status !== 'active') {
-                session()->flash('warning', 'Tu suscripcion esta inactiva. Reactiva el pago para continuar.');
+            if ($centro && ! in_array($centro->billing_status, ['active', 'past_due', 'grace'], true)) {
+                session()->flash('warning', 'Tu cuenta requiere regularizar billing para continuar.');
                 return redirect()->route('tenant.billing.inactive');
             }
 

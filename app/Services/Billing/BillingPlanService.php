@@ -64,4 +64,18 @@ class BillingPlanService
 
         return null;
     }
+
+    public function priceFor(string $planCode): float
+    {
+        $plan = $this->get($planCode);
+
+        return (float) ($plan['price'] ?? 0);
+    }
+
+    public function intervalFor(string $planCode): string
+    {
+        $plan = $this->get($planCode);
+
+        return (string) ($plan['interval'] ?? 'monthly');
+    }
 }

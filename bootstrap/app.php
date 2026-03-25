@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.maintenance' => \App\Http\Middleware\EnsureTenantNotInMaintenance::class,
             'tenant.initialized' => \App\Http\Middleware\EnsureTenantInitialized::class,
             'tenant.subscription.active' => \App\Http\Middleware\EnsureTenantSubscriptionActive::class,
+            'tenant.module.active' => \App\Http\Middleware\EnsureTenantModuleActive::class,
             'central.domain' => \App\Http\Middleware\EnsureCentralDomain::class,
             'require.onboarding' => \App\Http\Middleware\RequireOnboarding::class,
         ]);

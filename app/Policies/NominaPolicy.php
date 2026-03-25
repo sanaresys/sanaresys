@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\ContabilidadMedica\Nomina;
 use App\Models\User;
+use App\Services\Billing\TenantModuleAccessService;
 use Illuminate\Auth\Access\Response;
 
 class NominaPolicy
@@ -29,7 +30,7 @@ class NominaPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('crear nomina');
+        return $user->can('crear nomina') && $this->moduleAllowsMutations($user);
     }
 
     /**
@@ -37,7 +38,7 @@ class NominaPolicy
      */
     public function update(User $user, Nomina $nomina): bool
     {
-        return $user->can('actualizar nomina');
+        return $user->can('actualizar nomina') && $this->moduleAllowsMutations($user);
     }
 
     /**
@@ -45,7 +46,7 @@ class NominaPolicy
      */
     public function delete(User $user, Nomina $nomina): bool
     {
-        return $user->can('borrar nomina');
+        return $user->can('borrar nomina') && $this->moduleAllowsMutations($user);
     }
 
     /**
@@ -62,5 +63,18 @@ class NominaPolicy
     public function forceDelete(User $user, Nomina $nomina): bool
     {
         return false;
+    }
+
+    protected function moduleAllowsMutations(User $user): bool
+    {
+        if ($user->hasRole('root')) {
+            return true;
+        }
+
+        if (! tenancy()->initialized) {
+            return true;
+        }
+
+        return app(TenantModuleAccessService::class)->isModuleActive('nomina');
     }
 }

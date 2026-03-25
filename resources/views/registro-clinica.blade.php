@@ -26,7 +26,7 @@
 <div class="card">
     <h1>Registro de Clinica</h1>
     <p class="helper">
-        Flujo: <strong>registro -> verificacion de correo -> pago PayPal -> activacion automatica.</strong>
+        Flujo: <strong>registro -> verificacion de correo -> pantalla de billing -> pago PayPal -> activacion automatica.</strong>
     </p>
 
     <form method="POST" action="{{ route('clinica.registro.store') }}">

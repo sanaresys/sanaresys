@@ -2,132 +2,204 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BillingInvoice;
+use App\Models\BillingModule;
 use App\Models\Centros_Medico;
-use App\Services\Billing\BillingPlanService;
-use App\Services\Billing\BillingSubscriptionService;
-use App\Services\Billing\PayPalService;
+use App\Services\Billing\BillingAdminService;
+use App\Services\Billing\BillingInvoiceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class TenantBillingController extends Controller
 {
     public function __construct(
-        protected BillingPlanService $billingPlanService,
-        protected PayPalService $payPalService,
-        protected BillingSubscriptionService $billingSubscriptionService,
+        protected BillingInvoiceService $billingInvoiceService,
+        protected BillingAdminService $billingAdminService,
     ) {
+    }
+
+    public function index()
+    {
+        $centro = $this->currentCentro();
+        $tenantSubscription = $this->billingInvoiceService->ensureTenantSubscriptionForCentro($centro);
+        $openInvoice = $this->billingInvoiceService->openInvoiceForCentro($centro);
+
+        if (! $openInvoice && $centro->isBillingBlocked()) {
+            $openInvoice = $this->billingInvoiceService->createReactivationInvoice($centro);
+        }
+
+        $invoices = BillingInvoice::query()
+            ->with('items')
+            ->where('centro_id', $centro->id)
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        $modules = BillingModule::query()
+            ->where('is_active', true)
+            ->with([
+                'subscriptions' => fn ($query) => $query->where('centro_id', $centro->id),
+            ])
+            ->orderBy('name')
+            ->get();
+
+        return view('tenant-billing', [
+            'centro' => $centro,
+            'tenantSubscription' => $tenantSubscription,
+            'openInvoice' => $openInvoice,
+            'invoices' => $invoices,
+            'modules' => $modules,
+            'paypalClientId' => (string) config('services.paypal.client_id', ''),
+            'paypalCurrency' => (string) config('billing.currency', 'USD'),
+        ]);
     }
 
     public function inactive()
     {
-        $tenant = tenancy()->tenant;
-        abort_unless($tenant && $tenant->centro_id, 404);
-
-        $centro = Centros_Medico::on('mysql')->findOrFail($tenant->centro_id);
-        if ($centro->isBillingActive()) {
-            return redirect('/admin');
-        }
-
-        return view('tenant-billing-inactive', [
-            'centro' => $centro,
-            'plans' => $this->billingPlanService->all(),
-            'selectedPlanCode' => $centro->billing_plan_code ?: $this->billingPlanService->defaultPlanCode(),
-        ]);
+        return redirect()->route('tenant.billing.index');
     }
 
     public function startReactivation(Request $request): RedirectResponse
     {
-        if (! auth()->check()) {
-            return redirect()->route('filament.admin.auth.login');
-        }
+        abort_unless(auth()->user()?->can('billing.manage') || auth()->user()?->hasRole('administrador'), 403);
 
-        $tenant = tenancy()->tenant;
-        abort_unless($tenant && $tenant->centro_id, 404);
+        $centro = $this->currentCentro();
+        $planCode = $request->validate([
+            'plan_code' => ['nullable', 'string', 'max:32'],
+        ])['plan_code'] ?? null;
 
-        $centro = Centros_Medico::on('mysql')->findOrFail($tenant->centro_id);
+        $this->billingInvoiceService->createReactivationInvoice($centro, $planCode ? (string) $planCode : null);
+
+        return redirect()->route('tenant.billing.index')
+            ->with('status', 'Se preparo la factura de reactivacion. Completa el pago para recuperar acceso.');
+    }
+
+    public function createOrder(Request $request, BillingInvoice $invoice): JsonResponse
+    {
+        abort_unless(
+            auth()->user()?->can('billing.invoice.pay')
+            || auth()->user()?->can('billing.manage')
+            || auth()->user()?->hasRole('administrador'),
+            403
+        );
+
+        $centro = $this->currentCentro();
+        abort_unless((int) $invoice->centro_id === (int) $centro->id, 404);
+
+        $attempt = $this->billingInvoiceService->createOrReuseAttempt(
+            invoice: $invoice,
+            context: 'tenant_invoice',
+            requestedBy: auth()->user(),
+            returnUrl: route('tenant.billing.reactivate.return'),
+            cancelUrl: route('tenant.billing.reactivate.cancel'),
+        );
+
+        return response()->json([
+            'orderId' => $attempt->paypal_order_id,
+        ]);
+    }
+
+    public function capture(Request $request, BillingInvoice $invoice): JsonResponse
+    {
+        abort_unless(
+            auth()->user()?->can('billing.invoice.pay')
+            || auth()->user()?->can('billing.manage')
+            || auth()->user()?->hasRole('administrador'),
+            403
+        );
+
+        $centro = $this->currentCentro();
+        abort_unless((int) $invoice->centro_id === (int) $centro->id, 404);
+
         $validated = $request->validate([
-            'plan_code' => ['required', 'string', 'max:32'],
+            'order_id' => ['required', 'string'],
         ]);
 
-        $planCode = (string) $validated['plan_code'];
-        $paypalPlanId = $this->billingPlanService->getPayPalPlanIdOrFail($planCode);
+        $this->billingInvoiceService->captureAttemptFromReturn(
+            paypalOrderId: (string) $validated['order_id'],
+            centro: $centro,
+        );
 
-        try {
-            $result = $this->payPalService->createSubscription(
-                paypalPlanId: $paypalPlanId,
-                customId: "reactivate:{$tenant->id}:" . auth()->id() . ':' . now()->timestamp,
-                returnUrl: route('tenant.billing.reactivate.return'),
-                cancelUrl: route('tenant.billing.reactivate.cancel'),
-            );
-
-            $this->billingSubscriptionService->syncFromPayPalSubscription(
-                paypalSubscription: (array) $result['raw'],
-                centroId: $centro->id
-            );
-
-            session()->put('tenant_reactivation_subscription_id', (string) $result['id']);
-            session()->put('tenant_reactivation_plan_code', $planCode);
-
-            return redirect()->away((string) $result['approve_url']);
-        } catch (Throwable $e) {
-            Log::error('Error iniciando reactivacion PayPal para tenant inactivo.', [
-                'tenant_id' => $tenant->id,
-                'centro_id' => $centro->id,
-                'plan_code' => $planCode,
-                'error' => $e->getMessage(),
-            ]);
-
-            return redirect()->route('tenant.billing.inactive')
-                ->with('error', 'No se pudo iniciar el checkout de PayPal.');
-        }
+        return response()->json([
+            'redirect_url' => $centro->fresh()->isBillingActive() ? '/admin' : route('tenant.billing.index'),
+        ]);
     }
 
     public function returnFromPayPal(Request $request): RedirectResponse
     {
-        $tenant = tenancy()->tenant;
-        abort_unless($tenant && $tenant->centro_id, 404);
+        $centro = $this->currentCentro();
+        $orderId = (string) ($request->query('token') ?? $request->query('orderId'));
 
-        $centro = Centros_Medico::on('mysql')->findOrFail($tenant->centro_id);
-        $subscriptionId = (string) ($request->query('subscription_id')
-            ?? $request->query('token')
-            ?? session('tenant_reactivation_subscription_id', ''));
-
-        if ($subscriptionId === '') {
-            return redirect()->route('tenant.billing.inactive')
-                ->with('error', 'PayPal no devolvio una suscripcion valida.');
+        if ($orderId === '') {
+            return redirect()->route('tenant.billing.index')
+                ->with('error', 'PayPal no devolvio una orden valida.');
         }
 
         try {
-            $subscriptionData = $this->payPalService->getSubscription($subscriptionId);
-            $subscription = $this->billingSubscriptionService->syncFromPayPalSubscription(
-                paypalSubscription: $subscriptionData,
-                centroId: $centro->id
+            $this->billingInvoiceService->captureAttemptFromReturn(
+                paypalOrderId: $orderId,
+                centro: $centro,
             );
 
-            if ($subscription->isActive()) {
-                return redirect('/admin')->with('status', 'Suscripcion activa. Acceso restaurado.');
-            }
-
-            return redirect()->route('tenant.billing.inactive')
-                ->with('status', 'Pago aprobado. Estamos esperando activacion final de PayPal.');
-        } catch (Throwable $e) {
-            Log::error('Error confirmando retorno de reactivacion PayPal.', [
-                'tenant_id' => $tenant->id,
+            return redirect($centro->fresh()->isBillingActive() ? '/admin' : route('tenant.billing.index'))
+                ->with('status', 'Pago confirmado correctamente.');
+        } catch (\Throwable $e) {
+            Log::error('Error confirmando pago tenant desde retorno PayPal.', [
                 'centro_id' => $centro->id,
-                'subscription_id' => $subscriptionId,
+                'paypal_order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.billing.inactive')
-                ->with('error', 'No se pudo confirmar la reactivacion.');
+            return redirect()->route('tenant.billing.index')
+                ->with('error', 'No se pudo confirmar el pago.');
         }
     }
 
     public function cancel(): RedirectResponse
     {
-        return redirect()->route('tenant.billing.inactive')
-            ->with('error', 'Cancelaste el checkout de reactivacion.');
+        return redirect()->route('tenant.billing.index')
+            ->with('error', 'Cancelaste el checkout de PayPal.');
+    }
+
+    public function cancelAtPeriodEnd(): RedirectResponse
+    {
+        $centro = $this->currentCentro();
+        abort_unless(auth()->user()?->can('billing.cancellation.manage') || auth()->user()?->hasRole('administrador'), 403);
+
+        $this->billingAdminService->setCancelAtPeriodEnd(
+            centro: $centro,
+            enabled: true,
+            actor: auth()->user(),
+            reason: 'Cancelacion programada desde portal tenant.',
+        );
+
+        return redirect()->route('tenant.billing.index')
+            ->with('status', 'La cancelacion al final del periodo fue programada.');
+    }
+
+    public function resumeRenewal(): RedirectResponse
+    {
+        $centro = $this->currentCentro();
+        abort_unless(auth()->user()?->can('billing.cancellation.manage') || auth()->user()?->hasRole('administrador'), 403);
+
+        $this->billingAdminService->setCancelAtPeriodEnd(
+            centro: $centro,
+            enabled: false,
+            actor: auth()->user(),
+            reason: 'Cancelacion programada revertida desde portal tenant.',
+        );
+
+        return redirect()->route('tenant.billing.index')
+            ->with('status', 'La renovacion vuelve a quedar habilitada.');
+    }
+
+    protected function currentCentro(): Centros_Medico
+    {
+        $tenant = tenancy()->tenant;
+        abort_unless($tenant && $tenant->centro_id, 404);
+
+        return Centros_Medico::on('mysql')->findOrFail($tenant->centro_id);
     }
 }

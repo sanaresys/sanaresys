@@ -57,4 +57,8 @@ Route::get('/examen/{examen}/imprimir', [ExamenController::class, 'imprimir'])->
 Route::get('/consulta/{consulta}/examenes/imprimir', [ExamenController::class, 'imprimirPorConsulta'])->name('examenes.imprimir.consulta');
 
 // Rutas para nóminas
-Route::get('/nomina/{nomina}/pdf', [NominaController::class, 'generarPDFNomina'])->name('nomina.pdf');
+Route::middleware(['auth', 'tenant.resolve', 'tenant.initialized', 'tenant.module.active:nomina'])
+    ->group(function () {
+        Route::get('/nomina/{nomina}/pdf', [NominaController::class, 'generarPDFNomina'])->name('nomina.pdf');
+    });
+

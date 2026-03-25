@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Mail\ClinicRegistrationVerificationMail;
+use App\Models\BillingInvoice;
 use App\Models\ClinicRegistrationRequest;
-use App\Services\Billing\BillingSubscriptionService;
-use App\Services\Billing\PayPalService;
+use App\Services\Billing\BillingInvoiceService;
 use App\Services\Billing\RegistrationProvisioningService;
 use App\Services\TenantProvisioningService;
 use Illuminate\Database\Schema\Blueprint;
@@ -34,18 +34,13 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         config()->set('tenancy.base_domain', 'sanaresys.localhost');
         config()->set('tenancy.tenant_scheme', 'https');
         config()->set('billing.currency', 'USD');
+        config()->set('billing.engine.consent_text_version', 'test-v1');
         config()->set('billing.plans', [
             'monthly' => [
                 'code' => 'monthly',
                 'name' => 'Plan mensual',
                 'price' => 89.99,
-                'paypal_plan_id' => 'P-MONTHLY',
-            ],
-            'annual' => [
-                'code' => 'annual',
-                'name' => 'Plan anual',
-                'price' => 599.00,
-                'paypal_plan_id' => 'P-ANNUAL',
+                'interval' => 'monthly',
             ],
         ]);
 
@@ -85,39 +80,12 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         $this->assertSame('monthly', $registration->plan_code);
         $this->assertSame('pending_verification', $registration->status);
         $this->assertSame('pending', $registration->payment_status);
-        $this->assertSame('P-MONTHLY', $registration->paypal_plan_id);
         Mail::assertSent(ClinicRegistrationVerificationMail::class, 1);
     }
 
-    public function test_verify_transitions_to_pending_payment_and_redirects_to_paypal(): void
+    public function test_verify_redirects_to_internal_billing_screen_after_email_confirmation(): void
     {
         $registration = $this->createPendingRegistration();
-
-        $payPal = Mockery::mock(PayPalService::class);
-        $payPal->shouldReceive('createSubscription')
-            ->once()
-            ->andReturn([
-                'id' => 'I-SUBSCRIPTION-123',
-                'status' => 'APPROVAL_PENDING',
-                'approve_url' => 'https://www.sandbox.paypal.com/checkoutnow?token=I-SUBSCRIPTION-123',
-                'raw' => [
-                    'id' => 'I-SUBSCRIPTION-123',
-                    'status' => 'APPROVAL_PENDING',
-                    'plan_id' => 'P-MONTHLY',
-                    'links' => [
-                        ['rel' => 'approve', 'href' => 'https://www.sandbox.paypal.com/checkoutnow?token=I-SUBSCRIPTION-123'],
-                    ],
-                ],
-            ]);
-        $this->app->instance(PayPalService::class, $payPal);
-
-        $billingSync = Mockery::mock(BillingSubscriptionService::class);
-        $billingSync->shouldReceive('syncFromPayPalSubscription')->once();
-        $this->app->instance(BillingSubscriptionService::class, $billingSync);
-
-        $provisioning = Mockery::mock(RegistrationProvisioningService::class);
-        $provisioning->shouldNotReceive('provisionFromPaidRegistration');
-        $this->app->instance(RegistrationProvisioningService::class, $provisioning);
 
         $url = URL::temporarySignedRoute(
             'clinica.registro.verify',
@@ -128,55 +96,84 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         $response = $this->get($url);
         $registration->refresh();
 
-        $response->assertRedirect('https://www.sandbox.paypal.com/checkoutnow?token=I-SUBSCRIPTION-123');
-        $this->assertSame('pending_payment', $registration->status);
-        $this->assertSame('pending', $registration->payment_status);
-        $this->assertSame('I-SUBSCRIPTION-123', $registration->paypal_subscription_id);
+        $response->assertRedirect(route('clinica.registro.billing', ['publicId' => $registration->public_id]));
+        $this->assertSame('verified', $registration->status);
     }
 
-    public function test_payment_return_active_calls_provisioning_and_redirects_to_tenant(): void
+    public function test_capture_billing_order_returns_provisioning_redirect_after_paid_invoice(): void
     {
         $registration = $this->createPendingRegistration([
             'status' => ClinicRegistrationRequest::STATUS_PENDING_PAYMENT,
-            'paypal_subscription_id' => 'I-SUBSCRIPTION-123',
             'payment_status' => 'pending',
         ]);
 
-        $payPal = Mockery::mock(PayPalService::class);
-        $payPal->shouldReceive('getSubscription')
-            ->once()
-            ->with('I-SUBSCRIPTION-123')
-            ->andReturn([
-                'id' => 'I-SUBSCRIPTION-123',
-                'status' => 'ACTIVE',
-                'plan_id' => 'P-MONTHLY',
-                'billing_info' => [
-                    'next_billing_time' => now()->addMonth()->toIso8601String(),
-                ],
-            ]);
-        $payPal->shouldReceive('normalizeStatus')->andReturn('active');
-        $this->app->instance(PayPalService::class, $payPal);
+        $invoice = BillingInvoice::query()->create([
+            'public_id' => (string) str()->uuid(),
+            'clinic_registration_request_id' => $registration->id,
+            'kind' => 'onboarding',
+            'status' => 'open',
+            'currency' => 'USD',
+            'subtotal' => 89.99,
+            'total' => 89.99,
+            'due_at' => now(),
+            'billing_starts_at' => now(),
+            'billing_ends_at' => now()->addMonth(),
+            'billing_renews_at' => now()->addMonth(),
+        ]);
 
-        $billingSync = Mockery::mock(BillingSubscriptionService::class);
-        $billingSync->shouldReceive('syncFromPayPalSubscription')->once();
-        $this->app->instance(BillingSubscriptionService::class, $billingSync);
+        $registration->forceFill([
+            'billing_invoice_id' => $invoice->id,
+        ])->save();
+
+        $billing = Mockery::mock(BillingInvoiceService::class);
+        $billing->shouldReceive('captureAttemptFromReturn')
+            ->once()
+            ->andReturnUsing(function () use ($registration): void {
+                $registration->forceFill([
+                    'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
+                    'payment_status' => 'paid',
+                ])->save();
+            });
+        $this->app->instance(BillingInvoiceService::class, $billing);
 
         $provisioning = Mockery::mock(RegistrationProvisioningService::class);
-        $provisioning->shouldReceive('provisionFromPaidRegistration')
+        $provisioning->shouldReceive('issueTenantAccessUrl')
             ->once()
-            ->andReturn('https://tenant.sanaresys.localhost/tenant/impersonate/token123');
+            ->andReturn('https://tenant.sanaresys.localhost/tenant/impersonate/token456');
         $this->app->instance(RegistrationProvisioningService::class, $provisioning);
 
-        $response = $this->get(route('clinica.registro.payment.return', [
+        $response = $this->postJson(route('clinica.registro.billing.capture', [
             'publicId' => $registration->public_id,
-            'subscription_id' => 'I-SUBSCRIPTION-123',
+        ]), [
+            'order_id' => 'ORDER-123',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'redirect_url' => 'https://tenant.sanaresys.localhost/tenant/impersonate/token456',
+        ]);
+    }
+
+    public function test_enter_tenant_generates_fresh_redirect_for_provisioned_registration(): void
+    {
+        $registration = $this->createPendingRegistration([
+            'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
+            'payment_status' => 'paid',
+            'tenant_id' => 'centro_99',
+            'primary_domain' => 'tenant.sanaresys.localhost',
+        ]);
+
+        $provisioning = Mockery::mock(RegistrationProvisioningService::class);
+        $provisioning->shouldReceive('issueTenantAccessUrl')
+            ->once()
+            ->andReturn('https://tenant.sanaresys.localhost/tenant/impersonate/fresh-token');
+        $this->app->instance(RegistrationProvisioningService::class, $provisioning);
+
+        $response = $this->get(route('clinica.registro.tenant.enter', [
+            'publicId' => $registration->public_id,
         ]));
 
-        $registration->refresh();
-
-        $response->assertRedirect('https://tenant.sanaresys.localhost/tenant/impersonate/token123');
-        $this->assertSame('active', $registration->payment_status);
-        $this->assertSame('pending_payment', $registration->status);
+        $response->assertRedirect('https://tenant.sanaresys.localhost/tenant/impersonate/fresh-token');
     }
 
     protected function createPendingRegistration(array $overrides = []): ClinicRegistrationRequest
@@ -186,7 +183,6 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
             'status' => ClinicRegistrationRequest::STATUS_PENDING_VERIFICATION,
             'payment_status' => 'pending',
             'plan_code' => 'monthly',
-            'paypal_plan_id' => 'P-MONTHLY',
             'nombre_centro' => 'Clinica Salud Total',
             'slug' => 'clinica-salud-total',
             'direccion' => 'Colonia Palmira',
@@ -226,49 +222,6 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
             $table->softDeletes();
         });
 
-        $schema->create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        $schema->create('tenants', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('centro_id')->unique()->constrained('centros_medicos')->onDelete('cascade');
-            $table->json('data')->nullable();
-            $table->string('tenancy_db_name')->nullable();
-            $table->string('tenancy_primary_domain')->nullable();
-            $table->string('tenancy_mode')->nullable();
-            $table->timestamps();
-        });
-
-        $schema->create('domains', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('domain')->unique();
-            $table->string('tenant_id');
-            $table->timestamps();
-
-            $table->foreign('tenant_id')
-                ->references('id')
-                ->on('tenants')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
-        });
-
-        $schema->create('tenant_user_impersonation_tokens', function (Blueprint $table) {
-            $table->string('token', 128)->primary();
-            $table->string('tenant_id');
-            $table->string('user_id');
-            $table->string('auth_guard')->nullable();
-            $table->string('redirect_url');
-            $table->timestamp('created_at');
-        });
-
         $schema->create('clinic_registration_requests', function (Blueprint $table) {
             $table->id();
             $table->uuid('public_id')->unique();
@@ -287,17 +240,39 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
             $table->timestamp('verification_expires_at')->nullable();
             $table->timestamp('verified_at')->nullable();
             $table->timestamp('payment_approved_at')->nullable();
+            $table->timestamp('consent_at')->nullable();
+            $table->string('consent_text_version')->nullable();
+            $table->string('consent_ip')->nullable();
             $table->timestamp('provisioned_at')->nullable();
             $table->timestamp('failed_at')->nullable();
             $table->unsignedInteger('resend_count')->default(0);
-            $table->foreignId('centro_id')->nullable()->constrained('centros_medicos')->nullOnDelete();
+            $table->unsignedBigInteger('centro_id')->nullable();
             $table->string('tenant_id')->nullable()->index();
-            $table->string('paypal_subscription_id')->nullable()->index();
-            $table->string('paypal_plan_id')->nullable();
+            $table->unsignedBigInteger('billing_invoice_id')->nullable();
             $table->string('primary_domain')->nullable();
             $table->text('onboarding_redirect_url')->nullable();
             $table->string('failure_code', 100)->nullable();
             $table->text('failure_message')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('billing_invoices', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('public_id')->unique();
+            $table->unsignedBigInteger('centro_id')->nullable();
+            $table->unsignedBigInteger('clinic_registration_request_id')->nullable();
+            $table->string('kind', 32);
+            $table->string('status', 32);
+            $table->string('currency', 3);
+            $table->decimal('subtotal', 10, 2)->default(0);
+            $table->decimal('total', 10, 2)->default(0);
+            $table->timestamp('due_at')->nullable();
+            $table->timestamp('grace_until')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('billing_starts_at')->nullable();
+            $table->timestamp('billing_ends_at')->nullable();
+            $table->timestamp('billing_renews_at')->nullable();
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }

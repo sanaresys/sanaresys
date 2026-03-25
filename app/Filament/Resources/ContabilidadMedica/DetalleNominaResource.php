@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ContabilidadMedica;
 
 use App\Filament\Resources\ContabilidadMedica\DetalleNominaResource\Pages;
 use App\Models\ContabilidadMedica\DetalleNomina;
+use App\Services\Billing\TenantModuleAccessService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -22,6 +23,22 @@ class DetalleNominaResource extends Resource
     protected static ?string $modelLabel = 'Historial de Pago';
     protected static ?string $pluralModelLabel = 'Historial de Pagos';
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationBadge(): ?string
+    {
+        if (! tenancy()->initialized || auth()->user()?->hasRole('root')) {
+            return null;
+        }
+
+        return app(TenantModuleAccessService::class)->isModuleActive('nomina')
+            ? null
+            : 'DEMO';
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getNavigationBadge() ? 'warning' : null;
+    }
 
     public static function form(Form $form): Form
     {
@@ -165,8 +182,14 @@ class DetalleNominaResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['nomina', 'medico.persona']);
+
+        if (static::isDemoMode()) {
+            $query->whereRaw('1 = 0');
+        }
+
+        return $query;
     }
 
     public static function getPages(): array
@@ -181,5 +204,18 @@ class DetalleNominaResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    protected static function isDemoMode(): bool
+    {
+        if (! tenancy()->initialized) {
+            return false;
+        }
+
+        if (auth()->user()?->hasRole('root')) {
+            return false;
+        }
+
+        return ! app(TenantModuleAccessService::class)->isModuleActive('nomina');
     }
 }

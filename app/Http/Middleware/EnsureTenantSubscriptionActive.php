@@ -37,7 +37,7 @@ class EnsureTenantSubscriptionActive
             ->select(['id', 'billing_status'])
             ->find($tenant->centro_id);
 
-        if (! $centro || $centro->billing_status === 'active') {
+        if (! $centro || in_array($centro->billing_status, ['active', 'past_due', 'grace'], true)) {
             return $next($request);
         }
 

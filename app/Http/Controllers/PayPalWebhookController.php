@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\BillingWebhookEvent;
 use App\Models\ClinicRegistrationRequest;
+use App\Services\Billing\BillingInvoiceService;
+use App\Services\Billing\BillingModuleOrderService;
 use App\Services\Billing\BillingSubscriptionService;
 use App\Services\Billing\PayPalService;
 use App\Services\Billing\RegistrationProvisioningService;
@@ -18,6 +20,8 @@ class PayPalWebhookController extends Controller
     public function __construct(
         protected PayPalService $payPalService,
         protected BillingSubscriptionService $billingSubscriptionService,
+        protected BillingInvoiceService $billingInvoiceService,
+        protected BillingModuleOrderService $billingModuleOrderService,
         protected RegistrationProvisioningService $registrationProvisioningService,
     ) {
     }
@@ -58,6 +62,21 @@ class PayPalWebhookController extends Controller
                 ]);
 
                 return response()->json(['message' => 'Invalid signature.'], 400);
+            }
+
+            if ($this->isOrderEvent($eventType)) {
+                $handled = $this->handleOrderEvent($eventType, $payload);
+
+                $event->update([
+                    'event_type' => $eventType ?: $event->event_type,
+                    'resource_type' => $resourceType ?: $event->resource_type,
+                    'status' => $handled ? 'processed' : 'ignored',
+                    'processed_at' => now(),
+                    'payload' => $payload,
+                    'error_message' => null,
+                ]);
+
+                return response()->json(['message' => 'Processed'], 200);
             }
 
             $subscriptionId = $this->extractSubscriptionId($payload);
@@ -154,6 +173,105 @@ class PayPalWebhookController extends Controller
 
                 return $candidate;
             }
+        }
+
+        return null;
+    }
+
+    protected function isOrderEvent(string $eventType): bool
+    {
+        return in_array(strtoupper($eventType), [
+            'PAYMENT.CAPTURE.COMPLETED',
+            'PAYMENT.CAPTURE.REFUNDED',
+        ], true);
+    }
+
+    protected function handleOrderEvent(string $eventType, array $payload): bool
+    {
+        $normalized = strtoupper($eventType);
+
+        if ($normalized === 'PAYMENT.CAPTURE.COMPLETED') {
+            $orderId = $this->extractOrderIdFromCapturePayload($payload);
+            $captureId = $this->extractCaptureId($payload);
+
+            $attempt = $this->billingInvoiceService->handleCaptureCompleted(
+                paypalOrderId: $orderId,
+                paypalCaptureId: $captureId,
+                payload: $payload
+            );
+
+            if ($attempt !== null) {
+                return true;
+            }
+
+            $order = $this->billingModuleOrderService->handleCaptureCompleted(
+                paypalOrderId: $orderId,
+                paypalCaptureId: $captureId,
+                payload: $payload
+            );
+
+            return $order !== null;
+        }
+
+        if ($normalized === 'PAYMENT.CAPTURE.REFUNDED') {
+            $captureId = $this->extractCaptureId($payload);
+            if (! $captureId) {
+                return false;
+            }
+
+            $attempt = $this->billingInvoiceService->handleRefund(
+                paypalCaptureId: $captureId,
+                payload: $payload
+            );
+
+            if ($attempt !== null) {
+                return true;
+            }
+
+            $order = $this->billingModuleOrderService->handleRefundReview(
+                paypalCaptureId: $captureId,
+                payload: $payload
+            );
+
+            return $order !== null;
+        }
+
+        return false;
+    }
+
+    protected function extractOrderIdFromCapturePayload(array $payload): ?string
+    {
+        $candidates = [
+            Arr::get($payload, 'resource.supplementary_data.related_ids.order_id'),
+            Arr::get($payload, 'resource.supplementary_related_ids.order_id'),
+            Arr::get($payload, 'resource.links.0.href'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            if (str_contains($candidate, '/v2/checkout/orders/')) {
+                $segments = explode('/', trim($candidate, '/'));
+                $key = array_search('orders', $segments, true);
+
+                if ($key !== false && isset($segments[$key + 1])) {
+                    return (string) $segments[$key + 1];
+                }
+            }
+
+            return $candidate;
+        }
+
+        return null;
+    }
+
+    protected function extractCaptureId(array $payload): ?string
+    {
+        $captureId = Arr::get($payload, 'resource.id');
+        if (is_string($captureId) && trim($captureId) !== '') {
+            return $captureId;
         }
 
         return null;

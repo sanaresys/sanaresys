@@ -68,6 +68,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn () => '<script src="/js/disable-livewire-polling.js"></script>'
             )
+            ->renderHook(
+                'panels::body.start',
+                fn () => view('filament.components.module-renewal-banner')
+            )
 
 
             
