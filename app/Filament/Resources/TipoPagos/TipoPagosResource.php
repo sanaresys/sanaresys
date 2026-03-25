@@ -60,7 +60,6 @@ class TipoPagosResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('descripcion')->searchable()->sortable(),
                 
@@ -75,6 +74,7 @@ class TipoPagosResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

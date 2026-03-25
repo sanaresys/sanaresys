@@ -19,7 +19,6 @@ class Factura extends ModeloBase
         'paciente_id',
         'cita_id',
         'consulta_id',
-        'medico_id',
         'fecha_emision',
         'subtotal',
         'descuento_total',
@@ -133,50 +132,50 @@ class Factura extends ModeloBase
 
     public function generarNumeroSinCAI(): string
     {
-        // Obtener el Ãºltimo nÃºmero de factura sin CAI del centro actual
-        $ultimaFactura = static::where('usa_cai', false)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        if ($ultimaFactura && isset($ultimaFactura->numero_sin_cai)) {
-            $ultimoNumero = (int) $ultimaFactura->numero_sin_cai;
-            $nuevoNumero = $ultimoNumero + 1;
+        // Correlativo mensual para proformas (sin CAI):
+        // PROV-YYYY-MM-000001, PROV-YYYY-MM-000002, ...
+        // Se reinicia al cambiar de mes.
+        $fechaBase = $this->fecha_emision ? \Carbon\Carbon::parse($this->fecha_emision) : now();
+        $anio = (int) $fechaBase->format('Y');
+        $mes = (int) $fechaBase->format('m');
+
+        // Si el registro ya existe, su posición es determinística por id dentro del mes.
+        // Incluimos soft-deleted para no reciclar numeración.
+        if (!empty($this->id)) {
+            $correlativo = static::withTrashed()
+                ->where('usa_cai', false)
+                ->whereYear('fecha_emision', $anio)
+                ->whereMonth('fecha_emision', $mes)
+                ->where('id', '<=', $this->id)
+                ->count();
         } else {
-            $nuevoNumero = 1;
+            // Fallback para instancias no persistidas.
+            $correlativo = static::withTrashed()
+                ->where('usa_cai', false)
+                ->whereYear('fecha_emision', $anio)
+                ->whereMonth('fecha_emision', $mes)
+                ->count() + 1;
         }
-        
-        // Actualizar el campo numero_sin_cai en la factura actual
-        $this->update(['numero_sin_cai' => $nuevoNumero]);
-        
-        // Formatear como PROV-YYYY-MM-NNNNNN
-        return sprintf('PROV-%s-%06d', 
-            now()->format('Y-m'), 
-            $nuevoNumero
-        );
+
+        return sprintf('PROV-%04d-%02d-%06d', $anio, $mes, $correlativo);
     }
     protected static function booted(): void
     {
         parent::booted();
 
         static::creating(function (self $factura) {
-            // Establecer centro y auditorÃ­a
-            if (Auth::check()) {
-                $factura->centro_id ??= Auth::user()->centro_id;
-                $factura->created_by ??= Auth::id();
-            }
-
+            
             // Si usa CAI, generar correlativo
             if ($factura->usa_cai) {
                 try {
                     Log::info('Generando CAI para factura', [
-                        'factura_id' => $factura->id,
-                        'centro_id' => $factura->centro_id
+                        'factura_id' => $factura->id
                     ]);
                     
-                    $cai = CaiNumerador::obtenerCAIDisponible($factura->centro_id);
+                    $cai = CaiNumerador::obtenerCAIDisponible();
                     
                     if (!$cai) {
-                        throw new \Exception('No hay CAI disponible para este centro');
+                        throw new \Exception('No hay CAI disponible');
                     }
 
                     Log::info('CAI encontrado', ['cai_id' => $cai->id, 'cai_codigo' => $cai->cai_codigo]);
@@ -184,7 +183,6 @@ class Factura extends ModeloBase
                     $correlativo = CaiNumerador::generar(
                         caiId: $cai->id,
                         usuarioId: Auth::id() ?? 1,
-                        centroId: $factura->centro_id
                     );
 
                     Log::info('Correlativo generado', ['correlativo_id' => $correlativo->id]);
@@ -223,7 +221,7 @@ class Factura extends ModeloBase
 
     public function saldoPendiente(): float
     {
-        return $this->total - $this->montoPagado();
+        return max(0, (float) $this->total - (float) $this->montoPagado());
     }
 
     public function actualizarEstadoPago(): void
@@ -263,7 +261,7 @@ class Factura extends ModeloBase
                 $cuentaPorCobrar->update([
                     'saldo_pendiente' => $saldoPendiente,
                     'estado_cuentas_por_cobrar' => $estadoCuenta,
-                    'updated_by' => auth()->id(),
+                    'updated_by' => Auth::id(),
                 ]);
             } else {
                 // Crear nueva cuenta por cobrar solo si hay saldo pendiente
@@ -273,9 +271,8 @@ class Factura extends ModeloBase
                     'factura_id' => $this->id,
                     'saldo_pendiente' => $saldoPendiente,
                     'fecha_vencimiento' => now()->addDays(30),
-                    'centro_id' => $this->centro_id,
                     'estado_cuentas_por_cobrar' => $estadoCuenta,
-                    'created_by' => auth()->id() ?? $this->created_by,
+                    'created_by' => Auth::id() ?? $this->created_by,
                 ]);
             }
         } else {
@@ -291,7 +288,7 @@ class Factura extends ModeloBase
                 $cuentaPorCobrar->update([
                     'saldo_pendiente' => 0,
                     'estado_cuentas_por_cobrar' => 'PAGADA',
-                    'updated_by' => auth()->id(),
+                    'updated_by' => Auth::id(),
                 ]);
             }
         }
@@ -323,7 +320,7 @@ class Factura extends ModeloBase
      */
     public function getSaldoPendienteAttribute(): float
     {
-        return $this->total - $this->total_pagado;
+        return max(0, (float) $this->total - (float) $this->total_pagado);
     }
 
     /**

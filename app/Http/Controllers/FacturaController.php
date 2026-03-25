@@ -6,6 +6,7 @@ use App\Models\FacturaDiseno;
 use App\Models\Factura;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class FacturaController extends Controller
 {
@@ -77,11 +78,10 @@ class FacturaController extends Controller
     private function obtenerDatosReales()
     {
         // Obtener el centro médico actual
-        $centroId = $this->getCurrentTenantCentroId();
-        $centro = \App\Models\Centros_Medico::on('mysql')->find($centroId);
+        $centro = \App\Models\Centros_Medico::on('mysql')->first();
         
         // Obtener el usuario actual y su médico asociado
-        $usuario = auth()->user();
+            $usuario = Auth::user();
         $medico = null;
         $especialidad = 'Medicina General';
         
@@ -363,18 +363,14 @@ class FacturaController extends Controller
      */
     public function vistaPreviewDemo()
     {
-        // Obtener el diseño actual del centro
-        $centroId = $this->getCurrentTenantCentroId();
-
-        // Buscar diseño existente para el centro
-        $diseno = FacturaDiseno::where('centro_id', $centroId)
+        // Buscar diseño activo del tenant actual
+        $diseno = FacturaDiseno::query()
             ->where('activo', true)
             ->first();
 
         // Si no hay diseño, crear uno temporal con valores por defecto
         if (!$diseno) {
             $diseno = new FacturaDiseno([
-                'centro_id' => $centroId,
                 'nombre' => 'Diseño Principal',
                 'descripcion' => 'Diseño principal de facturas para el centro médico',
                 'activo' => true,
@@ -479,16 +475,5 @@ class FacturaController extends Controller
             'diseno' => $diseno,
             'datosFactura' => $datosFactura
         ]);
-    }
-
-    private function getCurrentTenantCentroId(): int
-    {
-        $centroId = tenancy()->initialized ? tenancy()->tenant?->centro_id : null;
-
-        if (! $centroId) {
-            throw new \RuntimeException('No hay tenant inicializado para generar vistas de facturas.');
-        }
-
-        return (int) $centroId;
     }
 }

@@ -347,6 +347,59 @@ class ClinicRegistrationController extends Controller
             );
 
             $registration->refresh();
+            if (Centros_Medico::on('mysql')->where('rtn', $registration->rtn)->exists()) {
+                throw ValidationException::withMessages([
+                    'rtn' => 'El RTN ya esta en uso por otra clinica.',
+                ]);
+            }
+
+            if ($this->provisioningService->emailExistsInAnyTenant($registration->owner_email)) {
+                throw ValidationException::withMessages([
+                    'owner_email' => 'El correo ya esta en uso en otro tenant.',
+                ]);
+            }
+
+            $this->identityService->validateSlugAvailable($registration->slug);
+
+            $centro = Centros_Medico::create([
+                'nombre_centro' => $registration->nombre_centro,
+                'direccion' => $registration->direccion,
+                'telefono' => $registration->telefono,
+                'rtn' => $registration->rtn,
+                'slug' => $registration->slug,
+                'tenancy_mode' => 'domain',
+                'onboarding_current_step' => 0,
+                'onboarding_skipped_cai' => false,
+                'onboarding_completed_at' => null,
+            ]);
+
+            $result = $this->provisioningService->provisionNewCenter($centro, [
+                'name' => $registration->owner_name,
+                'email' => $registration->owner_email,
+                'password' => $password,
+            ]);
+
+            tenancy()->end();
+
+            if (tenancy()->initialized){
+                tenancy()->end();
+            }
+
+            $token = tenancy()->impersonate(
+                tenant: $result->tenant,
+                userId: (string) $result->adminUserId,
+                redirectUrl: '/admin',
+                authGuard: 'web'
+            );
+
+            Log::info('Token de impersonación generado y guardado', [
+                'token' => $token->token,
+                'tenant_id' => $token->tenant_id,
+                'tabla_tokens_check' => \Stancl\Tenancy\Database\Models\ImpersonationToken::count(),
+            ]);
+
+            $scheme = (string) config('tenancy.tenant_scheme', 'https');
+            $target = "{$scheme}://{$result->primaryDomain}/tenant/impersonate/{$token->token}";
 
             if ($registration->isProvisioned()) {
                 return $this->redirectProvisionedRegistration($registration);

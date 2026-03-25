@@ -84,28 +84,4 @@ class CuentasPorCobrar extends Model
         return $this->estado_cuentas_por_cobrar === 'PAGADA' || $this->saldo_pendiente <= 0;
     }
 
-    protected static function booted(): void
-    {
-        parent::booted();
-
-        static::creating(function ($model) {
-            // Solo agregar centro_id si NO estamos en contexto de tenant
-            if (!tenancy()->initialized && Auth::check() && empty($model->centro_id)) {
-                $user = Auth::user();
-                if ($user && isset($user->centro_id)) {
-                    $model->centro_id = $user->centro_id;
-                }
-            }
-
-            if (Auth::check() && empty($model->created_by)) {
-                $model->created_by = Auth::id();
-            }
-        });
-
-        static::updating(function ($model) {
-            if (Auth::check() && empty($model->updated_by)) {
-                $model->updated_by = Auth::id();
-            }
-        });
-    }
 }
