@@ -34,7 +34,7 @@ class DisenoFactura extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
     protected static ?string $navigationLabel = 'DiseÃ±o de Facturas';
     protected static ?string $title = 'ConfiguraciÃ³n de DiseÃ±o de Facturas';
-    protected static ?string $navigationGroup = 'ConfiguraciÃ³n';
+    protected static ?string $navigationGroup = 'Configuracion';
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.diseno-factura';

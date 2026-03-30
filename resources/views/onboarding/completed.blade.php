@@ -1,7 +1,7 @@
 @extends('onboarding.layout')
 
 @php
-    $currentStep = 4;
+    $currentStep = 5;
 @endphp
 
 @section('content')

@@ -27,7 +27,7 @@ class ExamenesResource extends Resource
 {
     protected static ?string $model            = Examenes::class;
     protected static ?string $navigationLabel  = 'Exámenes';
-    protected static ?string $navigationGroup  = 'Gestión Médica';
+    protected static ?string $navigationGroup  = 'Panel Diario';
     protected static ?int    $navigationSort   = 2;
     protected static ?string $navigationIcon   = 'heroicon-o-rectangle-stack';
 

@@ -76,6 +76,17 @@
                     </div>
                     <p class="text-sm" style="color: #7c8a98;">Creara servicios, especialidades y precios para agilizar agenda y cobro.</p>
                 </article>
+
+                <article class="rounded-xl border p-5" style="border-color: #d6dce2; background: rgba(255,255,255,0.65);">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.18em] font-bold" style="color: #7c8a98;">Paso 4 (Opcional)</p>
+                            <h4 class="font-bold text-lg mt-1" style="color: #5c6a78;">Agregar medico</h4>
+                        </div>
+                        <span class="text-xs" style="color: #9ba8b4;">Bloqueado</span>
+                    </div>
+                    <p class="text-sm" style="color: #7c8a98;">Podras registrar tu primer medico y dejar lista la operacion clinica desde el onboarding.</p>
+                </article>
             </div>
 
             <div class="mt-6 p-4 rounded-xl border flex items-center justify-between gap-4" style="border-color: #cbd8de; background: #edf6f7;">

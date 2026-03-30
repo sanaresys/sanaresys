@@ -23,7 +23,7 @@ class ServiciosResource extends Resource
     protected static ?string $model = Servicio::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-        protected static ?string $navigationGroup = 'Gestión de Facturación';
+        protected static ?string $navigationGroup = 'Configuracion';
 
     public static function form(Form $form): Form
     {

@@ -31,7 +31,7 @@ class CAIAutorizacionesResource extends Resource
     
     protected static ?string $navigationLabel = 'Autorizaciones CAI';
     
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Configuracion';
     protected $listeners = ['serviciosActualizados' => '$refresh'];
 
     

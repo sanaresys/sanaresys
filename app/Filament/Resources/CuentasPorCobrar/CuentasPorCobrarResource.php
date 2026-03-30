@@ -19,7 +19,7 @@ class CuentasPorCobrarResource extends Resource
 {
     protected static ?string $model = CuentasPorCobrar::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document';
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Facturacion';
     protected static ?string $navigationLabel = 'Cuentas Pendientes';
     protected static ?string $modelLabel = 'Cuenta por Cobrar';
     protected static ?string $pluralModelLabel = 'Cuentas por Cobrar Pendientes';

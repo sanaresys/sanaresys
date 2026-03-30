@@ -14,7 +14,7 @@
                 <p class="mt-1 text-sm leading-relaxed" style="color: var(--onb-ink); opacity: 0.7;">Bienvenido a Sanaresys. Vamos a preparar tu espacio de trabajo para que puedas empezar a atender pacientes hoy mismo.</p>
             </div>
             <div class="text-right min-w-[80px]">
-                <p class="text-2xl font-bold" style="color: var(--onb-accent);">25%</p>
+                <p class="text-2xl font-bold" style="color: var(--onb-accent);">20%</p>
                 <p class="text-xs mt-1" style="color: var(--onb-ink); opacity: 0.6;">Avance</p>
             </div>
         </div>
@@ -28,7 +28,9 @@
             <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
             <span class="text-xs font-bold" style="color: #b0a99a;">3. SERVICIOS</span>
             <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">4. COMPLETO</span>
+            <span class="text-xs font-bold" style="color: #b0a99a;">4. MEDICO</span>
+            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
+            <span class="text-xs font-bold" style="color: #b0a99a;">5. COMPLETO</span>
         </div>
     </div>
 
@@ -83,19 +85,10 @@
                                 <label for="nombre_centro" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
                                     Nombre de la Clínica
                                 </label>
-                                <input type="text" 
-                                       id="nombre_centro" 
-                                       name="nombre_centro" 
-                                       value="{{ old('nombre_centro', $centro->nombre_centro ?? '') }}"
-                                       required
-                                       class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                       style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                       placeholder="Ej. Clínica San José"
-                                       onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                       onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                       onchange="showSaveIndicator()"
-                                       onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                       onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                <div class="w-full px-4 py-4 border-2 rounded-lg text-base"
+                                     style="border-color: #d7d0c0; background: #f3f1ec; color: var(--onb-ink); font-weight: 700;">
+                                    {{ $centro->nombre_centro ?? 'No disponible' }}
+                                </div>
                                 @error('nombre_centro')
                                     <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
                                 @enderror
@@ -106,20 +99,10 @@
                                 <label for="rtn" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
                                     RTN / Identificación Fiscal
                                 </label>
-                                <input type="text" 
-                                       id="rtn" 
-                                       name="rtn" 
-                                       value="{{ old('rtn', $centro->rtn ?? '') }}"
-                                       required
-                                       maxlength="20"
-                                       class="w-full px-4 py-4 border-2 rounded-lg transition-all font-mono text-base" 
-                                       style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                       placeholder="Ej. 08011990123456"
-                                       onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                       onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                       onchange="showSaveIndicator()"
-                                       onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                       onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                <div class="w-full px-4 py-4 border-2 rounded-lg font-mono text-base"
+                                     style="border-color: #d7d0c0; background: #f3f1ec; color: var(--onb-ink); font-weight: 700;">
+                                    {{ $centro->rtn ?? 'No disponible' }}
+                                </div>
                                 @error('rtn')
                                     <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
                                 @enderror

@@ -17,7 +17,7 @@ class PermissionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-key';
 
-    protected static ?string $navigationGroup = 'Gestión de Seguridad';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $navigationLabel = 'Permisos';
 
@@ -29,7 +29,7 @@ class PermissionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información Básica')
+                Forms\Components\Section::make('InformaciÃ³n BÃ¡sica')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('Nombre del permiso')
@@ -131,3 +131,4 @@ class PermissionResource extends Resource
         return static::canViewAny();
     }
 }
+

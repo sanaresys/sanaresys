@@ -14,7 +14,7 @@
                 <p class="mt-1 text-sm leading-relaxed" style="color: var(--onb-ink); opacity: 0.7;">Configura tu CAI para emitir facturas fiscales válidas aprobadas por la SAR.</p>
             </div>
             <div class="text-right min-w-[80px]">
-                <p class="text-2xl font-bold" style="color: var(--onb-accent);">50%</p>
+                <p class="text-2xl font-bold" style="color: var(--onb-accent);">40%</p>
                 <p class="text-xs mt-1" style="color: var(--onb-ink); opacity: 0.6;">Avance</p>
             </div>
         </div>
@@ -28,7 +28,9 @@
             <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
             <span class="text-xs font-bold" style="color: #b0a99a;">3. SERVICIOS</span>
             <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">4. COMPLETO</span>
+            <span class="text-xs font-bold" style="color: #b0a99a;">4. MEDICO</span>
+            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
+            <span class="text-xs font-bold" style="color: #b0a99a;">5. COMPLETO</span>
         </div>
     </div>
 

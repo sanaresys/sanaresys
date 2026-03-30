@@ -25,6 +25,10 @@ Route::middleware(['auth', 'tenant.resolve'])->prefix('onboarding')->name('onboa
     
     Route::get('/step-3', [OnboardingController::class, 'stepThree'])->name('step-3');
     Route::post('/step-3', [OnboardingController::class, 'saveStepThree'])->name('save-step-3');
+
+    Route::get('/step-4', [OnboardingController::class, 'stepFour'])->name('step-4');
+    Route::post('/step-4', [OnboardingController::class, 'saveStepFour'])->name('save-step-4');
+    Route::post('/skip-medico', [OnboardingController::class, 'skipMedico'])->name('skip-medico');
     
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
     Route::post('/mark-completed', [OnboardingController::class, 'markCompleted'])->name('mark-completed');

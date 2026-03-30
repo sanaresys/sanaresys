@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Centros_Medico;
 use App\Models\CAIAutorizaciones;
 use App\Models\Servicio;
+use App\Models\Medico;
+use App\Models\Persona;
+use App\Models\Nacionalidad;
+use App\Models\Tenant;
 use App\Services\TenantProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class OnboardingController extends Controller
@@ -66,8 +71,6 @@ class OnboardingController extends Controller
     public function saveStepOne(Request $request)
     {
         $validated = $request->validate([
-            'nombre_centro' => 'required|string|max:255',
-            'rtn' => 'required|string|max:20',
             'direccion' => 'required|string|max:500',
             'telefono' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -80,8 +83,6 @@ class OnboardingController extends Controller
         }
 
         $centro->update([
-            'nombre_centro' => $validated['nombre_centro'],
-            'rtn' => $validated['rtn'],
             'direccion' => $validated['direccion'],
             'telefono' => $validated['telefono'],
             'email' => $validated['email'] ?? null,
@@ -287,8 +288,8 @@ class OnboardingController extends Controller
                 'onboarding_current_step' => 3,
             ]);
 
-            return redirect()->route('onboarding.complete')
-                ->with('success', 'Servicios creados correctamente');
+            return redirect()->route('onboarding.step-4')
+                ->with('success', 'Servicios creados correctamente. Ahora puedes agregar tu primer medico (opcional).');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -311,6 +312,151 @@ class OnboardingController extends Controller
     }
 
     /**
+     * Paso 4: Agregar medico (opcional)
+     */
+    public function stepFour()
+    {
+        $centro = $this->getCentroFromTenant();
+
+        if (! $centro) {
+            return redirect()->route('filament.admin.pages.dashboard');
+        }
+
+        if ($centro->onboarding_current_step < 3) {
+            return redirect()->route('onboarding.step-3');
+        }
+
+        $nacionalidades = Nacionalidad::query()
+            ->orderBy('nacionalidad')
+            ->get(['id', 'nacionalidad']);
+
+        return view('onboarding.step-4', compact('centro', 'nacionalidades'));
+    }
+
+    /**
+     * Guardar medico inicial (opcional)
+     */
+    public function saveStepFour(Request $request)
+    {
+        $validated = $request->validate([
+            'primer_nombre' => 'required|string|max:255',
+            'primer_apellido' => 'required|string|max:255',
+            'dni' => 'required|string|max:30',
+            'telefono' => 'required|string|max:20',
+            'sexo' => 'required|in:M,F',
+            'fecha_nacimiento' => 'required|date|before:today',
+            'nacionalidad_id' => 'required|integer|exists:nacionalidades,id',
+            'numero_colegiacion' => 'required|string|max:100',
+        ]);
+
+        $centro = $this->getCentroFromTenant();
+
+        if (! $centro) {
+            return back()->withErrors(['error' => 'Centro medico no encontrado.']);
+        }
+
+        try {
+            $tenant = Tenant::where('centro_id', $centro->id)->first();
+
+            if (! $tenant) {
+                throw new \Exception('No se encontro el tenant para el centro actual.');
+            }
+
+            tenancy()->initialize($tenant);
+
+            if (! tenancy()->initialized) {
+                throw new \Exception('No se pudo inicializar el tenant.');
+            }
+
+            DB::beginTransaction();
+
+            if (Persona::query()->where('dni', $validated['dni'])->exists()) {
+                throw ValidationException::withMessages([
+                    'dni' => 'Ya existe una persona con este DNI.',
+                ]);
+            }
+
+            $persona = Persona::query()->create([
+                'primer_nombre' => $validated['primer_nombre'],
+                'segundo_nombre' => null,
+                'primer_apellido' => $validated['primer_apellido'],
+                'segundo_apellido' => null,
+                'dni' => $validated['dni'],
+                'telefono' => $validated['telefono'],
+                'direccion' => null,
+                'sexo' => $validated['sexo'],
+                'fecha_nacimiento' => $validated['fecha_nacimiento'],
+                'nacionalidad_id' => $validated['nacionalidad_id'],
+            ]);
+
+            $medicoData = [
+                'persona_id' => $persona->id,
+                'numero_colegiacion' => $validated['numero_colegiacion'],
+                'horario_entrada' => null,
+                'horario_salida' => null,
+            ];
+
+            if (Schema::hasColumn('medicos', 'centro_id')) {
+                $medicoData['centro_id'] = $centro->id;
+            }
+
+            Medico::query()->create($medicoData);
+
+            DB::commit();
+            tenancy()->end();
+
+            $centro->update([
+                'onboarding_current_step' => 4,
+            ]);
+
+            return redirect()->route('onboarding.complete')
+                ->with('success', 'Medico agregado correctamente.');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
+
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
+
+            Log::error('Error agregando medico en onboarding.', [
+                'centro_id' => $centro->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'No se pudo crear el medico: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Omitir paso de agregar medico
+     */
+    public function skipMedico()
+    {
+        $centro = $this->getCentroFromTenant();
+
+        if (! $centro) {
+            return back()->withErrors(['error' => 'Centro medico no encontrado.']);
+        }
+
+        $centro->update([
+            'onboarding_current_step' => 4,
+        ]);
+
+        return redirect()->route('onboarding.complete')
+            ->with('warning', 'Has omitido el paso de agregar medico. Puedes hacerlo despues desde el panel.');
+    }
+
+    /**
      * Completar onboarding
      */
     public function complete()
@@ -318,8 +464,8 @@ class OnboardingController extends Controller
         $centro = $this->getCentroFromTenant();
 
         // Verificar que completó todos los pasos
-        if ($centro->onboarding_current_step < 3) {
-            return redirect()->route('onboarding.step-3');
+        if ($centro->onboarding_current_step < 4) {
+            return redirect()->route('onboarding.step-4');
         }
 
         return view('onboarding.completed', compact('centro'));

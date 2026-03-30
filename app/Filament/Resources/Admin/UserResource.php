@@ -27,7 +27,7 @@ class UserResource extends Resource
     }
     
     protected static ?string $model = User::class;
-    protected static ?string $navigationGroup = 'Gestión de Seguridad';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
 
@@ -36,7 +36,7 @@ class UserResource extends Resource
         return $form
             ->schema([
                 Wizard::make([
-                    Wizard\Step::make('Información Personal')
+                    Wizard\Step::make('InformaciÃ³n Personal')
                         ->schema([
                             TextInput::make('persona.dni')
                                 ->label('DNI')
@@ -44,7 +44,7 @@ class UserResource extends Resource
                                 ->maxLength(20)
                                 ->live(debounce: 500)
                                 ->afterStateUpdated(function (string $operation, $state, Forms\Set $set, Forms\Get $get, $livewire) {
-                                    // Solo ejecutar durante la creación
+                                    // Solo ejecutar durante la creaciÃ³n
                                     if (!($livewire instanceof \Filament\Resources\Pages\CreateRecord) || !$state) {
                                         return;
                                     }
@@ -57,15 +57,15 @@ class UserResource extends Resource
                                         $usuarioExistente = \App\Models\User::where('persona_id', $persona->id)->first();
                                         
                                         if ($usuarioExistente) {
-                                            // Mostrar advertencia de que ya existe un usuario - esto impedirá continuar
+                                            // Mostrar advertencia de que ya existe un usuario - esto impedirÃ¡ continuar
                                             \Filament\Notifications\Notification::make()
-                                                ->title('❌ No se puede continuar')
+                                                ->title('âŒ No se puede continuar')
                                                 ->body("Esta persona ya tiene un usuario asociado: {$usuarioExistente->name} ({$usuarioExistente->email}). No se puede crear otro usuario para la misma persona.")
                                                 ->danger()
                                                 ->persistent()
                                                 ->send();
                                         } else {
-                                            // Llenar automáticamente los campos con los datos encontrados
+                                            // Llenar automÃ¡ticamente los campos con los datos encontrados
                                             $set('persona.primer_nombre', $persona->primer_nombre);
                                             $set('persona.segundo_nombre', $persona->segundo_nombre);
                                             $set('persona.primer_apellido', $persona->primer_apellido);
@@ -76,20 +76,20 @@ class UserResource extends Resource
                                             $set('persona.fecha_nacimiento', $persona->fecha_nacimiento);
                                             $set('persona.nacionalidad_id', $persona->nacionalidad_id);
                                             
-                                            // También llenar el email del usuario si el usuario tiene email
-                                            // Nota: El email está en la tabla users, no en personas
+                                            // TambiÃ©n llenar el email del usuario si el usuario tiene email
+                                            // Nota: El email estÃ¡ en la tabla users, no en personas
                                             
-                                            // Mostrar notificación de éxito
+                                            // Mostrar notificaciÃ³n de Ã©xito
                                             \Filament\Notifications\Notification::make()
-                                                ->title('✅ Persona encontrada')
-                                                ->body("Se encontraron datos para el DNI: {$state}. Los campos se han llenado automáticamente. Puede continuar creando el usuario para esta persona.")
+                                                ->title('âœ… Persona encontrada')
+                                                ->body("Se encontraron datos para el DNI: {$state}. Los campos se han llenado automÃ¡ticamente. Puede continuar creando el usuario para esta persona.")
                                                 ->success()
                                                 ->send();
                                         }
                                     } else {
                                         // Nueva persona
                                         \Filament\Notifications\Notification::make()
-                                            ->title('📝 Nueva persona')
+                                            ->title('ðŸ“ Nueva persona')
                                             ->body("No se encontraron datos para el DNI: {$state}. Complete los campos para crear una nueva persona.")
                                             ->info()
                                             ->send();
@@ -97,7 +97,7 @@ class UserResource extends Resource
                                 })
                                 ->helperText(function($livewire) {
                                     if ($livewire instanceof \Filament\Resources\Pages\CreateRecord) {
-                                        return 'Ingrese el DNI para buscar automáticamente los datos de la persona si ya existe en el sistema';
+                                        return 'Ingrese el DNI para buscar automÃ¡ticamente los datos de la persona si ya existe en el sistema';
                                     }
                                     return 'DNI de la persona asociada a este usuario';
                                 })
@@ -106,7 +106,7 @@ class UserResource extends Resource
                                         return function (string $attribute, $value, \Closure $fail) {
                                             if (!$value) return;
                                             
-                                            // Solo validar durante la creación
+                                            // Solo validar durante la creaciÃ³n
                                             $livewire = request()->route()->getController();
                                             if (!($livewire instanceof \Filament\Resources\Pages\CreateRecord)) {
                                                 return; // Skip validation during edit
@@ -121,7 +121,7 @@ class UserResource extends Resource
                                                 }
                                                 // Si no tiene usuario asociado, permitir continuar
                                             }
-                                            // Si no existe la persona, también permitir continuar (nueva persona)
+                                            // Si no existe la persona, tambiÃ©n permitir continuar (nueva persona)
                                         };
                                     }
                                 ]),
@@ -129,7 +129,7 @@ class UserResource extends Resource
                             Forms\Components\Placeholder::make('estado_persona')
                                 ->label('Estado de la persona')
                                 ->content(function (Forms\Get $get, $livewire) {
-                                    // Solo mostrar durante la creación
+                                    // Solo mostrar durante la creaciÃ³n
                                     if (!($livewire instanceof \Filament\Resources\Pages\CreateRecord)) {
                                         return null;
                                     }
@@ -141,15 +141,15 @@ class UserResource extends Resource
                                     
                                     $persona = \App\Models\Persona::where('dni', $dni)->first();
                                     if (!$persona) {
-                                        return '✅ Nueva persona - Se creará un nuevo registro';
+                                        return 'âœ… Nueva persona - Se crearÃ¡ un nuevo registro';
                                     }
                                     
                                     $usuarioExistente = \App\Models\User::where('persona_id', $persona->id)->first();
                                     if ($usuarioExistente) {
-                                        return "❌ ERROR: Esta persona ya tiene usuario: {$usuarioExistente->name} - No se puede continuar";
+                                        return "âŒ ERROR: Esta persona ya tiene usuario: {$usuarioExistente->name} - No se puede continuar";
                                     }
                                     
-                                    return '✅ Persona existente encontrada - Se puede crear usuario para esta persona';
+                                    return 'âœ… Persona existente encontrada - Se puede crear usuario para esta persona';
                                 })
                                 ->live()
                                 ->columnSpanFull()
@@ -174,13 +174,13 @@ class UserResource extends Resource
                                 ->maxLength(255),
                             
                             TextInput::make('persona.telefono')
-                                ->label('Teléfono')
+                                ->label('TelÃ©fono')
                                 ->tel()
                                 ->required()
                                 ->maxLength(20),
                             
                             Textarea::make('persona.direccion')
-                                ->label('Dirección')
+                                ->label('DirecciÃ³n')
                                 ->rows(3)
                                 ->required()
                                 ->columnSpanFull(),
@@ -206,7 +206,7 @@ class UserResource extends Resource
                                 ->required(),
                             
                             FileUpload::make('persona.fotografia')
-                                ->label('Fotografía')
+                                ->label('FotografÃ­a')
                                 ->image()
                                 ->directory('personas')
                                 ->maxSize(2048)
@@ -214,7 +214,7 @@ class UserResource extends Resource
                         ])
                         ->columns(2),
                     
-                    Wizard\Step::make('Información de Usuario')
+                    Wizard\Step::make('InformaciÃ³n de Usuario')
                         ->schema([
                             TextInput::make('name')
                                 ->label('Nombre de Usuario')
@@ -229,7 +229,7 @@ class UserResource extends Resource
                                 ->maxLength(255),
                             
                             Forms\Components\TextInput::make('password')
-                                ->label('Contraseña')
+                                ->label('ContraseÃ±a')
                                 ->password()
                                 ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
                                 ->dehydrateStateUsing(fn($state) => !empty($state) ? bcrypt($state) : null)
@@ -239,7 +239,7 @@ class UserResource extends Resource
                                 ->autocomplete('new-password'),
 
                             Forms\Components\TextInput::make('password_confirmation')
-                                ->label('Confirmar Contraseña')
+                                ->label('Confirmar ContraseÃ±a')
                                 ->password()
                                 ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
                                 ->same('password')
@@ -252,7 +252,7 @@ class UserResource extends Resource
                                 ->multiple()
                                 ->relationship('roles', 'name', function ($query) {
                                     if (!auth()->user()?->hasRole('root')) {
-                                       // Multi-tenant: los roles ya están en el tenant actual
+                                       // Multi-tenant: los roles ya estÃ¡n en el tenant actual
                                        $query->where('name', '!=', 'root'); // Excluir rol root
                                     }
                                     return $query;
@@ -261,7 +261,7 @@ class UserResource extends Resource
                                 ->required(),
                             
                             Select::make('centro_id')
-                                ->label('Centro Médico')
+                                ->label('Centro MÃ©dico')
                                 ->options(\App\Models\Centros_Medico::pluck('nombre_centro', 'id'))
                                 ->required()
                                 ->visible(fn () => auth()->user()?->hasRole('root'))
@@ -308,7 +308,7 @@ class UserResource extends Resource
                     ->limit(2),
                 
                 Tables\Columns\TextColumn::make('centro.nombre_centro')
-                    ->label('Centro Médico')
+                    ->label('Centro MÃ©dico')
                     ->toggleable(isToggledHiddenByDefault: true),
                 
                 Tables\Columns\TextColumn::make('created_at')
@@ -369,3 +369,4 @@ class UserResource extends Resource
 
     
 }
+

@@ -31,7 +31,7 @@ class PersonaResource extends Resource
 
     protected static ?string $model = Persona::class;
 
-    protected static ?string $navigationGroup = 'Gestión de Personas';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -51,8 +51,8 @@ class PersonaResource extends Resource
                 TextInput::make('segundo_nombre')->label('Segundo Nombre'),
                 TextInput::make('primer_apellido')->label('Primer Apellido')->required(),
                 TextInput::make('segundo_apellido')->label('Segundo Apellido'),
-                TextInput::make('telefono')->label('Teléfono')->required(),
-                TextInput::make('direccion')->label('Dirección')->required(),
+                TextInput::make('telefono')->label('TelÃ©fono')->required(),
+                TextInput::make('direccion')->label('DirecciÃ³n')->required(),
                 Select::make('sexo')
                     ->label('Sexo')
                     ->options([
@@ -68,13 +68,13 @@ class PersonaResource extends Resource
                     ->searchable()
                     ->preload(),
                 FileUpload::make('fotografia')
-                    ->label('Fotografía')
+                    ->label('FotografÃ­a')
                     ->image()
                     ->directory('personas')
                     ->maxSize(2048)
                     ->deleteUploadedFileUsing(fn ($file) => Storage::disk('public')->delete($file))
                     ->nullable(),
-                // El campo centro_id se asigna automáticamente en el modelo, no es necesario en el formulario
+                // El campo centro_id se asigna automÃ¡ticamente en el modelo, no es necesario en el formulario
             ]);
     }
 
@@ -82,7 +82,7 @@ class PersonaResource extends Resource
     {
         $dni = preg_replace('/\D+/', '', (string) $dniInput);
 
-        // Validación mínima para evitar llamadas innecesarias.
+        // ValidaciÃ³n mÃ­nima para evitar llamadas innecesarias.
         if (!$dni || strlen($dni) < 13) {
             return;
         }
@@ -133,7 +133,7 @@ class PersonaResource extends Resource
                 }
             }
 
-            // Si existe en esta API, se asume nacionalidad hondureña.
+            // Si existe en esta API, se asume nacionalidad hondureÃ±a.
             $nacionalidadHondurenaId = Nacionalidad::query()
                 ->where('nacionalidad', 'like', 'Hondur%')
                 ->value('id');
@@ -142,7 +142,7 @@ class PersonaResource extends Resource
                 $set('nacionalidad_id', $nacionalidadHondurenaId);
             }
 
-            // Concatenar dirección: lugar_poblado, aldea, municipio, departamento.
+            // Concatenar direcciÃ³n: lugar_poblado, aldea, municipio, departamento.
             $direccion = collect([
                 $payload['lugar_poblado'] ?? null,
                 $payload['aldea'] ?? null,
@@ -168,8 +168,8 @@ class PersonaResource extends Resource
                 Tables\Columns\TextColumn::make('primer_nombre')->label('Primer Nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('primer_apellido')->label('Primer Apellido')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('telefono')->label('Teléfono')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('direccion')->label('Dirección')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('telefono')->label('TelÃ©fono')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('direccion')->label('DirecciÃ³n')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('nacionalidad.nacionalidad')->label('Nacionalidad')->searchable()->sortable(),
             ])
             ->filters([
@@ -203,10 +203,11 @@ class PersonaResource extends Resource
         ];
     }
 
-    // Controlar quién puede eliminar según permiso
+    // Controlar quiÃ©n puede eliminar segÃºn permiso
     
 
     // app/Filament/Resources/PersonaResource.php
 
-    // El filtrado por centro_id se realiza automáticamente por el scope global en el modelo
+    // El filtrado por centro_id se realiza automÃ¡ticamente por el scope global en el modelo
 }
+

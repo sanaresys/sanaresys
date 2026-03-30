@@ -25,7 +25,7 @@ class NacionalidadResource extends Resource
 
     protected static ?string $modelLabel = 'Nacionalidades';
     
-    protected static ?string $navigationGroup = 'Gestión de Catálogos';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $model = Nacionalidad::class;
 

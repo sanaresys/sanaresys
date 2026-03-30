@@ -19,7 +19,7 @@ class PagosFacturasResource extends Resource
 {
     protected static ?string $model = PagosFactura::class;
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Facturacion';
 
     public static function form(Form $form): Form
     {

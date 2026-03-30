@@ -23,7 +23,7 @@ class ImpuestosResource extends Resource
 {
     protected static ?string $model = Impuesto::class;
 
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $navigationIcon = 'heroicon-o-calculator';
 
