@@ -7,6 +7,7 @@ use App\Http\Controllers\FacturaPdfController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PacienteExpedientePdfController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -59,6 +60,12 @@ Route::get('/consulta/{consulta}/recetas/imprimir', [RecetaController::class, 'i
 // Rutas para imprimir exámenes
 Route::get('/examen/{examen}/imprimir', [ExamenController::class, 'imprimir'])->name('examenes.imprimir');
 Route::get('/consulta/{consulta}/examenes/imprimir', [ExamenController::class, 'imprimirPorConsulta'])->name('examenes.imprimir.consulta');
+
+// Rutas para expediente de paciente
+Route::middleware(['auth', 'tenant.resolve'])->group(function () {
+    Route::get('/paciente/{paciente}/expediente/pdf', [PacienteExpedientePdfController::class, 'generarPdf'])
+        ->name('paciente.expediente.pdf');
+});
 
 // Rutas para nóminas
 Route::get('/nomina/{nomina}/pdf', [NominaController::class, 'generarPDFNomina'])->name('nomina.pdf');

@@ -325,6 +325,30 @@ class ViewPacientes extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('resumen_pdf')
+                ->label('Resumen PDF')
+                ->icon('heroicon-m-document-text')
+                ->color('gray')
+                ->url(function () {
+                    return route('paciente.expediente.pdf', [
+                        'paciente' => $this->record->id,
+                        'tipo' => 'resumen',
+                    ]);
+                })
+                ->openUrlInNewTab(),
+
+            Actions\Action::make('expediente_completo_pdf')
+                ->label('Expediente Completo')
+                ->icon('heroicon-m-document-arrow-down')
+                ->color('gray')
+                ->url(function () {
+                    return route('paciente.expediente.pdf', [
+                        'paciente' => $this->record->id,
+                        'tipo' => 'completo',
+                    ]);
+                })
+                ->openUrlInNewTab(),
+
             Actions\Action::make('crear_consulta')
                 ->label('Crear Consulta')
                 ->icon('heroicon-m-clipboard-document-list')
