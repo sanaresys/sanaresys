@@ -4,109 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Configuracion inicial | Sanaresys</title>
+    <title>Configuración inicial | Sanaresys</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/onboarding-premium.css') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --ink: #10212a;
-            --ink-soft: #48606f;
-            --paper: #f6f1e7;
-            --paper-strong: #fffaf1;
-            --accent: #0f8a8d;
-            --accent-strong: #0a5f61;
-            --gold: #c68c2f;
-            --line: #d8cab4;
-            --radius-xl: 1rem;
-            --radius-2xl: 1.5rem;
-        }
-
+        /* Override global body styles para onboarding */
         body {
-            font-family: 'Public Sans', sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(circle at 10% 10%, rgba(15, 138, 141, 0.08), transparent 35%),
-                radial-gradient(circle at 92% 18%, rgba(198, 140, 47, 0.12), transparent 26%),
-                linear-gradient(180deg, var(--paper-strong) 0%, var(--paper) 100%);
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #FDF9F3;
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .brand-title,
-        .display-title {
-            font-family: 'Fraunces', serif;
-            letter-spacing: -0.02em;
-        }
-
-        .card-premium {
-            background: rgba(255, 251, 242, 0.84);
-            border: 1px solid var(--line);
-            border-radius: var(--radius-2xl);
-            box-shadow: 0 12px 35px rgba(16, 33, 42, 0.08);
-            backdrop-filter: blur(6px);
-        }
+        /* Ocultar header/footer del layout de Filament si se escapan */
+        #onb-app { min-height: 100vh; }
     </style>
 </head>
-<body>
-    <div class="min-h-screen flex flex-col">
-        <header class="border-b" style="border-color: var(--line); background: rgba(255, 250, 241, 0.9); backdrop-filter: blur(4px);">
-            <div class="w-full px-4 md:px-6 lg:px-8 py-4 md:py-5 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); box-shadow: 0 8px 20px rgba(10,95,97,.25);">
-                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="brand-title text-xl font-extrabold">Sanaresys</h1>
-                        <p class="text-sm" style="color: var(--ink-soft);">Implementacion inicial</p>
-                    </div>
-                </div>
+<body id="onb-app">
+    {{-- Alertas de sesión --}}
+    @if(session('success') || session('warning') || $errors->any())
+    <div style="position: fixed; top: 1rem; right: 1rem; z-index: 9999; max-width: 380px; display: flex; flex-direction: column; gap: 0.5rem;">
+        @if(session('success'))
+        <div class="onb-alert onb-alert-success onb-fade-up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="flex-shrink:0;color:#1A7A4A;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p style="margin:0;font-weight:600;">{{ session('success') }}</p>
+        </div>
+        @endif
+
+        @if(session('warning'))
+        <div class="onb-alert onb-alert-warning onb-fade-up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="flex-shrink:0;color:#5C4300;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <p style="margin:0;font-weight:600;">{{ session('warning') }}</p>
+        </div>
+        @endif
+
+        @if($errors->any())
+        <div class="onb-alert onb-alert-error onb-fade-up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="flex-shrink:0;color:#C0392B;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+                <p style="margin:0 0 0.25rem;font-weight:700;color:#C0392B;">Corrige los siguientes errores:</p>
+                <ul style="margin:0;padding-left:1.1rem;">
+                    @foreach($errors->all() as $error)
+                    <li style="font-size:13px;color:#C0392B;">{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </header>
-
-        <main class="flex-1 w-full px-2 md:px-4 lg:px-6 py-4 md:py-6">
-            <div class="max-w-[1760px] mx-auto">
-                @if(session('success'))
-                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #ecfdf5; border-color: #10b981;">
-                    <p class="font-semibold" style="color: #065f46;">{{ session('success') }}</p>
-                </div>
-                @endif
-
-                @if(session('warning'))
-                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #fff7ed; border-color: #f59e0b;">
-                    <p class="font-semibold" style="color: #9a3412;">{{ session('warning') }}</p>
-                </div>
-                @endif
-
-                @if($errors->any())
-                <div class="mb-6 rounded-xl border-l-4 p-4" style="background: #fef2f2; border-color: #ef4444;">
-                    <p class="font-semibold mb-2" style="color: #991b1b;">Corrige estos errores:</p>
-                    <ul class="list-disc list-inside text-sm" style="color: #7f1d1d;">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
-                @yield('content')
-            </div>
-        </main>
-
-        <footer class="py-4 border-t" style="border-color: var(--line);">
-            <div class="w-full px-4 md:px-6 lg:px-8 text-center text-sm" style="color: var(--ink-soft);">
-                <p>© {{ date('Y') }} Sanaresys. Plataforma de gestion para clinicas medicas.</p>
-            </div>
-        </footer>
+        </div>
+        @endif
     </div>
+    @endif
+
+    @yield('content')
 
     <script src="{{ asset('js/onboarding-effects.js') }}"></script>
     @stack('scripts')
+
+    {{-- Auto-dismiss alertas --}}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.onb-alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(12px)';
+                setTimeout(() => alert.remove(), 400);
+            }, 4500);
+        });
+    });
+    </script>
 </body>
 </html>

@@ -13,6 +13,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
+
 // Rutas de Onboarding (requieren autenticación)
 Route::middleware(['auth', 'tenant.resolve'])->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::get('/', [OnboardingController::class, 'welcome'])->name('welcome');

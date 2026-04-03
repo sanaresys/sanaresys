@@ -1,132 +1,292 @@
 @extends('onboarding.layout')
 
-@php
-    $currentStep = 4;
-@endphp
+@php $currentStep = 4; @endphp
 
 @section('content')
-<div class="card-premium overflow-hidden min-h-[88vh]">
-    <div class="px-8 pt-4 pb-5 md:px-12 md:pt-5 md:pb-6 border-b" style="border-color: #e8e5df; background: #ffffff;">
-        <div class="flex items-start justify-between gap-6 mb-4">
-            <div>
-                <h1 class="display-title text-3xl md:text-4xl font-bold" style="color: var(--onb-ink);">Agregar Medico</h1>
-                <p class="mt-1 text-sm leading-relaxed" style="color: var(--onb-ink); opacity: 0.7;">Este paso es opcional. Puedes crear tu primer medico ahora para iniciar mas rapido.</p>
+<div class="onb-split">
+
+    {{-- ══════════════════════════════════════════════
+         PANEL IZQUIERDO
+    ══════════════════════════════════════════════ --}}
+    <aside class="onb-panel-left">
+        <div>
+            <p class="onb-brand-label">Sanaresys</p>
+
+            <div class="onb-step-counter onb-fade-up">
+                <span class="onb-step-num">04</span>
+                <span class="onb-step-total">/ 04</span>
             </div>
-            <div class="text-right min-w-[80px]">
-                <p class="text-2xl font-bold" style="color: var(--onb-accent);">80%</p>
-                <p class="text-xs mt-1" style="color: var(--onb-ink); opacity: 0.6;">Avance</p>
+
+            <h1 class="onb-panel-headline onb-fade-up onb-delay-1">
+                Agrega al primer médico de tu equipo.
+            </h1>
+
+            <p class="onb-panel-subtext onb-fade-up onb-delay-1">
+                Tener un médico registrado te permite agendar citas y generar facturas de forma inmediata.
+            </p>
+
+            <div class="onb-panel-divider"></div>
+
+            {{-- Card ámbar: paso opcional --}}
+            <div class="onb-amber-card onb-fade-up onb-delay-2">
+                <p class="onb-amber-label">Paso opcional</p>
+                <p>Puedes agregar médicos más tarde desde el panel de administración → Equipo médico.</p>
             </div>
+
+            <ul class="onb-benefits onb-fade-up onb-delay-2">
+                <li class="onb-benefit-item">
+                    <span class="onb-benefit-icon">
+                        <svg fill="none" viewBox="0 0 12 12" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2 6l3 3 5-5"/>
+                        </svg>
+                    </span>
+                    <span>Asigna citas al médico desde el primer día</span>
+                </li>
+                <li class="onb-benefit-item">
+                    <span class="onb-benefit-icon">
+                        <svg fill="none" viewBox="0 0 12 12" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2 6l3 3 5-5"/>
+                        </svg>
+                    </span>
+                    <span>Sus datos aparecerán en facturas y expedientes</span>
+                </li>
+            </ul>
         </div>
 
-        <div class="flex items-center gap-2">
-            <div class="w-16 h-1.5 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">1. DATOS BASICOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">2. FACTURACION</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">3. SERVICIOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: var(--onb-accent);">4. MEDICO</span>
-            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">5. COMPLETO</span>
+        <div>
+            <div class="onb-progress-dots onb-fade-up onb-delay-3">
+                <span class="onb-dot done"></span>
+                <span class="onb-dot done"></span>
+                <span class="onb-dot done"></span>
+                <span class="onb-dot active"></span>
+            </div>
+            <p class="onb-panel-footer" style="margin-top:1rem;">© {{ date('Y') }} Sanaresys</p>
         </div>
-    </div>
+    </aside>
 
-    <div class="px-8 py-6 md:px-12 md:py-8" style="background: #fafaf8;">
-        <div class="p-5 rounded-xl mb-6" style="background: linear-gradient(135deg, rgba(15,138,141,0.06) 0%, rgba(248,243,234,0.3) 100%); border: 1.5px dashed #bfb8a5;">
-            <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(15,138,141,0.15);">
-                    <svg class="w-5 h-5" style="color: var(--onb-accent);" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
+    {{-- ══════════════════════════════════════════════
+         PANEL DERECHO — Formulario médico
+    ══════════════════════════════════════════════ --}}
+    <main class="onb-panel-right">
+        <div class="onb-panel-right-inner">
+
+            {{-- Barra de progreso --}}
+            <div class="onb-progress-bar-wrap onb-fade-up">
+                <div class="onb-progress-segments">
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg active"></div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-extrabold" style="color: var(--onb-ink);">Paso opcional</p>
-                    <p class="text-xs mt-1.5 leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.7;">Si todavia no deseas registrar medicos, puedes omitir este paso y finalizar el onboarding.</p>
+                <span class="onb-progress-label">Paso 4 de 4</span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;" class="onb-fade-up onb-delay-1">
+                <h2 class="onb-screen-title" style="margin:0;">Agregar Médico</h2>
+                <span class="onb-badge amber">Opcional</span>
+            </div>
+            <p class="onb-screen-subtitle onb-fade-up onb-delay-1">
+                Completa los datos del primer médico o profesional de salud de la clínica.
+            </p>
+
+            {{-- Banner: puedes omitir --}}
+            <div class="onb-banner amber onb-fade-up onb-delay-2">
+                <svg class="onb-banner-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="onb-banner-body">
+                    <p>Si todavía no tienes los datos del médico, puedes omitir este paso y agregarlo después.</p>
+                    <a href="#" class="onb-banner-link"
+                       onclick="event.preventDefault(); document.getElementById('skip-medico-form').submit();">
+                        Finalizar sin agregar médico →
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <form action="{{ route('onboarding.save-step-4') }}" method="POST">
-            @csrf
+            {{-- Formulario de omisión oculto --}}
+            <form id="skip-medico-form" action="{{ route('onboarding.skip-medico') }}" method="POST" style="display:none;">
+                @csrf
+            </form>
 
-            <div style="background: #ffffff; border: 1px solid #e8e5df; border-radius: 0.75rem;">
-                <div class="px-6 md:px-8 py-6 md:py-8 border-b" style="border-color: #e8e5df;">
-                    <h2 class="text-lg font-bold" style="color: var(--onb-ink);">Datos del Medico</h2>
-                    <p class="text-sm mt-1" style="color: var(--onb-ink); opacity: 0.6;">Completa los datos para registrar al primer medico de la clinica.</p>
-                </div>
+            <form action="{{ route('onboarding.save-step-4') }}" method="POST">
+                @csrf
 
-                <div class="px-8 md:px-12 py-8 md:py-10 space-y-10">
-                    <div class="p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Primer nombre</label>
-                                <input type="text" name="primer_nombre" value="{{ old('primer_nombre') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                <div class="onb-form-card onb-fade-up onb-delay-2">
+
+                    {{-- Sección: Nombre completo --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Nombre Completo</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="onb-field">
+                                <label for="primer_nombre" class="onb-label">Primer nombre</label>
+                                <input type="text"
+                                       id="primer_nombre"
+                                       name="primer_nombre"
+                                       required
+                                       class="onb-input"
+                                       value="{{ old('primer_nombre') }}"
+                                       placeholder="María">
+                                @error('primer_nombre')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Primer apellido</label>
-                                <input type="text" name="primer_apellido" value="{{ old('primer_apellido') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                            <div class="onb-field">
+                                <label for="primer_apellido" class="onb-label">Primer apellido</label>
+                                <input type="text"
+                                       id="primer_apellido"
+                                       name="primer_apellido"
+                                       required
+                                       class="onb-input"
+                                       value="{{ old('primer_apellido') }}"
+                                       placeholder="González">
+                                @error('primer_apellido')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">DNI</label>
-                                <input type="text" name="dni" value="{{ old('dni') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                        </div>
+                    </div>
+
+                    {{-- Sección: Identificación --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Identificación</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="onb-field">
+                                <label for="dni" class="onb-label">DNI / Identidad</label>
+                                <input type="text"
+                                       id="dni"
+                                       name="dni"
+                                       required
+                                       class="onb-input onb-mono"
+                                       value="{{ old('dni') }}"
+                                       placeholder="0801-1990-12345"
+                                       maxlength="20">
+                                @error('dni')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
+                                <span class="onb-field-hint">Número de identidad hondureña</span>
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Telefono</label>
-                                <input type="text" name="telefono" value="{{ old('telefono') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                            <div class="onb-field">
+                                <label for="numero_colegiacion" class="onb-label">N° de Colegiación</label>
+                                <input type="text"
+                                       id="numero_colegiacion"
+                                       name="numero_colegiacion"
+                                       required
+                                       class="onb-input onb-mono"
+                                       value="{{ old('numero_colegiacion') }}"
+                                       placeholder="CMH-12345">
+                                @error('numero_colegiacion')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
+                                <span class="onb-field-hint">Colegio Médico de Honduras</span>
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Sexo</label>
-                                <select name="sexo" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);">
+                        </div>
+                    </div>
+
+                    {{-- Sección: Datos personales --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Datos Personales</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+                            <div class="onb-field">
+                                <label for="sexo" class="onb-label">Sexo</label>
+                                <select id="sexo"
+                                        name="sexo"
+                                        required
+                                        class="onb-input"
+                                        style="cursor:pointer;">
                                     <option value="">Selecciona</option>
                                     <option value="M" {{ old('sexo') === 'M' ? 'selected' : '' }}>Masculino</option>
                                     <option value="F" {{ old('sexo') === 'F' ? 'selected' : '' }}>Femenino</option>
                                 </select>
+                                @error('sexo')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Fecha de nacimiento</label>
-                                <input type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                            <div class="onb-field">
+                                <label for="fecha_nacimiento" class="onb-label">Fecha de nacimiento</label>
+                                <input type="date"
+                                       id="fecha_nacimiento"
+                                       name="fecha_nacimiento"
+                                       required
+                                       class="onb-input"
+                                       value="{{ old('fecha_nacimiento') }}"
+                                       max="{{ date('Y-m-d', strtotime('-18 years')) }}">
+                                @error('fecha_nacimiento')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
                             </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Nacionalidad</label>
-                                <select name="nacionalidad_id" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);">
+                            <div class="onb-field">
+                                <label for="nacionalidad_id" class="onb-label">Nacionalidad</label>
+                                <select id="nacionalidad_id"
+                                        name="nacionalidad_id"
+                                        required
+                                        class="onb-input"
+                                        style="cursor:pointer;">
                                     <option value="">Selecciona</option>
-                                    @foreach($nacionalidades as $nacionalidad)
-                                        <option value="{{ $nacionalidad->id }}" {{ (string) old('nacionalidad_id') === (string) $nacionalidad->id ? 'selected' : '' }}>
-                                            {{ $nacionalidad->nacionalidad }}
+                                    @foreach($nacionalidades as $nac)
+                                        <option value="{{ $nac->id }}" {{ (string)old('nacionalidad_id') === (string)$nac->id ? 'selected' : '' }}>
+                                            {{ $nac->nacionalidad }}
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div>
-                                <label class="text-sm font-extrabold" style="color: var(--onb-ink);">Numero de colegiacion</label>
-                                <input type="text" name="numero_colegiacion" value="{{ old('numero_colegiacion') }}" required class="w-full mt-2 px-4 py-4 border-2 rounded-lg" style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink);" />
+                                @error('nacionalidad_id')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center pt-8 border-t" style="border-color: #e8e5df;">
-                        <a href="{{ route('onboarding.step-3') }}" class="px-6 py-3 text-sm font-semibold rounded-lg transition-all inline-flex items-center gap-2" style="color: var(--onb-ink); background: transparent; border: 1.5px solid #d8d3c8;">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                            Atras
-                        </a>
-                        <div class="flex items-center gap-3">
-                            <button type="submit" formaction="{{ route('onboarding.skip-medico') }}" formmethod="POST" class="px-6 py-3 text-sm font-bold rounded-lg transition-all" style="color: var(--onb-ink); background: #f3efe6; border: 1px solid #d8d3c8;">
-                                Omitir por ahora
-                            </button>
-                            <button type="submit" class="px-8 py-3 text-sm font-bold rounded-lg text-white transition-all inline-flex items-center gap-2" style="background: var(--onb-accent);">
-                                Guardar y continuar
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </button>
+                    {{-- Sección: Contacto --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Contacto</p>
+                        <div class="onb-field">
+                            <label for="telefono_medico" class="onb-label">Teléfono</label>
+                            <div class="onb-input-wrap">
+                                <span class="onb-input-icon">
+                                    <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                                    </svg>
+                                </span>
+                                <input type="text"
+                                       id="telefono_medico"
+                                       name="telefono"
+                                       required
+                                       class="onb-input"
+                                       value="{{ old('telefono') }}"
+                                       placeholder="+504 9999-8888">
+                            </div>
+                            @error('telefono')
+                                <span class="onb-field-error">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
-    </div>
+
+                {{-- Navegación --}}
+                <div class="onb-nav onb-fade-up onb-delay-3">
+                    <a href="{{ route('onboarding.step-3') }}" class="onb-btn onb-btn-ghost">
+                        <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5l-7 5 7 5"/>
+                        </svg>
+                        Atrás
+                    </a>
+                    <div class="onb-nav-right">
+                        <button type="button"
+                                class="onb-btn-text"
+                                onclick="document.getElementById('skip-medico-form').submit()">
+                            Omitir por ahora →
+                        </button>
+                        <button type="submit" class="onb-btn onb-btn-primary">
+                            Guardar y Finalizar
+                            <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 5-7 5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
 </div>
 @endsection

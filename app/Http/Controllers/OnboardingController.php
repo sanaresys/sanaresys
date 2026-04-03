@@ -468,7 +468,11 @@ class OnboardingController extends Controller
             return redirect()->route('onboarding.step-4');
         }
 
-        return view('onboarding.completed', compact('centro'));
+        // Cargar servicios del tenant (DB aislada) para el resumen
+        $servicios = Servicio::orderBy('nombre')->take(5)->get();
+        $cantidadServicios = Servicio::count();
+
+        return view('onboarding.completed', compact('centro', 'servicios', 'cantidadServicios'));
     }
 
     /**

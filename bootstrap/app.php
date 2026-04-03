@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prependToGroup('web', \App\Http\Middleware\ResolveTenantByHostOrLegacyCentro::class);
+
         $middleware->alias([
             'tenant.resolve' => \App\Http\Middleware\ResolveTenantByHostOrLegacyCentro::class,
             'tenant.canonical' => \App\Http\Middleware\EnforceCanonicalTenantDomain::class,

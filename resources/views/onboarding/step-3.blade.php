@@ -1,303 +1,260 @@
 @extends('onboarding.layout')
 
-@php
-    $currentStep = 3;
-@endphp
+@php $currentStep = 3; @endphp
 
 @section('content')
-<div class="card-premium overflow-hidden min-h-[88vh]">
-    <!-- Header limpio -->
-    <div class="px-8 pt-4 pb-5 md:px-12 md:pt-5 md:pb-6 border-b" style="border-color: #e8e5df; background: #ffffff;">
-        <div class="flex items-start justify-between gap-6 mb-4">
-            <div>
-                <h1 class="display-title text-3xl md:text-4xl font-bold" style="color: var(--onb-ink);">Servicios Médicos</h1>
-                <p class="mt-1 text-sm leading-relaxed" style="color: var(--onb-ink); opacity: 0.7;">Define los servicios que ofreces a tus pacientes.</p>
+<div class="onb-split">
+
+    {{-- ══════════════════════════════════════════════
+         PANEL IZQUIERDO
+    ══════════════════════════════════════════════ --}}
+    <aside class="onb-panel-left">
+        <div>
+            <p class="onb-brand-label">Sanaresys</p>
+
+            <div class="onb-step-counter onb-fade-up">
+                <span class="onb-step-num">03</span>
+                <span class="onb-step-total">/ 04</span>
             </div>
-            <div class="text-right min-w-[80px]">
-                <p class="text-2xl font-bold" style="color: var(--onb-accent);">60%</p>
-                <p class="text-xs mt-1" style="color: var(--onb-ink); opacity: 0.6;">Avance</p>
+
+            <h1 class="onb-panel-headline onb-fade-up onb-delay-1">
+                ¿Qué servicios ofrece tu clínica?
+            </h1>
+
+            <p class="onb-panel-subtext onb-fade-up onb-delay-1">
+                Define tus servicios desde el inicio para agilizar el cobro y la generación de facturas desde la primera cita.
+            </p>
+
+            <div class="onb-panel-divider"></div>
+
+            {{-- Sugerencias en panel --}}
+            <p style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:0.75rem;"
+               class="onb-fade-up onb-delay-2">
+                💡 Sugerencias comunes
+            </p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.5rem;" class="onb-fade-up onb-delay-2">
+                @foreach(['Consulta General', 'Consulta Especialista', 'Control Prenatal', 'Pediatría', 'Curaciones', 'Laboratorio', 'Ultrasonido', 'Presión Arterial'] as $sug)
+                <span style="font-size:11px;font-weight:600;padding:0.25rem 0.6rem;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);border-radius:999px;color:rgba(255,255,255,0.87);cursor:pointer;"
+                      onclick="useSuggestion('{{ $sug }}')">
+                    {{ $sug }}
+                </span>
+                @endforeach
             </div>
         </div>
 
-        <!-- Barra de progreso -->
-        <div class="flex items-center gap-2">
-            <div class="w-16 h-1.5 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">1. DATOS BÁSICOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">2. FACTURACIÓN</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: var(--onb-accent);">3. SERVICIOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">4. MEDICO</span>
-            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">5. COMPLETO</span>
+        <div>
+            <div class="onb-progress-dots onb-fade-up onb-delay-3">
+                <span class="onb-dot done"></span>
+                <span class="onb-dot done"></span>
+                <span class="onb-dot active"></span>
+                <span class="onb-dot"></span>
+            </div>
+            <p class="onb-panel-footer" style="margin-top:1rem;">© {{ date('Y') }} Sanaresys</p>
         </div>
-    </div>
+    </aside>
 
-    <div class="px-8 py-6 md:px-12 md:py-8" style="background: #fafaf8;">
-        <form action="{{ route('onboarding.save-step-3') }}" method="POST" id="serviciosForm">
-            @csrf
+    {{-- ══════════════════════════════════════════════
+         PANEL DERECHO — Lista de servicios
+    ══════════════════════════════════════════════ --}}
+    <main class="onb-panel-right">
+        <div class="onb-panel-right-inner">
 
-            <!-- Tarjeta principal -->
-            <div style="background: #ffffff; border: 1px solid #e8e5df; border-radius: 0.75rem;">
-                <!-- Header -->
-                <div class="px-6 md:px-8 py-6 md:py-8 border-b" style="border-color: #e8e5df;">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: rgba(15, 138, 141, 0.1);">
-                            <svg class="w-6 h-6" style="color: var(--onb-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
+            {{-- Barra de progreso --}}
+            <div class="onb-progress-bar-wrap onb-fade-up">
+                <div class="onb-progress-segments">
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg active"></div>
+                    <div class="onb-progress-seg"></div>
+                </div>
+                <span class="onb-progress-label">Paso 3 de 4</span>
+            </div>
+
+            <h2 class="onb-screen-title onb-fade-up onb-delay-1">Catálogo de Servicios</h2>
+            <p class="onb-screen-subtitle onb-fade-up onb-delay-1">
+                Agrega al menos un servicio. Puedes añadir, editar o eliminar más desde tu panel en cualquier momento.
+            </p>
+
+            <form action="{{ route('onboarding.save-step-3') }}" method="POST" id="serviciosForm">
+                @csrf
+
+                {{-- Contenedor de tarjetas de servicio --}}
+                <div id="servicios-container" class="onb-fade-up onb-delay-2" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.75rem;">
+                    {{-- Servicio 1 predefinido --}}
+                    <div class="onb-service-card servicio-item" id="service-0">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                            <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--onb-primary);">
+                                Servicio 1
+                            </span>
+                            {{-- El primer servicio no se puede eliminar --}}
                         </div>
-                        <div class="flex-1">
-                            <h2 class="text-lg font-bold" style="color: var(--onb-ink);">Catálogo de Servicios</h2>
-                            <p class="text-sm mt-1" style="color: var(--onb-ink); opacity: 0.6;">Agrega al menos un servicio. Puedes añadir más después desde tu panel.</p>
+                        <div style="display:grid;grid-template-columns:1fr 160px;gap:0.875rem;">
+                            <div class="onb-field">
+                                <label class="onb-label">Nombre del servicio</label>
+                                <input type="text"
+                                       name="servicios[0][nombre]"
+                                       required
+                                       class="onb-input"
+                                       placeholder="Ej: Consulta General">
+                                @error('servicios.0.nombre')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="onb-field">
+                                <label class="onb-label">Precio (L.)</label>
+                                <input type="number"
+                                       name="servicios[0][precio]"
+                                       required
+                                       min="0"
+                                       step="0.01"
+                                       class="onb-input"
+                                       placeholder="450.00">
+                                @error('servicios.0.precio')
+                                    <span class="onb-field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs font-semibold flex items-center gap-1 transition-opacity" id="save-indicator" style="color: var(--onb-accent); opacity: 0;">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                                </svg>
-                                Guardado
-                            </p>
+                        <div class="onb-field" style="margin-top:0.6rem;">
+                            <input type="text"
+                                   name="servicios[0][descripcion]"
+                                   class="onb-input"
+                                   style="font-size:0.875rem;"
+                                   placeholder="Descripción opcional (Ej: Medicina General)">
                         </div>
                     </div>
                 </div>
 
-                <!-- Contenido del formulario -->
-                <div class="px-8 md:px-12 py-8 md:py-10 space-y-10">
-                    <!-- Servicios dinámicos -->
-                    <div id="servicios-container" class="space-y-8">
-                        <!-- Servicio 1 predefinido -->
-                        <div class="servicio-item p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--onb-accent); box-shadow: 0 2px 8px rgba(15,138,141,0.25);">
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-extrabold text-sm uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">SERVICIO 1</h3>
-                                    <p class="text-xs font-medium mt-0.5" style="color: var(--onb-ink); opacity: 0.55;">Información del servicio</p>
-                                </div>
-                            </div>
-                            
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div class="md:col-span-2 space-y-2">
-                                    <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Nombre del Servicio</label>
-                                    <input type="text" 
-                                           name="servicios[0][nombre]" 
-                                           required
-                                           onchange="showSaveIndicator()"
-                                           class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                           style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                           placeholder="Ej: Consulta General"
-                                           onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                           onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                                           onmouseover="this.style.borderColor='#9a9280'"
-                                           onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                                    <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Nombre del servicio que verán tus pacientes</p>
-                                </div>
+                {{-- Botón agregar servicio --}}
+                <button type="button"
+                        id="add-servicio"
+                        class="onb-add-service-btn onb-fade-up onb-delay-2">
+                    <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 4v12M4 10h12"/>
+                    </svg>
+                    Agregar otro servicio
+                </button>
 
-                                <div class="space-y-2">
-                                    <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Precio en Lempiras</label>
-                                    <input type="number" 
-                                           name="servicios[0][precio]" 
-                                           required
-                                           min="0"
-                                           step="0.01"
-                                           onchange="showSaveIndicator()"
-                                           class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                           style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                           placeholder="500.00"
-                                           onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                           onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                                           onmouseover="this.style.borderColor='#9a9280'"
-                                           onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                                    <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Costo del servicio (L)</p>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Descripción</label>
-                                    <input type="text" 
-                                           name="servicios[0][descripcion]" 
-                                           onchange="showSaveIndicator()"
-                                           class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                           style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                           placeholder="Medicina General"
-                                           onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                           onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                                           onmouseover="this.style.borderColor='#9a9280'"
-                                           onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                                    <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Opcional - Detalles adicionales</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botón agregar servicio -->
-                    <div class="flex justify-center">
-                        <button type="button" 
-                                id="add-servicio"
-                                class="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed rounded-lg font-bold transition-all text-sm"
-                                style="border-color: #bfb8a5; color: var(--onb-accent); background: rgba(15,138,141,0.05);"
-                                onmouseover="this.style.background='rgba(15,138,141,0.1)'; this.style.borderColor='var(--onb-accent)'"
-                                onmouseout="this.style.background='rgba(15,138,141,0.05)'; this.style.borderColor='#bfb8a5'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Agregar Otro Servicio
-                        </button>
-                    </div>
-
-                    <!-- Sugerencias -->
-                    <div class="p-5 rounded-xl border-2 border-dashed" 
-                         style="border-color: #bfb8a5; background: linear-gradient(135deg, rgba(15,138,141,0.04) 0%, rgba(248,243,234,0.3) 100%);">
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(15,138,141,0.15);">
-                                <svg class="w-5 h-5" style="color: var(--onb-accent);" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-extrabold text-sm uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">Ejemplos Comunes</p>
-                                <p class="text-xs font-medium mt-1.5 mb-4" style="color: var(--onb-ink); opacity: 0.6;">Servicios médicos frecuentes en clínicas y consultorios</p>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Consulta General</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Especializada</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Control Prenatal</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Chequeo Médico</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Pediátrica</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Inyecciones</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Curaciones</span>
-                                    <span class="text-xs px-3 py-2 rounded-lg font-semibold" style="background: rgba(15,138,141,0.12); color: var(--onb-ink);">Presión Arterial</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botones de navegación -->
-                    <div class="flex justify-between items-center pt-10 border-t" style="border-color: #e8e5df;">
-                        <a href="{{ route('onboarding.step-2') }}" 
-                           class="px-6 py-3 text-sm rounded-lg font-bold transition-all border-2" 
-                           style="border-color: #d8d3c8; color: var(--onb-ink); background: transparent;"
-                           onmouseover="this.style.background='#f5f3ee'"
-                           onmouseout="this.style.background='transparent'">
-                            ← Atrás
-                        </a>
-                        <button type="submit" 
-                                class="inline-flex items-center gap-2 px-8 py-3 text-sm rounded-lg font-bold text-white transition-all"
-                                style="background: var(--onb-accent); box-shadow: 0 4px 12px rgba(15,138,141,0.25);"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(15,138,141,0.35)'"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(15,138,141,0.25)'">
-                            Continuar
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </div>
+                {{-- Contador resumen --}}
+                <div id="resumen-servicios"
+                     style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;margin:0.75rem 0;border-top:1px solid var(--onb-border);border-bottom:1px solid var(--onb-border);"
+                     class="onb-fade-up onb-delay-3">
+                    <span id="contador-label" style="font-size:13px;color:var(--onb-ink-soft);">
+                        <strong style="color:var(--onb-ink);">1 servicio</strong> agregado
+                    </span>
+                    <span style="font-size:12px;color:var(--onb-ink-muted);">
+                        Mínimo 1 requerido
+                    </span>
                 </div>
-            </div>
-        </form>
-    </div>
+
+                {{-- Navegación --}}
+                <div class="onb-nav onb-fade-up onb-delay-3">
+                    <a href="{{ route('onboarding.step-2') }}" class="onb-btn onb-btn-ghost">
+                        <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5l-7 5 7 5"/>
+                        </svg>
+                        Atrás
+                    </a>
+                    <button type="submit" class="onb-btn onb-btn-primary">
+                        Guardar y Continuar
+                        <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 5-7 5"/>
+                        </svg>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
 </div>
+@endsection
 
 @push('scripts')
 <script>
     let servicioCount = 1;
 
-    // Función para mostrar indicador de guardado
-    function showSaveIndicator() {
-        const indicator = document.getElementById('save-indicator');
-        if (indicator) {
-            indicator.style.opacity = '1';
-            setTimeout(() => {
-                indicator.style.opacity = '0';
-            }, 3000);
+    // Usar sugerencia del panel izquierdo
+    function useSuggestion(nombre) {
+        const container = document.getElementById('servicios-container');
+        const firstInput = container.querySelector('input[name="servicios[0][nombre]"]');
+        if (firstInput && firstInput.value.trim() === '') {
+            firstInput.value = nombre;
+            firstInput.focus();
+            actualizarContador();
+            return;
+        }
+        agregarServicio(nombre);
+    }
+
+    function actualizarContador() {
+        const items = document.querySelectorAll('.servicio-item');
+        const n = items.length;
+        const label = document.getElementById('contador-label');
+        if (label) {
+            label.innerHTML = `<strong style="color:var(--onb-ink);">${n} servicio${n !== 1 ? 's' : ''}</strong> agregado${n !== 1 ? 's' : ''}`;
         }
     }
 
-    document.getElementById('add-servicio').addEventListener('click', function() {
+    function agregarServicio(nombreSugerido = '') {
         const container = document.getElementById('servicios-container');
-        const newServicio = `
-            <div class="servicio-item p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--onb-accent); box-shadow: 0 2px 8px rgba(15,138,141,0.25);">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-sm uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">SERVICIO ${servicioCount + 1}</h3>
-                            <p class="text-xs font-medium mt-0.5" style="color: var(--onb-ink); opacity: 0.55;">Información del servicio</p>
-                        </div>
-                    </div>
-                    <button type="button" 
-                            class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all" 
-                            style="background: #ed6a5a; color: white;"
-                            onmouseover="this.style.background='#d55a4a'"
-                            onmouseout="this.style.background='#ed6a5a'"
-                            onclick="this.closest('.servicio-item').remove()">
-                        Eliminar
-                    </button>
+        const idx = servicioCount;
+
+        const card = document.createElement('div');
+        card.className = 'onb-service-card servicio-item onb-fade-up';
+        card.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--onb-primary);">
+                    Servicio ${idx + 1}
+                </span>
+                <button type="button"
+                        onclick="this.closest('.servicio-item').remove(); actualizarContador();"
+                        style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#C0392B;background:rgba(192,57,43,0.08);border:none;border-radius:6px;padding:3px 9px;cursor:pointer;">
+                    <svg fill="none" viewBox="0 0 16 16" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1m2 0l-1 10a1 1 0 01-1 1H5a1 1 0 01-1-1L3 4"/>
+                    </svg>
+                    Eliminar
+                </button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 160px;gap:0.875rem;">
+                <div class="onb-field">
+                    <label class="onb-label">Nombre del servicio</label>
+                    <input type="text"
+                           name="servicios[${idx}][nombre]"
+                           required
+                           value="${nombreSugerido}"
+                           class="onb-input"
+                           placeholder="Ej: Consulta Especialista">
                 </div>
-                
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2 space-y-2">
-                        <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Nombre del Servicio</label>
-                        <input type="text" 
-                               name="servicios[${servicioCount}][nombre]" 
-                               required
-                               onchange="showSaveIndicator()"
-                               class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                               style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                               placeholder="Ej: Consulta Especializada"
-                               onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                               onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                               onmouseover="this.style.borderColor='#9a9280'"
-                               onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                        <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Nombre del servicio que verán tus pacientes</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Precio en Lempiras</label>
-                        <input type="number" 
-                               name="servicios[${servicioCount}][precio]" 
-                               required
-                               min="0"
-                               step="0.01"
-                               onchange="showSaveIndicator()"
-                               class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                               style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                               placeholder="800.00"
-                               onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                               onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                               onmouseover="this.style.borderColor='#9a9280'"
-                               onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                        <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Costo del servicio (L)</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="font-extrabold text-sm block" style="color: var(--onb-ink);">Descripción</label>
-                        <input type="text" 
-                               name="servicios[${servicioCount}][descripcion]" 
-                               onchange="showSaveIndicator()"
-                               class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                               style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                               placeholder="Descripción"
-                               onfocus="this.style.borderColor='var(--onb-accent)'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                               onblur="this.style.borderColor='#bfb8a5'; this.style.boxShadow='none'"
-                               onmouseover="this.style.borderColor='#9a9280'"
-                               onmouseout="if(this !== document.activeElement) this.style.borderColor='#bfb8a5'">
-                        <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.6;">Opcional - Detalles adicionales</p>
-                    </div>
+                <div class="onb-field">
+                    <label class="onb-label">Precio (L.)</label>
+                    <input type="number"
+                           name="servicios[${idx}][precio]"
+                           required
+                           min="0"
+                           step="0.01"
+                           class="onb-input"
+                           placeholder="800.00">
                 </div>
             </div>
+            <div class="onb-field" style="margin-top:0.6rem;">
+                <input type="text"
+                       name="servicios[${idx}][descripcion]"
+                       class="onb-input"
+                       style="font-size:0.875rem;"
+                       placeholder="Descripción opcional">
+            </div>
         `;
-        
-        container.insertAdjacentHTML('beforeend', newServicio);
+
+        container.appendChild(card);
         servicioCount++;
-    });
+        actualizarContador();
+
+        // Enfocar el input de nombre
+        const newInput = card.querySelector('input[type="text"]');
+        if (newInput) setTimeout(() => newInput.focus(), 50);
+    }
+
+    document.getElementById('add-servicio').addEventListener('click', () => agregarServicio());
 </script>
 @endpush
-@endsection
