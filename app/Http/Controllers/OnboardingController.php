@@ -9,7 +9,6 @@ use App\Services\TenantProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
 class OnboardingController extends Controller
 {
@@ -67,7 +66,7 @@ class OnboardingController extends Controller
     {
         $validated = $request->validate([
             'nombre_centro' => 'required|string|max:255',
-            'rtn' => 'required|string|max:20',
+            'rtn' => 'nullable|string|max:20',
             'direccion' => 'required|string|max:500',
             'telefono' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -81,7 +80,7 @@ class OnboardingController extends Controller
 
         $centro->update([
             'nombre_centro' => $validated['nombre_centro'],
-            'rtn' => $validated['rtn'],
+            'rtn' => $this->normalizeNullableString($validated['rtn'] ?? null),
             'direccion' => $validated['direccion'],
             'telefono' => $validated['telefono'],
             'email' => $validated['email'] ?? null,
@@ -133,6 +132,14 @@ class OnboardingController extends Controller
 
             return redirect()->route('onboarding.step-3')
                 ->with('info', 'Configuración CAI omitida. Puedes configurarlo más adelante.');
+        }
+
+        if (blank($centro->rtn)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'rtn' => 'Necesitas completar el RTN de la clinica en el paso 1 antes de configurar CAI.',
+                ]);
         }
 
         try {
@@ -348,5 +355,16 @@ class OnboardingController extends Controller
 
         return redirect()->route('filament.admin.pages.dashboard')
             ->with('success', '¡Felicidades! Tu centro médico está configurado y listo para usar.');
+    }
+
+    protected function normalizeNullableString(null|string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

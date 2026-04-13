@@ -10,6 +10,7 @@ use App\Models\Centros_Medico;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\BillingStatusNotification;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -65,37 +66,27 @@ class BillingNotificationService
                 $recipientKey = strtolower((string) ($recipient->email ?: 'user:' . $recipient->id));
 
                 foreach ($channels as $channel) {
-                    $alreadySent = BillingNotificationLog::query()
-                        ->where('centro_id', $centro->id)
-                        ->where('billing_invoice_id', $invoice?->id)
-                        ->where('billing_tenant_subscription_id', $tenantSubscription?->id)
-                        ->where('billing_module_subscription_id', $moduleSubscription?->id)
-                        ->where('event_key', $eventKey)
-                        ->where('channel', $channel)
-                        ->where('recipient', $recipientKey)
-                        ->whereDate('scheduled_for_date', $scheduledForDate->toDateString())
-                        ->exists();
+                    $log = $this->reserveNotificationLog(
+                        centro: $centro,
+                        eventKey: $eventKey,
+                        channel: $channel,
+                        recipientKey: $recipientKey,
+                        scheduledForDate: $scheduledForDate,
+                        invoice: $invoice,
+                        tenantSubscription: $tenantSubscription,
+                        moduleSubscription: $moduleSubscription,
+                        userId: $recipient->id,
+                    );
 
-                    if ($alreadySent) {
+                    if (! $log) {
                         continue;
                     }
 
                     $recipient->notify(new BillingStatusNotification([$channel], $payload));
 
-                    BillingNotificationLog::query()->create([
-                        'centro_id' => $centro->id,
-                        'billing_invoice_id' => $invoice?->id,
-                        'billing_tenant_subscription_id' => $tenantSubscription?->id,
-                        'billing_module_subscription_id' => $moduleSubscription?->id,
-                        'event_key' => $eventKey,
-                        'channel' => $channel,
-                        'recipient' => $recipientKey,
-                        'scheduled_for_date' => $scheduledForDate->toDateString(),
+                    $log->forceFill([
                         'sent_at' => now(),
-                        'meta' => [
-                            'user_id' => $recipient->id,
-                        ],
-                    ]);
+                    ])->save();
 
                     $sent++;
                 }
@@ -145,5 +136,82 @@ class BillingNotificationService
                 tenancy()->initialize($currentTenant);
             }
         }
+    }
+
+    protected function reserveNotificationLog(
+        Centros_Medico $centro,
+        string $eventKey,
+        string $channel,
+        string $recipientKey,
+        Carbon $scheduledForDate,
+        ?BillingInvoice $invoice,
+        ?BillingTenantSubscription $tenantSubscription,
+        ?BillingModuleSubscription $moduleSubscription,
+        int $userId,
+    ): ?BillingNotificationLog {
+        $dedupeKey = $this->buildDedupeKey(
+            centroId: $centro->id,
+            invoiceId: $invoice?->id,
+            tenantSubscriptionId: $tenantSubscription?->id,
+            moduleSubscriptionId: $moduleSubscription?->id,
+            eventKey: $eventKey,
+            channel: $channel,
+            recipientKey: $recipientKey,
+            scheduledForDate: $scheduledForDate,
+        );
+
+        try {
+            return BillingNotificationLog::query()->create([
+                'centro_id' => $centro->id,
+                'billing_invoice_id' => $invoice?->id,
+                'billing_tenant_subscription_id' => $tenantSubscription?->id,
+                'billing_module_subscription_id' => $moduleSubscription?->id,
+                'dedupe_key' => $dedupeKey,
+                'event_key' => $eventKey,
+                'channel' => $channel,
+                'recipient' => $recipientKey,
+                'scheduled_for_date' => $scheduledForDate->toDateString(),
+                'sent_at' => null,
+                'meta' => [
+                    'user_id' => $userId,
+                ],
+            ]);
+        } catch (QueryException $e) {
+            if (! $this->isDuplicateKey($e)) {
+                throw $e;
+            }
+
+            return null;
+        }
+    }
+
+    protected function buildDedupeKey(
+        int|string|null $centroId,
+        int|string|null $invoiceId,
+        int|string|null $tenantSubscriptionId,
+        int|string|null $moduleSubscriptionId,
+        string $eventKey,
+        string $channel,
+        string $recipientKey,
+        Carbon $scheduledForDate,
+    ): string {
+        return hash('sha256', implode('|', [
+            'centro:' . ($centroId ?: 0),
+            'invoice:' . ($invoiceId ?: 0),
+            'tenant_subscription:' . ($tenantSubscriptionId ?: 0),
+            'module_subscription:' . ($moduleSubscriptionId ?: 0),
+            'event:' . $eventKey,
+            'channel:' . $channel,
+            'recipient:' . strtolower($recipientKey),
+            'date:' . $scheduledForDate->toDateString(),
+        ]));
+    }
+
+    protected function isDuplicateKey(QueryException $e): bool
+    {
+        $sqlState = $e->errorInfo[0] ?? null;
+        $driverCode = $e->errorInfo[1] ?? null;
+
+        return $sqlState === '23000' || (int) $driverCode === 1062;
     }
 }

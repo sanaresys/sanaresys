@@ -28,6 +28,9 @@
     <p class="muted">
         Estado para <strong>{{ $registration->nombre_centro }}</strong>. Correo: <strong>{{ $registration->owner_email }}</strong>
     </p>
+    <p class="muted" style="margin-top:-8px; margin-bottom:18px;">
+        Flujo: <strong>registro -> verificacion por correo -> 30 dias gratis -> pago al vencimiento.</strong>
+    </p>
 
     @if (session('status'))
         <div class="msg success">{{ session('status') }}</div>
@@ -72,7 +75,7 @@
         @if($canStartPayment)
             <form method="POST" action="{{ route('clinica.registro.payment.start', ['publicId' => $registration->public_id]) }}">
                 @csrf
-                <button class="btn" type="submit">Ir a billing</button>
+                <button class="btn" type="submit">Ir a pago pendiente</button>
             </form>
         @endif
 

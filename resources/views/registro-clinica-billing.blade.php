@@ -35,11 +35,45 @@
     </style>
 </head>
 <body>
+@php
+    $mode = (string) ($billingMode ?? 'onboarding');
+    $isRenewalBilling = $mode === 'renewal';
+    $isTrialActivation = ! $isRenewalBilling && (
+        (float) ($invoice->total ?? 0) <= 0
+        || data_get($invoice->meta, 'origin') === 'onboarding_trial'
+    );
+@endphp
 <div class="shell">
     <section class="card">
-        <div class="eyebrow">Billing Manual</div>
-        <h1>Tu clinica ya esta verificada</h1>
-        <p>Ahora solo falta completar el pago inicial para activar <strong>{{ $registration->nombre_centro }}</strong> y provisionar el tenant.</p>
+        <div class="eyebrow">
+            @if($isRenewalBilling)
+                Renovacion de Plan
+            @elseif($isTrialActivation)
+                Activacion de Trial
+            @else
+                Billing Manual
+            @endif
+        </div>
+        <h1>
+            @if($isRenewalBilling)
+                Renueva tu plan para continuar
+            @elseif($isTrialActivation)
+                Tu periodo gratis fue activado
+            @else
+                Tu clinica ya esta verificada
+            @endif
+        </h1>
+        <p>
+            @if($isRenewalBilling)
+                El periodo gratis de <strong>{{ (int) ($freeTrialDays ?? 30) }} dias</strong> finalizo.
+                Completa este pago para mantener activa la clinica <strong>{{ $registration->nombre_centro }}</strong>.
+            @elseif($isTrialActivation)
+                Tu clinica <strong>{{ $registration->nombre_centro }}</strong> esta en periodo gratis y no requiere tarjeta ni PayPal para esta activacion.
+                Al vencer el trial, aqui mismo podras completar la renovacion.
+            @else
+                Ahora solo falta completar el pago inicial para activar <strong>{{ $registration->nombre_centro }}</strong> y provisionar el tenant.
+            @endif
+        </p>
 
         <div class="amount">USD {{ number_format((float) $invoice->total, 2) }}</div>
         <span class="pill">{{ strtoupper($registration->plan_code ?? 'monthly') }}</span>
@@ -52,7 +86,7 @@
                         <div class="muted">
                             {{ strtoupper($item->billing_interval ?? 'monthly') }}
                             @if($item->period_ends_at)
-                                · vigencia hasta {{ $item->period_ends_at->format('d/m/Y') }}
+                                - vigencia hasta {{ $item->period_ends_at->format('d/m/Y') }}
                             @endif
                         </div>
                     </div>
@@ -64,7 +98,14 @@
         <div class="consent">
             <label>
                 <input type="checkbox" id="billing-consent" {{ $registration->consent_at ? 'checked' : '' }}>
-                <span>Autorizo continuar con el cobro manual del plan seleccionado y acepto la política de renovación gestionada por el portal según los módulos y periodos activos. Versión del texto: <strong>{{ $consentTextVersion }}</strong>.</span>
+                <span>
+                    @if($isRenewalBilling)
+                        Autorizo continuar con el cobro de renovacion del plan y acepto la politica de facturacion vigente para periodos activos.
+                    @else
+                        Autorizo continuar con el cobro manual del plan seleccionado y acepto la politica de renovacion gestionada por el portal segun los modulos y periodos activos.
+                    @endif
+                    Version del texto: <strong>{{ $consentTextVersion }}</strong>.
+                </span>
             </label>
         </div>
 

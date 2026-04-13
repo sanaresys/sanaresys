@@ -110,7 +110,6 @@
                                        id="rtn" 
                                        name="rtn" 
                                        value="{{ old('rtn', $centro->rtn ?? '') }}"
-                                       required
                                        maxlength="20"
                                        class="w-full px-4 py-4 border-2 rounded-lg transition-all font-mono text-base" 
                                        style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
@@ -123,7 +122,7 @@
                                 @error('rtn')
                                     <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">SAR requiere este número para validar tus facturas</p>
+                                <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Opcional por ahora. Necesitas completarlo antes de configurar CAI y facturación fiscal.</p>
                             </div>
                         </div>
                     </div>

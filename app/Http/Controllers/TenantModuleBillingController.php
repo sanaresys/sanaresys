@@ -51,7 +51,12 @@ class TenantModuleBillingController extends Controller
         }
 
         $centro = $this->currentCentro();
-        $invoice = $this->billingInvoiceService->createModuleProrationInvoice($centro, $module, $interval);
+        try {
+            $invoice = $this->billingInvoiceService->createModuleProrationInvoice($centro, $module, $interval);
+        } catch (ValidationException $e) {
+            return redirect()->route('tenant.billing.index')
+                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo preparar el modulo.');
+        }
 
         $this->billingAuditService->log(
             eventType: 'billing.module.invoice_created',

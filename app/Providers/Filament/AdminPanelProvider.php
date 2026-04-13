@@ -61,6 +61,10 @@ class AdminPanelProvider extends PanelProvider
 
 
             ->renderHook(
+                'panels::head.end',
+                fn () => '<style>[x-cloak]{display:none !important;}</style>'
+            )
+            ->renderHook(
                 'panels::user-menu.before',
                 fn () => view('filament.components.centro-selector-topbar')
             )

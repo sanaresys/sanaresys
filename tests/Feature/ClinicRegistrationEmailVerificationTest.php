@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\ClinicRegistrationVerificationMail;
 use App\Models\BillingInvoice;
+use App\Models\Centros_Medico;
 use App\Models\ClinicRegistrationRequest;
 use App\Services\Billing\BillingInvoiceService;
 use App\Services\Billing\RegistrationProvisioningService;
@@ -83,9 +84,57 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         Mail::assertSent(ClinicRegistrationVerificationMail::class, 1);
     }
 
-    public function test_verify_redirects_to_internal_billing_screen_after_email_confirmation(): void
+    public function test_store_allows_empty_rtn_and_saves_null_value(): void
+    {
+        Mail::fake();
+
+        $provisioning = Mockery::mock(TenantProvisioningService::class);
+        $provisioning->shouldReceive('emailExistsInAnyTenant')
+            ->once()
+            ->with('owner.no.rtn@example.com')
+            ->andReturn(false);
+        $this->app->instance(TenantProvisioningService::class, $provisioning);
+
+        $response = $this->post(route('clinica.registro.store'), [
+            'plan_code' => 'monthly',
+            'nombre_centro' => 'Clinica Sin Rtn',
+            'direccion' => 'Colonia Palmira',
+            'telefono' => '9999-9999',
+            'rtn' => '',
+            'owner_name' => 'Owner Name',
+            'owner_email' => 'owner.no.rtn@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ]);
+
+        $registration = ClinicRegistrationRequest::query()->firstOrFail();
+
+        $response->assertRedirect(route('clinica.registro.waiting', ['publicId' => $registration->public_id]));
+        $this->assertNull($registration->rtn);
+        $this->assertSame('pending_verification', $registration->status);
+        Mail::assertSent(ClinicRegistrationVerificationMail::class, 1);
+    }
+
+    public function test_verify_activates_trial_and_redirects_to_tenant_access(): void
     {
         $registration = $this->createPendingRegistration();
+
+        $billing = Mockery::mock(BillingInvoiceService::class);
+        $billing->shouldReceive('activateOnboardingTrial')
+            ->once()
+            ->andReturnUsing(function () use ($registration): void {
+                $registration->forceFill([
+                    'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
+                    'payment_status' => 'paid',
+                ])->save();
+            });
+        $this->app->instance(BillingInvoiceService::class, $billing);
+
+        $provisioning = Mockery::mock(RegistrationProvisioningService::class);
+        $provisioning->shouldReceive('issueTenantAccessUrl')
+            ->once()
+            ->andReturn('https://tenant.sanaresys.localhost/tenant/impersonate/trial-token');
+        $this->app->instance(RegistrationProvisioningService::class, $provisioning);
 
         $url = URL::temporarySignedRoute(
             'clinica.registro.verify',
@@ -96,8 +145,66 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         $response = $this->get($url);
         $registration->refresh();
 
-        $response->assertRedirect(route('clinica.registro.billing', ['publicId' => $registration->public_id]));
-        $this->assertSame('verified', $registration->status);
+        $response->assertRedirect('https://tenant.sanaresys.localhost/tenant/impersonate/trial-token');
+        $this->assertSame(ClinicRegistrationRequest::STATUS_PROVISIONED, $registration->status);
+        $this->assertSame('paid', $registration->payment_status);
+    }
+
+    public function test_create_billing_order_for_provisioned_registration_keeps_provisioned_status(): void
+    {
+        $centro = Centros_Medico::query()->create([
+            'nombre_centro' => 'Clinica Salud Total',
+            'slug' => 'clinica-salud-total',
+            'tenancy_mode' => 'domain',
+            'billing_status' => 'past_due',
+            'direccion' => 'Colonia Palmira',
+            'telefono' => '9999-9999',
+            'rtn' => '08011999123456',
+        ]);
+
+        $registration = $this->createPendingRegistration([
+            'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
+            'payment_status' => 'paid',
+            'centro_id' => $centro->id,
+        ]);
+
+        $invoice = BillingInvoice::query()->create([
+            'public_id' => (string) str()->uuid(),
+            'centro_id' => $centro->id,
+            'kind' => 'renewal',
+            'status' => 'open',
+            'currency' => 'USD',
+            'subtotal' => 89.99,
+            'total' => 89.99,
+            'due_at' => now(),
+            'billing_starts_at' => now()->subMonth(),
+            'billing_ends_at' => now(),
+            'billing_renews_at' => now(),
+        ]);
+
+        $billing = Mockery::mock(BillingInvoiceService::class);
+        $billing->shouldReceive('openBasePlanInvoiceForCentro')
+            ->once()
+            ->andReturn($invoice);
+        $billing->shouldReceive('createOrReuseAttempt')
+            ->once()
+            ->andReturn((object) ['paypal_order_id' => 'ORDER-RENEW-1']);
+        $this->app->instance(BillingInvoiceService::class, $billing);
+
+        $response = $this->postJson(route('clinica.registro.billing.order', [
+            'publicId' => $registration->public_id,
+        ]), [
+            'consent' => true,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'orderId' => 'ORDER-RENEW-1',
+        ]);
+
+        $registration->refresh();
+        $this->assertSame(ClinicRegistrationRequest::STATUS_PROVISIONED, $registration->status);
+        $this->assertSame('paid', $registration->payment_status);
     }
 
     public function test_capture_billing_order_returns_provisioning_redirect_after_paid_invoice(): void
@@ -217,7 +324,7 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
             $table->string('direccion');
             $table->string('telefono');
             $table->string('email')->nullable();
-            $table->string('rtn')->unique();
+            $table->string('rtn')->nullable()->unique();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -232,7 +339,7 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
             $table->string('plan_code', 32)->nullable();
             $table->string('direccion');
             $table->string('telefono', 50);
-            $table->string('rtn', 100)->index();
+            $table->string('rtn', 100)->nullable()->index();
             $table->string('owner_name');
             $table->string('owner_email')->index();
             $table->text('password_encrypted')->nullable();

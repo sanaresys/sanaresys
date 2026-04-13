@@ -19,6 +19,10 @@ class EnsureTenantSubscriptionActive
             return $next($request);
         }
 
+        if ($request->routeIs('filament.admin.pages.billing')) {
+            return $next($request);
+        }
+
         if ($request->routeIs('tenant.billing.*')) {
             return $next($request);
         }

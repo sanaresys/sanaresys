@@ -11,6 +11,10 @@ return [
         'consent_text_version' => env('BILLING_CONSENT_TEXT_VERSION', '2026-03-24-v1'),
     ],
 
+    'onboarding' => [
+        'free_trial_days' => (int) env('BILLING_ONBOARDING_FREE_TRIAL_DAYS', 30),
+    ],
+
     'modules' => [
         [
             'code' => 'nomina',

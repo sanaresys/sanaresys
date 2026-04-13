@@ -94,6 +94,132 @@ class BillingInvoiceService
         return $invoice->fresh('items');
     }
 
+    public function activateOnboardingTrial(ClinicRegistrationRequest $registration): void
+    {
+        if ($registration->isProvisioned()) {
+            return;
+        }
+
+        $trialDays = $this->onboardingFreeTrialDays();
+
+        $invoice = DB::connection('mysql')->transaction(function () use ($registration, $trialDays): BillingInvoice {
+            $locked = ClinicRegistrationRequest::query()
+                ->whereKey($registration->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->isProvisioned()) {
+                return BillingInvoice::query()
+                    ->where('clinic_registration_request_id', $locked->id)
+                    ->where('kind', 'onboarding')
+                    ->where('status', 'paid')
+                    ->latest('id')
+                    ->firstOrFail();
+            }
+
+            if (! in_array($locked->status, [
+                ClinicRegistrationRequest::STATUS_VERIFIED,
+                ClinicRegistrationRequest::STATUS_PENDING_PAYMENT,
+            ], true)) {
+                throw ValidationException::withMessages([
+                    'registration' => 'La solicitud no esta lista para activar el periodo gratis.',
+                ]);
+            }
+
+            $paidInvoice = BillingInvoice::query()
+                ->with('items')
+                ->where('clinic_registration_request_id', $locked->id)
+                ->where('kind', 'onboarding')
+                ->where('status', 'paid')
+                ->latest('id')
+                ->first();
+
+            if ($paidInvoice) {
+                $locked->forceFill([
+                    'billing_invoice_id' => $paidInvoice->id,
+                    'payment_status' => 'paid',
+                    'payment_approved_at' => $locked->payment_approved_at ?: $this->periodService->now(),
+                ])->save();
+
+                return $paidInvoice;
+            }
+
+            $planCode = $locked->plan_code ?: $this->planService->defaultPlanCode();
+            $interval = $this->periodService->planInterval($planCode);
+            $startsAt = $this->periodService->now();
+            $endsAt = $startsAt->copy()->addDays($trialDays);
+
+            BillingInvoice::query()
+                ->where('clinic_registration_request_id', $locked->id)
+                ->where('kind', 'onboarding')
+                ->whereIn('status', ['open', 'past_due'])
+                ->update([
+                    'status' => 'voided',
+                    'voided_at' => $startsAt,
+                    'notes' => 'Factura reemplazada por activacion de periodo gratis.',
+                ]);
+
+            $invoice = BillingInvoice::query()->create([
+                'public_id' => (string) Str::uuid(),
+                'clinic_registration_request_id' => $locked->id,
+                'kind' => 'onboarding',
+                'status' => 'open',
+                'currency' => (string) config('billing.currency', 'USD'),
+                'due_at' => $startsAt,
+                'grace_until' => null,
+                'billing_starts_at' => $startsAt,
+                'billing_ends_at' => $endsAt,
+                'billing_renews_at' => $endsAt,
+                'meta' => [
+                    'plan_code' => $planCode,
+                    'billing_interval' => $interval,
+                    'origin' => 'onboarding_trial',
+                    'free_trial_days' => $trialDays,
+                ],
+            ]);
+
+            BillingInvoiceItem::query()->create([
+                'billing_invoice_id' => $invoice->id,
+                'item_type' => 'base_plan',
+                'description' => sprintf('Periodo gratis (%d dias) plan %s', $trialDays, strtoupper($planCode)),
+                'billing_interval' => $interval,
+                'quantity' => 1,
+                'unit_amount' => 0,
+                'amount' => 0,
+                'period_starts_at' => $startsAt,
+                'period_ends_at' => $endsAt,
+                'meta' => [
+                    'plan_code' => $planCode,
+                    'origin' => 'onboarding_trial',
+                    'full_price_reference' => $this->periodService->planPrice($planCode),
+                ],
+            ]);
+
+            $this->syncInvoiceTotals($invoice);
+
+            $locked->forceFill([
+                'billing_invoice_id' => $invoice->id,
+                'payment_status' => 'pending',
+            ])->save();
+
+            return $invoice->fresh('items');
+        });
+
+        if ($invoice->status !== 'paid') {
+            $this->recordOfflinePayment(
+                invoice: $invoice,
+                actor: null,
+                reason: sprintf('Periodo gratis de onboarding activado (%d dias).', $trialDays),
+            );
+        }
+
+        $registration->refresh();
+
+        if (! $registration->isProvisioned() && in_array((string) $registration->payment_status, ['paid', 'active'], true)) {
+            $this->registrationProvisioningService->provisionFromPaidRegistration($registration);
+        }
+    }
+
     public function createReactivationInvoice(Centros_Medico $centro, ?string $planCode = null): BillingInvoice
     {
         $tenantSubscription = $this->ensureTenantSubscription($centro, $planCode);
@@ -222,6 +348,24 @@ class BillingInvoiceService
         string $interval,
     ): BillingInvoice {
         $tenantSubscription = $this->ensureTenantSubscription($centro);
+        $existingOpenInvoice = $this->findOpenModuleInvoice($centro, $module);
+
+        if ($existingOpenInvoice) {
+            $matchesRequestedInterval = $existingOpenInvoice->items->contains(function (BillingInvoiceItem $item) use ($module, $interval): bool {
+                return (int) $item->billing_module_id === (int) $module->id
+                    && $item->item_type === 'module_proration'
+                    && $item->billing_interval === $interval;
+            });
+
+            if ($matchesRequestedInterval) {
+                return $existingOpenInvoice;
+            }
+
+            throw ValidationException::withMessages([
+                'module' => 'Este modulo ya tiene un cobro pendiente. Resuelve ese pago antes de cambiarlo a otro periodo.',
+            ]);
+        }
+
         $moduleSubscription = BillingModuleSubscription::query()
             ->firstOrNew([
                 'centro_id' => $centro->id,
@@ -229,10 +373,12 @@ class BillingInvoiceService
             ]);
 
         if ($moduleSubscription->exists
-            && in_array($moduleSubscription->status, ['active', 'past_due', 'grace'], true)
+            && in_array($moduleSubscription->status, ['active', 'pending', 'past_due', 'grace'], true)
             && ! $moduleSubscription->cancel_at_period_end) {
             throw ValidationException::withMessages([
-                'module' => 'Este modulo ya esta activo o pendiente de cobro.',
+                'module' => $moduleSubscription->status === 'pending'
+                    ? 'Este modulo ya tiene una activacion pendiente. Completa ese pago antes de intentarlo otra vez.'
+                    : 'Este modulo ya esta activo para esta clinica.',
             ]);
         }
 
@@ -331,6 +477,8 @@ class BillingInvoiceService
         string $returnUrl,
         string $cancelUrl,
     ): BillingChargeAttempt {
+        $invoice = $this->ensureInvoiceCanBePaid($invoice);
+
         if ($invoice->status === 'paid') {
             throw ValidationException::withMessages([
                 'invoice' => 'Esta factura ya fue pagada.',
@@ -396,6 +544,8 @@ class BillingInvoiceService
         if ($attempt->status === 'captured' && $attempt->captured_at) {
             return $attempt->fresh('invoice.items');
         }
+
+        $this->ensureInvoiceCanBePaid($attempt->invoice()->with('items')->firstOrFail());
 
         $capturePayload = $this->payPalService->captureOrder($paypalOrderId);
 
@@ -492,6 +642,19 @@ class BillingInvoiceService
             ->with(['items', 'chargeAttempts'])
             ->where('centro_id', $centro->id)
             ->whereIn('status', ['open', 'past_due'])
+            ->latest('id')
+            ->first();
+    }
+
+    public function openBasePlanInvoiceForCentro(Centros_Medico $centro): ?BillingInvoice
+    {
+        return BillingInvoice::query()
+            ->with(['items', 'chargeAttempts'])
+            ->where('centro_id', $centro->id)
+            ->whereIn('status', ['open', 'past_due'])
+            ->whereHas('items', function ($query): void {
+                $query->where('item_type', 'base_plan');
+            })
             ->latest('id')
             ->first();
     }
@@ -603,8 +766,12 @@ class BillingInvoiceService
             ])->save();
 
             if ($invoice->registration) {
+                $nextRegistrationStatus = $invoice->kind === 'onboarding'
+                    ? ClinicRegistrationRequest::STATUS_PENDING_PAYMENT
+                    : $invoice->registration->status;
+
                 $invoice->registration->forceFill([
-                    'status' => ClinicRegistrationRequest::STATUS_PENDING_PAYMENT,
+                    'status' => $nextRegistrationStatus,
                     'payment_status' => 'paid',
                     'payment_approved_at' => $capturedAt,
                     'billing_invoice_id' => $invoice->id,
@@ -642,6 +809,7 @@ class BillingInvoiceService
 
         if ($centro) {
             $this->applySuccessStateToCentro($centro, $invoice);
+            $this->voidConflictingOpenModuleInvoices($centro, $invoice);
         }
 
         $this->auditService->log(
@@ -951,6 +1119,143 @@ class BillingInvoiceService
         ])->save();
     }
 
+    protected function ensureInvoiceCanBePaid(BillingInvoice $invoice): BillingInvoice
+    {
+        $invoice->loadMissing('items');
+
+        if (! in_array($invoice->status, ['open', 'past_due', 'paid'], true)) {
+            throw ValidationException::withMessages([
+                'invoice' => 'Esta factura ya no esta disponible para cobro.',
+            ]);
+        }
+
+        if ($invoice->status === 'paid') {
+            return $invoice;
+        }
+
+        $supersedingInvoice = $this->findSupersedingPaidModuleInvoice($invoice);
+        if (! $supersedingInvoice) {
+            return $invoice;
+        }
+
+        $invoice->forceFill([
+            'status' => 'voided',
+            'voided_at' => $this->periodService->now(),
+            'notes' => 'Factura anulada porque el modulo ya fue cubierto por otro pago.',
+            'meta' => array_merge((array) $invoice->meta, [
+                'superseded_by_invoice_id' => $supersedingInvoice->id,
+            ]),
+        ])->save();
+
+        $this->auditService->log(
+            eventType: 'billing.invoice.voided',
+            centro: $invoice->centro,
+            invoice: $invoice,
+            reason: 'Se evito cobrar una factura vieja porque ya existia otra factura pagada del mismo modulo.',
+            newValues: [
+                'status' => 'voided',
+                'superseded_by_invoice_id' => $supersedingInvoice->id,
+            ],
+        );
+
+        throw ValidationException::withMessages([
+            'invoice' => 'Ese cobro ya no corresponde porque el modulo ya fue contratado con otro pago.',
+        ]);
+    }
+
+    protected function findSupersedingPaidModuleInvoice(BillingInvoice $invoice): ?BillingInvoice
+    {
+        $moduleIds = $invoice->items
+            ->filter(fn (BillingInvoiceItem $item) => in_array($item->item_type, ['module_proration', 'module_renewal'], true))
+            ->pluck('billing_module_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($moduleIds->isEmpty()) {
+            return null;
+        }
+
+        return BillingInvoice::query()
+            ->where('centro_id', $invoice->centro_id)
+            ->where('status', 'paid')
+            ->whereKeyNot($invoice->id)
+            ->where(function ($query) use ($invoice): void {
+                if ($invoice->billing_ends_at) {
+                    $query->where('billing_ends_at', '>=', $invoice->billing_ends_at);
+                } else {
+                    $query->where('id', '>', $invoice->id);
+                }
+            })
+            ->whereHas('items', function ($query) use ($moduleIds): void {
+                $query->whereIn('billing_module_id', $moduleIds->all())
+                    ->whereIn('item_type', ['module_proration', 'module_renewal']);
+            })
+            ->orderByDesc('billing_ends_at')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    protected function findOpenModuleInvoice(Centros_Medico $centro, BillingModule $module): ?BillingInvoice
+    {
+        return BillingInvoice::query()
+            ->with('items')
+            ->where('centro_id', $centro->id)
+            ->whereIn('status', ['open', 'past_due'])
+            ->whereHas('items', function ($query) use ($module): void {
+                $query->where('billing_module_id', $module->id)
+                    ->where('item_type', 'module_proration');
+            })
+            ->latest('id')
+            ->first();
+    }
+
+    protected function voidConflictingOpenModuleInvoices(Centros_Medico $centro, BillingInvoice $paidInvoice): void
+    {
+        $moduleIds = $paidInvoice->items
+            ->filter(fn (BillingInvoiceItem $item) => in_array($item->item_type, ['module_proration', 'module_renewal'], true))
+            ->pluck('billing_module_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($moduleIds->isEmpty()) {
+            return;
+        }
+
+        BillingInvoice::query()
+            ->with('items')
+            ->where('centro_id', $centro->id)
+            ->whereKeyNot($paidInvoice->id)
+            ->whereIn('status', ['open', 'past_due'])
+            ->whereHas('items', function ($query) use ($moduleIds): void {
+                $query->whereIn('billing_module_id', $moduleIds->all())
+                    ->whereIn('item_type', ['module_proration', 'module_renewal']);
+            })
+            ->get()
+            ->each(function (BillingInvoice $invoice) use ($paidInvoice, $centro): void {
+                $invoice->forceFill([
+                    'status' => 'voided',
+                    'voided_at' => $this->periodService->now(),
+                    'notes' => 'Factura anulada porque el modulo ya fue activado con otro cobro.',
+                    'meta' => array_merge((array) $invoice->meta, [
+                        'voided_by_invoice_id' => $paidInvoice->id,
+                    ]),
+                ])->save();
+
+                $this->auditService->log(
+                    eventType: 'billing.invoice.voided',
+                    centro: $centro,
+                    invoice: $invoice,
+                    reason: 'Se anulo una factura abierta porque otra factura del mismo modulo ya fue pagada.',
+                    newValues: [
+                        'status' => 'voided',
+                        'voided_by_invoice_id' => $paidInvoice->id,
+                    ],
+                );
+            });
+    }
+
     protected function findReusableAttempt(BillingInvoice $invoice): ?BillingChargeAttempt
     {
         $attempt = BillingChargeAttempt::query()
@@ -1037,5 +1342,10 @@ class BillingInvoiceService
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    protected function onboardingFreeTrialDays(): int
+    {
+        return max(1, (int) config('billing.onboarding.free_trial_days', 30));
     }
 }

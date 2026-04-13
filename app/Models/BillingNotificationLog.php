@@ -17,6 +17,7 @@ class BillingNotificationLog extends Model
         'billing_invoice_id',
         'billing_tenant_subscription_id',
         'billing_module_subscription_id',
+        'dedupe_key',
         'event_key',
         'channel',
         'recipient',

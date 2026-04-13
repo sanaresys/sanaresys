@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Pages\Billing as BillingPage;
 use App\Models\BillingInvoice;
-use App\Models\BillingModule;
 use App\Models\Centros_Medico;
+use App\Models\ClinicRegistrationRequest;
 use App\Services\Billing\BillingAdminService;
 use App\Services\Billing\BillingInvoiceService;
+use App\Support\CentralUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class TenantBillingController extends Controller
 {
@@ -22,43 +25,20 @@ class TenantBillingController extends Controller
 
     public function index()
     {
-        $centro = $this->currentCentro();
-        $tenantSubscription = $this->billingInvoiceService->ensureTenantSubscriptionForCentro($centro);
-        $openInvoice = $this->billingInvoiceService->openInvoiceForCentro($centro);
-
-        if (! $openInvoice && $centro->isBillingBlocked()) {
-            $openInvoice = $this->billingInvoiceService->createReactivationInvoice($centro);
+        if ($redirect = $this->redirectToCentralRegistrationBillingIfNeeded()) {
+            return $redirect;
         }
 
-        $invoices = BillingInvoice::query()
-            ->with('items')
-            ->where('centro_id', $centro->id)
-            ->latest('id')
-            ->limit(12)
-            ->get();
-
-        $modules = BillingModule::query()
-            ->where('is_active', true)
-            ->with([
-                'subscriptions' => fn ($query) => $query->where('centro_id', $centro->id),
-            ])
-            ->orderBy('name')
-            ->get();
-
-        return view('tenant-billing', [
-            'centro' => $centro,
-            'tenantSubscription' => $tenantSubscription,
-            'openInvoice' => $openInvoice,
-            'invoices' => $invoices,
-            'modules' => $modules,
-            'paypalClientId' => (string) config('services.paypal.client_id', ''),
-            'paypalCurrency' => (string) config('billing.currency', 'USD'),
-        ]);
+        return redirect()->to(BillingPage::getUrl(panel: 'admin'));
     }
 
     public function inactive()
     {
-        return redirect()->route('tenant.billing.index');
+        if ($redirect = $this->redirectToCentralRegistrationBillingIfNeeded()) {
+            return $redirect;
+        }
+
+        return redirect()->to(BillingPage::getUrl(panel: 'admin'));
     }
 
     public function startReactivation(Request $request): RedirectResponse
@@ -88,13 +68,19 @@ class TenantBillingController extends Controller
         $centro = $this->currentCentro();
         abort_unless((int) $invoice->centro_id === (int) $centro->id, 404);
 
-        $attempt = $this->billingInvoiceService->createOrReuseAttempt(
-            invoice: $invoice,
-            context: 'tenant_invoice',
-            requestedBy: auth()->user(),
-            returnUrl: route('tenant.billing.reactivate.return'),
-            cancelUrl: route('tenant.billing.reactivate.cancel'),
-        );
+        try {
+            $attempt = $this->billingInvoiceService->createOrReuseAttempt(
+                invoice: $invoice,
+                context: 'tenant_invoice',
+                requestedBy: auth()->user(),
+                returnUrl: route('tenant.billing.reactivate.return'),
+                cancelUrl: route('tenant.billing.reactivate.cancel'),
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => collect($e->errors())->flatten()->first() ?: 'No se pudo iniciar el pago.',
+            ], 422);
+        }
 
         return response()->json([
             'orderId' => $attempt->paypal_order_id,
@@ -117,10 +103,16 @@ class TenantBillingController extends Controller
             'order_id' => ['required', 'string'],
         ]);
 
-        $this->billingInvoiceService->captureAttemptFromReturn(
-            paypalOrderId: (string) $validated['order_id'],
-            centro: $centro,
-        );
+        try {
+            $this->billingInvoiceService->captureAttemptFromReturn(
+                paypalOrderId: (string) $validated['order_id'],
+                centro: $centro,
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => collect($e->errors())->flatten()->first() ?: 'No se pudo confirmar el pago.',
+            ], 422);
+        }
 
         return response()->json([
             'redirect_url' => $centro->fresh()->isBillingActive() ? '/admin' : route('tenant.billing.index'),
@@ -201,5 +193,29 @@ class TenantBillingController extends Controller
         abort_unless($tenant && $tenant->centro_id, 404);
 
         return Centros_Medico::on('mysql')->findOrFail($tenant->centro_id);
+    }
+
+    protected function redirectToCentralRegistrationBillingIfNeeded(): ?RedirectResponse
+    {
+        $centro = $this->currentCentro();
+        $openBasePlanInvoice = $this->billingInvoiceService->openBasePlanInvoiceForCentro($centro);
+
+        if (! $openBasePlanInvoice) {
+            return null;
+        }
+
+        $registration = ClinicRegistrationRequest::query()
+            ->where('centro_id', $centro->id)
+            ->where('status', ClinicRegistrationRequest::STATUS_PROVISIONED)
+            ->latest('id')
+            ->first();
+
+        if (! $registration) {
+            return null;
+        }
+
+        return redirect()->away(CentralUrl::route('clinica.registro.billing', [
+            'publicId' => $registration->public_id,
+        ]));
     }
 }

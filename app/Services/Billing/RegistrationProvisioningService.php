@@ -55,7 +55,9 @@ class RegistrationProvisioningService
                     ]);
                 }
 
-                if (Centros_Medico::on('mysql')->where('rtn', $locked->rtn)->exists()) {
+                $rtn = $this->normalizeNullableString($locked->rtn);
+
+                if ($rtn !== null && Centros_Medico::on('mysql')->where('rtn', $rtn)->exists()) {
                     throw ValidationException::withMessages([
                         'rtn' => 'El RTN ya esta en uso por otra clinica.',
                     ]);
@@ -76,7 +78,7 @@ class RegistrationProvisioningService
                     'direccion' => $locked->direccion,
                     'telefono' => $locked->telefono,
                     'email' => $locked->owner_email,
-                    'rtn' => $locked->rtn,
+                    'rtn' => $rtn,
                     'slug' => $locked->slug,
                     'tenancy_mode' => 'domain',
                     'billing_status' => 'active',
@@ -206,5 +208,16 @@ class RegistrationProvisioningService
         ])->save();
 
         return $target;
+    }
+
+    protected function normalizeNullableString(null|string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

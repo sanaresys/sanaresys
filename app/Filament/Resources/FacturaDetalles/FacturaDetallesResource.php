@@ -16,7 +16,7 @@ class FacturaDetallesResource extends Resource
 {
     protected static ?string $model = FacturaDetalle::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationGroup = 'Gestion de Facturacion';
+    protected static ?string $navigationGroup = 'Gestión de Facturación';
     protected static ?string $navigationLabel = 'Detalles de Facturas';
     protected static ?string $pluralModelLabel = 'Detalles de Facturas';
     protected static ?string $modelLabel = 'Detalle de Factura';
