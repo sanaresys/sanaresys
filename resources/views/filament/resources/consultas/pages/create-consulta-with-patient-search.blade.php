@@ -40,18 +40,6 @@
         </div>
     @else
         {{-- Formulario de creación de consulta en layout dividido --}}
-        <div class="consulta-layout-controls" role="toolbar" aria-label="Ajustar ancho de paneles">
-            <button type="button" class="consulta-layout-btn" data-layout-action="focus-left">
-                Enfocar consulta
-            </button>
-            <button type="button" class="consulta-layout-btn" data-layout-action="reset">
-                Vista equilibrada
-            </button>
-            <button type="button" class="consulta-layout-btn" data-layout-action="focus-right">
-                Enfocar contexto
-            </button>
-        </div>
-
         <div class="consulta-dual-layout items-start" id="consultaSplitLayout">
             <div class="consulta-form-panel space-y-6">
                 <x-filament::section>
@@ -102,12 +90,11 @@
                 tabindex="0"
             ></div>
 
-            <aside class="consulta-context-panel space-y-4">
+            <aside class="consulta-context-panel">
                 <x-filament::section>
-                    <x-slot name="heading">Paciente en contexto</x-slot>
-                    <x-slot name="description">Vista clínica rápida para decidir sin perder foco en la consulta.</x-slot>
+                    <x-slot name="heading">Información del Paciente</x-slot>
 
-                    <div class="space-y-4 context-pdf-sheet">
+                    <div class="space-y-3 context-pdf-sheet" id="consultaContextQuickView">
                         @php
                             $nombrePaciente = $this->selectedPatient?->persona?->nombre_completo ?? 'Paciente no disponible';
                             $sexoPaciente = $this->selectedPatient?->persona?->sexo === 'M' ? 'Masculino' : ($this->selectedPatient?->persona?->sexo === 'F' ? 'Femenino' : 'N/D');
@@ -124,103 +111,121 @@
                             $medicamentosActivos = $this->getMedicamentosActivos();
                         @endphp
 
-                        <div class="context-alert-box">
-                            <div class="context-alert-title-wrap">
-                                <p class="context-alert-title">Antecedentes patológicos del paciente</p>
-                            </div>
-                            @if($enfermedades->isEmpty())
-                                <p class="context-empty-state">Sin enfermedades registradas.</p>
-                            @else
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($enfermedades->take(8) as $enfermedad)
-                                        <span class="context-chip-alert">
-                                            {{ $enfermedad->enfermedades ?? 'Enfermedad' }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @endif
+                        <div class="context-quick-tabs" role="tablist" aria-label="Vista rápida del paciente">
+                            <button type="button" class="context-quick-tab is-active" data-context-tab="resumen" role="tab" aria-selected="true">
+                                Resumen
+                            </button>
+                            <button type="button" class="context-quick-tab" data-context-tab="clinico" role="tab" aria-selected="false">
+                                Clínico
+                            </button>
+                            <button type="button" class="context-quick-tab" data-context-tab="historial" role="tab" aria-selected="false">
+                                Historial
+                            </button>
                         </div>
 
-                        <div class="context-hero-card context-hero-card--summary">
-                            <div class="context-hero-top">
-                                <div class="context-avatar">{{ $iniciales }}</div>
-                                <div class="context-title-wrap">
-                                    <p class="context-name">{{ $nombrePaciente }}</p>
-                                    <p class="context-subtitle">Paciente activo en esta consulta</p>
+                        <div class="context-quick-panel is-active" data-context-panel="resumen" role="tabpanel">
+                            <div class="context-hero-card context-hero-card--summary">
+                                <div class="context-hero-top">
+                                    <div class="context-avatar">{{ $iniciales }}</div>
+                                    <div class="context-title-wrap">
+                                        <p class="context-name">{{ $nombrePaciente }}</p>
+                                        <p class="context-subtitle">Paciente activo en esta consulta</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="context-kv-grid mt-4 context-kv-grid--summary">
-                                <div class="context-kv-item">
-                                    <p class="context-kv-label">DNI</p>
-                                    <p class="context-kv-value">{{ $this->selectedPatient?->persona?->dni ?? 'N/D' }}</p>
-                                </div>
-                                <div class="context-kv-item">
-                                    <p class="context-kv-label">Sexo</p>
-                                    <p class="context-kv-value">{{ $sexoPaciente }}</p>
-                                </div>
-                                <div class="context-kv-item">
-                                    <p class="context-kv-label">Edad</p>
-                                    <p class="context-kv-value">{{ $this->selectedPatient?->persona?->fecha_nacimiento ? \Carbon\Carbon::parse($this->selectedPatient->persona->fecha_nacimiento)->age . ' años' : 'N/D' }}</p>
-                                </div>
-                                <div class="context-kv-item">
-                                    <p class="context-kv-label">Teléfono</p>
-                                    <p class="context-kv-value">{{ $this->selectedPatient?->persona?->telefono ?? 'N/D' }}</p>
-                                </div>
-                                <div class="context-kv-item">
-                                    <p class="context-kv-label">Grupo sanguíneo</p>
-                                    <p class="context-kv-value">{{ $this->selectedPatient?->grupo_sanguineo ?? 'N/D' }}</p>
+                                <div class="context-kv-grid mt-4 context-kv-grid--summary">
+                                    <div class="context-kv-item">
+                                        <p class="context-kv-label">DNI</p>
+                                        <p class="context-kv-value">{{ $this->selectedPatient?->persona?->dni ?? 'N/D' }}</p>
+                                    </div>
+                                    <div class="context-kv-item">
+                                        <p class="context-kv-label">Sexo</p>
+                                        <p class="context-kv-value">{{ $sexoPaciente }}</p>
+                                    </div>
+                                    <div class="context-kv-item">
+                                        <p class="context-kv-label">Edad</p>
+                                        <p class="context-kv-value">{{ $this->selectedPatient?->persona?->fecha_nacimiento ? \Carbon\Carbon::parse($this->selectedPatient->persona->fecha_nacimiento)->age . ' años' : 'N/D' }}</p>
+                                    </div>
+                                    <div class="context-kv-item">
+                                        <p class="context-kv-label">Teléfono</p>
+                                        <p class="context-kv-value">{{ $this->selectedPatient?->persona?->telefono ?? 'N/D' }}</p>
+                                    </div>
+                                    <div class="context-kv-item">
+                                        <p class="context-kv-label">Grupo sanguíneo</p>
+                                        <p class="context-kv-value">{{ $this->selectedPatient?->grupo_sanguineo ?? 'N/D' }}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <h4 class="context-section-title">Tratamiento y medicación base</h4>
-                            @if($medicamentosActivos->isEmpty())
-                                <p class="context-empty-state">Sin medicación o tratamiento registrado.</p>
-                            @else
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($medicamentosActivos as $medicamento)
-                                        <span class="context-chip-medication">{{ $medicamento }}</span>
-                                    @endforeach
+                        <div class="context-quick-panel" data-context-panel="clinico" role="tabpanel" hidden>
+                            <div class="context-alert-box">
+                                <div class="context-alert-title-wrap">
+                                    <p class="context-alert-title">Antecedentes patológicos del paciente</p>
                                 </div>
-                            @endif
+                                @if($enfermedades->isEmpty())
+                                    <p class="context-empty-state">Sin enfermedades registradas.</p>
+                                @else
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($enfermedades->take(8) as $enfermedad)
+                                            <span class="context-chip-alert">
+                                                {{ $enfermedad->enfermedades ?? 'Enfermedad' }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div>
+                                <h4 class="context-section-title">Tratamiento y medicación base</h4>
+                                @if($medicamentosActivos->isEmpty())
+                                    <p class="context-empty-state">Sin medicación o tratamiento registrado.</p>
+                                @else
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($medicamentosActivos as $medicamento)
+                                            <span class="context-chip-medication">{{ $medicamento }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
-                        <div>
-                            <h4 class="context-section-title">Últimas consultas</h4>
-                            @php $consultas = $this->getRecentConsultas(); @endphp
-                            @if($consultas->isEmpty())
-                                <p class="context-empty-state">No hay consultas previas.</p>
-                            @else
-                                <div class="space-y-2">
-                                    @foreach($consultas as $consulta)
-                                        <div class="context-timeline-item">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <p class="context-timeline-date">{{ $consulta->created_at?->format('d/m/Y') ?? 'N/D' }}</p>
-                                                <p class="context-timeline-id">#{{ $consulta->id }}</p>
+                        <div class="context-quick-panel" data-context-panel="historial" role="tabpanel" hidden>
+                            <div>
+                                <h4 class="context-section-title">Últimas consultas</h4>
+                                @php $consultas = $this->getRecentConsultas(); @endphp
+                                @if($consultas->isEmpty())
+                                    <p class="context-empty-state">No hay consultas previas.</p>
+                                @else
+                                    <div class="space-y-2">
+                                        @foreach($consultas->take(3) as $consulta)
+                                            <div class="context-timeline-item">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <p class="context-timeline-date">{{ $consulta->created_at?->format('d/m/Y') ?? 'N/D' }}</p>
+                                                    <p class="context-timeline-id">#{{ $consulta->id }}</p>
+                                                </div>
+                                                <p class="context-timeline-dx">
+                                                    {{ $consulta->diagnostico ?: 'Sin diagnóstico registrado' }}
+                                                </p>
                                             </div>
-                                            <p class="context-timeline-dx">
-                                                {{ $consulta->diagnostico ?: 'Sin diagnóstico registrado' }}
-                                            </p>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-3">
-                            <div class="context-counter-card context-counter-card--blue">
-                                <div class="flex items-center justify-between">
-                                    <p class="context-counter-label">Recetas recientes</p>
-                                    <span class="context-counter-number">{{ $this->getRecentRecetas()->count() }}</span>
-                                </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
 
-                            <div class="context-counter-card context-counter-card--indigo">
-                                <div class="flex items-center justify-between">
-                                    <p class="context-counter-label">Exámenes recientes</p>
-                                    <span class="context-counter-number">{{ $this->getRecentExamenes()->count() }}</span>
+                            <div class="grid grid-cols-1 gap-3">
+                                <div class="context-counter-card context-counter-card--blue">
+                                    <div class="flex items-center justify-between">
+                                        <p class="context-counter-label">Recetas recientes</p>
+                                        <span class="context-counter-number">{{ $this->getRecentRecetas()->count() }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="context-counter-card context-counter-card--indigo">
+                                    <div class="flex items-center justify-between">
+                                        <p class="context-counter-label">Exámenes recientes</p>
+                                        <span class="context-counter-number">{{ $this->getRecentExamenes()->count() }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -268,31 +273,6 @@
                 gap: 1.5rem;
             }
 
-            .consulta-layout-controls {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                margin-bottom: 0.9rem;
-            }
-
-            .consulta-layout-btn {
-                border: 1px solid var(--cx-border);
-                border-radius: 999px;
-                padding: 0.38rem 0.8rem;
-                font-size: 0.78rem;
-                font-weight: 600;
-                color: var(--cx-text);
-                background: color-mix(in srgb, var(--cx-bg-soft) 82%, transparent 18%);
-                transition: all 0.15s ease;
-            }
-
-            .consulta-layout-btn:hover,
-            .consulta-layout-btn:focus-visible {
-                border-color: color-mix(in srgb, var(--cx-text) 35%, var(--cx-border) 65%);
-                background: color-mix(in srgb, var(--cx-bg-soft) 92%, transparent 8%);
-                outline: none;
-            }
-
             .consulta-resizer {
                 display: none;
             }
@@ -323,16 +303,10 @@
 
                 .consulta-context-panel {
                     position: sticky;
-                    top: 1.25rem;
-                    max-height: calc(100vh - 2.5rem);
+                    top: 0.5rem;
+                    max-height: calc(100vh - 1rem);
                     overflow: auto;
                     padding-right: 0.25rem;
-                }
-            }
-
-            @media (max-width: 1023px) {
-                .consulta-layout-controls {
-                    display: none;
                 }
             }
 
@@ -357,6 +331,16 @@
             .consulta-context-panel .fi-section-header {
                 background: transparent !important;
                 border-bottom: 1px solid var(--cx-border) !important;
+            }
+
+            .consulta-context-panel .fi-section-header {
+                padding-top: 0.6rem !important;
+                padding-bottom: 0.6rem !important;
+            }
+
+            .consulta-context-panel .fi-section-content {
+                padding-top: 0.65rem !important;
+                padding-bottom: 0.75rem !important;
             }
 
             .consulta-form-panel .fi-section-header-heading,
@@ -397,6 +381,45 @@
                 border-radius: 14px;
                 padding: 14px;
                 background: color-mix(in srgb, var(--cx-sheet) 94%, #ffffff 6%);
+            }
+
+            .context-quick-tabs {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.4rem;
+            }
+
+            .context-quick-tab {
+                border: 1px solid var(--cx-sheet-line);
+                border-radius: 999px;
+                padding: 0.38rem 0.65rem;
+                font-size: 0.72rem;
+                font-weight: 700;
+                color: var(--cx-text);
+                background: color-mix(in srgb, var(--cx-sheet) 90%, #ffffff 10%);
+                transition: all 0.15s ease;
+                white-space: nowrap;
+            }
+
+            .context-quick-tab:hover,
+            .context-quick-tab:focus-visible {
+                border-color: color-mix(in srgb, var(--cx-text) 24%, var(--cx-sheet-line) 76%);
+                outline: none;
+            }
+
+            .context-quick-tab.is-active {
+                color: #173a38;
+                border-color: color-mix(in srgb, var(--cx-cyan) 60%, var(--cx-sheet-line) 40%);
+                background: linear-gradient(165deg, color-mix(in srgb, var(--cx-cyan) 86%, #ffffff 14%), color-mix(in srgb, var(--cx-cyan) 70%, #ffffff 30%));
+            }
+
+            .context-quick-panel {
+                display: none;
+                gap: 0.8rem;
+            }
+
+            .context-quick-panel.is-active {
+                display: grid;
             }
 
             .context-hero-card--summary {
@@ -627,6 +650,12 @@
                 color: var(--cx-muted);
             }
 
+            @media (max-width: 420px) {
+                .context-quick-tabs {
+                    grid-template-columns: 1fr;
+                }
+            }
+
             .consulta-context-panel .fi-section,
             .consulta-form-panel .fi-section {
                 color: var(--cx-text);
@@ -715,20 +744,6 @@
                         applyWidth(50);
                     }
 
-                    document.querySelectorAll('[data-layout-action]').forEach((button) => {
-                        button.addEventListener('click', () => {
-                            const action = button.getAttribute('data-layout-action');
-
-                            if (action === 'focus-left') {
-                                applyWidth(64);
-                            } else if (action === 'focus-right') {
-                                applyWidth(36);
-                            } else {
-                                applyWidth(50);
-                            }
-                        });
-                    });
-
                     let dragging = false;
 
                     const updateFromPointer = (clientX) => {
@@ -774,13 +789,53 @@
                     });
                 };
 
+                const initContextQuickView = () => {
+                    const quickView = document.getElementById('consultaContextQuickView');
+
+                    if (!quickView || quickView.dataset.quickReady === '1') {
+                        return;
+                    }
+
+                    quickView.dataset.quickReady = '1';
+
+                    const tabs = Array.from(quickView.querySelectorAll('[data-context-tab]'));
+                    const panels = Array.from(quickView.querySelectorAll('[data-context-panel]'));
+
+                    const setActive = (name) => {
+                        tabs.forEach((tab) => {
+                            const isActive = tab.getAttribute('data-context-tab') === name;
+                            tab.classList.toggle('is-active', isActive);
+                            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                        });
+
+                        panels.forEach((panel) => {
+                            const isActive = panel.getAttribute('data-context-panel') === name;
+                            panel.classList.toggle('is-active', isActive);
+                            panel.hidden = !isActive;
+                        });
+                    };
+
+                    tabs.forEach((tab) => {
+                        tab.addEventListener('click', () => {
+                            setActive(tab.getAttribute('data-context-tab'));
+                        });
+                    });
+
+                    setActive('resumen');
+                };
+
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', initSplitLayout, { once: true });
+                    document.addEventListener('DOMContentLoaded', () => {
+                        initSplitLayout();
+                        initContextQuickView();
+                    }, { once: true });
                 } else {
                     initSplitLayout();
+                    initContextQuickView();
                 }
 
                 document.addEventListener('livewire:navigated', initSplitLayout);
+                document.addEventListener('livewire:navigated', initContextQuickView);
             })();
         </script>
     @endif
