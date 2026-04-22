@@ -20,7 +20,7 @@ Route::middleware(['web', 'central.domain'])->group(function () {
         ->name('clinica.registro.resend');
 
     Route::get('/registro-clinica/verificar/{publicId}', [ClinicRegistrationController::class, 'verify'])
-        ->middleware(['signed', 'throttle:20,1'])
+        ->middleware(['signed:relative', 'throttle:20,1'])
         ->name('clinica.registro.verify');
 
     Route::get('/registro-clinica/{publicId}/billing', [ClinicRegistrationController::class, 'billing'])

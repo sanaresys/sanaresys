@@ -445,11 +445,13 @@ class ClinicRegistrationController extends Controller
 
     protected function sendVerificationEmail(ClinicRegistrationRequest $registration): void
     {
-        $verificationUrl = URL::temporarySignedRoute(
+        $verificationPath = URL::temporarySignedRoute(
             'clinica.registro.verify',
             $registration->verification_expires_at ?? now()->addDay(),
             ['publicId' => $registration->public_id],
+            false,
         );
+        $verificationUrl = rtrim(CentralUrl::origin(), '/') . $verificationPath;
 
         Mail::to($registration->owner_email)->send(
             new ClinicRegistrationVerificationMail($registration, $verificationUrl)

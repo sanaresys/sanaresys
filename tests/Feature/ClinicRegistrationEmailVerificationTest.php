@@ -139,7 +139,8 @@ class ClinicRegistrationEmailVerificationTest extends TestCase
         $url = URL::temporarySignedRoute(
             'clinica.registro.verify',
             now()->addMinutes(10),
-            ['publicId' => $registration->public_id]
+            ['publicId' => $registration->public_id],
+            false,
         );
 
         $response = $this->get($url);
