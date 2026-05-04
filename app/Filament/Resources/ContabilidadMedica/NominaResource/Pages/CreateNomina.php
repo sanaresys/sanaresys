@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ContabilidadMedica\NominaResource\Pages;
 use App\Filament\Resources\ContabilidadMedica\NominaResource;
 use App\Models\ContabilidadMedica\DetalleNomina;
 use App\Models\Medico;
+use App\Services\Billing\TenantModuleAccessService;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Section;
@@ -27,6 +28,17 @@ class CreateNomina extends CreateRecord
 
     public function mount(): void
     {
+        if (! app(TenantModuleAccessService::class)->isModuleActive('nomina')) {
+            Notification::make()
+                ->title('Modulo no activo')
+                ->body('Debes adquirir o renovar el modulo de nomina para usar esta funcionalidad.')
+                ->warning()
+                ->send();
+
+            $this->redirect(route('tenant.billing.modules.index'));
+            return;
+        }
+
         parent::mount();
         $this->loadMedicos();
     }

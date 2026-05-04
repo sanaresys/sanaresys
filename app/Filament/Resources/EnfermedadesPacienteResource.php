@@ -25,7 +25,7 @@ class EnfermedadesPacienteResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Configuracion';
+    protected static ?string $navigationGroup = 'Gestión Médica';
     
     protected static ?string $navigationLabel = 'Enfermedades de Pacientes';
     protected static ?string $modelLabel = 'Enfermedad de Paciente';

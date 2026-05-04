@@ -18,7 +18,7 @@ class EnfermedadeResource extends Resource
 {
     protected static ?string $model = Enfermedade::class;
 
-    protected static ?string $navigationGroup = 'Configuracion';
+    protected static ?string $navigationGroup = 'Gestión Médica';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static bool $shouldRegisterNavigation = true;
 

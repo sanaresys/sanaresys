@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         // Crear roles y permisos primero
         $this->call([
             RolesAndPermissionsSeeder::class,
+            BillingModulesSeeder::class,
             CentrosMedicoSeeder::class, // Crear centros antes de asignar usuarios
             EspecialidadSeeder::class,
             NacionalidadSeeder::class,
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'root',
             'email' => 'root@example.com',
+            'password' => '12345678'
         ]);
         
         $user = User::find(1);

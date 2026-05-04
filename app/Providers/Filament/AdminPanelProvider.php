@@ -75,12 +75,20 @@ class AdminPanelProvider extends PanelProvider
 
 
             ->renderHook(
+                'panels::head.end',
+                fn () => '<style>[x-cloak]{display:none !important;}</style>'
+            )
+            ->renderHook(
                 'panels::user-menu.before',
                 fn () => view('filament.components.centro-selector-topbar')
             )
             ->renderHook(
                 'panels::body.end',
                 fn () => '<script src="/js/disable-livewire-polling.js"></script>'
+            )
+            ->renderHook(
+                'panels::body.start',
+                fn () => view('filament.components.module-renewal-banner')
             )
 
 
@@ -95,6 +103,7 @@ class AdminPanelProvider extends PanelProvider
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
+                'tenant.subscription.active',
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,

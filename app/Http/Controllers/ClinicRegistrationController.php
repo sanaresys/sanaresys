@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ClinicRegistrationVerificationMail;
-use App\Models\ClinicRegistrationRequest;
+use App\Models\BillingInvoice;
 use App\Models\Centros_Medico;
+use App\Models\ClinicRegistrationRequest;
+use App\Services\Billing\BillingInvoiceService;
+use App\Services\Billing\BillingPlanService;
+use App\Services\Billing\RegistrationProvisioningService;
 use App\Services\TenantIdentityService;
 use App\Services\TenantProvisioningService;
 use App\Support\CentralUrl;
-use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -17,29 +21,43 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 class ClinicRegistrationController extends Controller
 {
     public function __construct(
         protected TenantIdentityService $identityService,
         protected TenantProvisioningService $provisioningService,
+        protected BillingPlanService $billingPlanService,
+        protected BillingInvoiceService $billingInvoiceService,
+        protected RegistrationProvisioningService $registrationProvisioningService,
     ) {
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('registro-clinica');
+        $plans = $this->billingPlanService->all();
+        $selectedPlanCode = (string) $request->query('plan', old('plan_code', $this->billingPlanService->defaultPlanCode()));
+
+        if (! isset($plans[$selectedPlanCode])) {
+            $selectedPlanCode = $this->billingPlanService->defaultPlanCode();
+        }
+
+        return view('registro-clinica', [
+            'plans' => $plans,
+            'selectedPlanCode' => $selectedPlanCode,
+            'selectedPlan' => $plans[$selectedPlanCode] ?? null,
+        ]);
     }
 
     public function success(Request $request)
     {
-        $domain   = $request->query('domain');
-        $clinic   = $request->query('clinic');
+        $domain = $request->query('domain');
+        $clinic = $request->query('clinic');
         $redirect = $request->query('redirect');
 
-        if (!$domain || !$redirect) {
+        if (! $domain || ! $redirect) {
             return redirect()->away(CentralUrl::route('clinica.registro'));
         }
 
@@ -49,14 +67,24 @@ class ClinicRegistrationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'plan_code' => ['required', 'string', 'max:32'],
             'nombre_centro' => ['required', 'string', 'max:255'],
             'direccion' => ['required', 'string', 'max:255'],
             'telefono' => ['required', 'string', 'max:50'],
-            'rtn' => ['required', 'string', 'max:100', 'unique:centros_medicos,rtn'],
+            'rtn' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('centros_medicos', 'rtn')->whereNotNull('rtn'),
+            ],
             'owner_name' => ['required', 'string', 'max:255'],
             'owner_email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+        $rtn = $this->normalizeNullableString($validated['rtn'] ?? null);
+
+        $plan = $this->billingPlanService->get($validated['plan_code']);
+        $planCode = (string) ($plan['code'] ?? $validated['plan_code']);
 
         if ($this->provisioningService->emailExistsInAnyTenant($validated['owner_email'])) {
             throw ValidationException::withMessages([
@@ -70,11 +98,13 @@ class ClinicRegistrationController extends Controller
         $registration = ClinicRegistrationRequest::query()->create([
             'public_id' => (string) Str::uuid(),
             'status' => ClinicRegistrationRequest::STATUS_PENDING_VERIFICATION,
+            'payment_status' => 'pending',
+            'plan_code' => $planCode,
             'nombre_centro' => $validated['nombre_centro'],
             'slug' => $slug,
             'direccion' => $validated['direccion'],
             'telefono' => $validated['telefono'],
-            'rtn' => $validated['rtn'],
+            'rtn' => $rtn,
             'owner_name' => $validated['owner_name'],
             'owner_email' => strtolower($validated['owner_email']),
             'password_encrypted' => Crypt::encryptString($validated['password']),
@@ -83,12 +113,6 @@ class ClinicRegistrationController extends Controller
         ]);
 
         $this->sendVerificationEmail($registration);
-
-        Log::info('Solicitud de registro de clinica pendiente de verificacion.', [
-            'registration_public_id' => $registration->public_id,
-            'email' => $registration->owner_email,
-            'slug' => $registration->slug,
-        ]);
 
         return redirect()
             ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
@@ -113,7 +137,10 @@ class ClinicRegistrationController extends Controller
             ClinicRegistrationRequest::STATUS_EXPIRED,
         ], true) && $registration->resend_count < 5;
 
-        return view('registro-clinica-waiting', compact('registration', 'canResend'));
+        $canStartPayment = $registration->isProvisioned()
+            && $this->resolveOpenBasePlanInvoiceForRegistration($registration) !== null;
+
+        return view('registro-clinica-waiting', compact('registration', 'canResend', 'canStartPayment'));
     }
 
     public function resendVerification(string $publicId): RedirectResponse
@@ -159,13 +186,15 @@ class ClinicRegistrationController extends Controller
     {
         $registration = $this->findRegistrationOrFail($publicId);
 
-        if ($registration->isProvisioned() && $registration->onboarding_redirect_url) {
-            return redirect()->away($registration->onboarding_redirect_url);
+        if ($registration->isProvisioned()) {
+            return $this->redirectProvisionedRegistration($registration);
         }
 
         if (! in_array($registration->status, [
             ClinicRegistrationRequest::STATUS_PENDING_VERIFICATION,
             ClinicRegistrationRequest::STATUS_EXPIRED,
+            ClinicRegistrationRequest::STATUS_VERIFIED,
+            ClinicRegistrationRequest::STATUS_PENDING_PAYMENT,
         ], true)) {
             return redirect()
                 ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
@@ -178,11 +207,6 @@ class ClinicRegistrationController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->isProvisioned()) {
-                $registration = $locked;
-                return;
-            }
-
             if ($locked->isExpired()) {
                 $locked->forceFill([
                     'status' => ClinicRegistrationRequest::STATUS_EXPIRED,
@@ -192,23 +216,22 @@ class ClinicRegistrationController extends Controller
                 ])->save();
 
                 $registration = $locked;
+
                 return;
             }
 
-            $locked->forceFill([
-                'status' => ClinicRegistrationRequest::STATUS_VERIFIED,
-                'verified_at' => $locked->verified_at ?? now(),
-                'failure_code' => null,
-                'failure_message' => null,
-                'failed_at' => null,
-            ])->save();
+            if (! $locked->isProvisioned()) {
+                $locked->forceFill([
+                    'status' => ClinicRegistrationRequest::STATUS_VERIFIED,
+                    'verified_at' => $locked->verified_at ?? now(),
+                    'failure_code' => null,
+                    'failure_message' => null,
+                    'failed_at' => null,
+                ])->save();
+            }
 
             $registration = $locked;
         });
-
-        if ($registration->isProvisioned() && $registration->onboarding_redirect_url) {
-            return redirect()->away($registration->onboarding_redirect_url);
-        }
 
         if ($registration->status === ClinicRegistrationRequest::STATUS_EXPIRED) {
             return redirect()
@@ -216,146 +239,208 @@ class ClinicRegistrationController extends Controller
                 ->with('error', 'El enlace expiro. Solicita un reenvio.');
         }
 
-        if ($registration->status !== ClinicRegistrationRequest::STATUS_VERIFIED) {
+        $this->billingInvoiceService->activateOnboardingTrial($registration->fresh());
+        $registration->refresh();
+
+        if ($registration->isProvisioned()) {
+            return $this->redirectProvisionedRegistration($registration);
+        }
+
+        return redirect()
+            ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
+            ->with('status', 'Tu periodo gratis se activo. Estamos finalizando la configuracion.');
+    }
+
+    public function startPayment(string $publicId): RedirectResponse
+    {
+        return redirect()->route('clinica.registro.billing', ['publicId' => $publicId]);
+    }
+
+    public function billing(string $publicId)
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+        $context = $this->resolveBillingContext($registration);
+
+        if (! $context) {
+            if ($registration->isProvisioned()) {
+                return $this->redirectProvisionedRegistration($registration);
+            }
+
             return redirect()
                 ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
-                ->with('error', 'No se pudo iniciar la provision de esta solicitud.');
+                ->with('error', 'Primero debes verificar el correo para continuar al pago.');
         }
 
-        $centro = null;
+        $invoice = $context['invoice'];
+        $billingMode = $context['mode'];
 
-        try {
-            $password = Crypt::decryptString((string) $registration->password_encrypted);
-        } catch (DecryptException $e) {
-            $this->failRegistration(
-                $registration,
-                'password_decrypt_failed',
-                'No se pudo validar la solicitud. Registra la clinica nuevamente.'
-            );
+        return view('registro-clinica-billing', [
+            'registration' => $registration->fresh(),
+            'invoice' => $invoice,
+            'billingMode' => $billingMode,
+            'requiresConsent' => $billingMode === 'onboarding',
+            'freeTrialDays' => (int) config('billing.onboarding.free_trial_days', 30),
+            'paypalClientId' => (string) config('services.paypal.client_id', ''),
+            'paypalCurrency' => (string) config('billing.currency', 'USD'),
+            'consentTextVersion' => (string) config('billing.engine.consent_text_version', 'v1'),
+        ]);
+    }
 
-            return redirect()
-                ->to(CentralUrl::route('clinica.registro'))
-                ->withErrors(['nombre_centro' => 'La solicitud ya no es valida. Registra la clinica nuevamente.'])
-                ->withInput($this->buildInputPayload($registration));
+    public function createBillingOrder(Request $request, string $publicId): JsonResponse
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+        $context = $this->resolveBillingContext($registration);
+
+        if (! $context) {
+            return response()->json([
+                'message' => 'La solicitud no esta lista para pago.',
+            ], 422);
         }
 
-        try {
-            if (Centros_Medico::on('mysql')->where('rtn', $registration->rtn)->exists()) {
-                throw ValidationException::withMessages([
-                    'rtn' => 'El RTN ya esta en uso por otra clinica.',
-                ]);
-            }
+        $request->validate([
+            'consent' => ['accepted'],
+        ]);
 
-            if ($this->provisioningService->emailExistsInAnyTenant($registration->owner_email)) {
-                throw ValidationException::withMessages([
-                    'owner_email' => 'El correo ya esta en uso en otro tenant.',
-                ]);
-            }
+        $updates = [
+            'consent_at' => now(),
+            'consent_text_version' => (string) config('billing.engine.consent_text_version', 'v1'),
+            'consent_ip' => (string) $request->ip(),
+        ];
 
-            $this->identityService->validateSlugAvailable($registration->slug);
+        if ($context['mode'] === 'onboarding') {
+            $updates['status'] = ClinicRegistrationRequest::STATUS_PENDING_PAYMENT;
+            $updates['payment_status'] = 'pending';
+        }
 
-            $centro = Centros_Medico::create([
-                'nombre_centro' => $registration->nombre_centro,
-                'direccion' => $registration->direccion,
-                'telefono' => $registration->telefono,
-                'rtn' => $registration->rtn,
-                'slug' => $registration->slug,
-                'tenancy_mode' => 'domain',
-                'onboarding_current_step' => 0,
-                'onboarding_skipped_cai' => false,
-                'onboarding_completed_at' => null,
-            ]);
+        $registration->forceFill($updates)->save();
 
-            $result = $this->provisioningService->provisionNewCenter($centro, [
-                'name' => $registration->owner_name,
-                'email' => $registration->owner_email,
-                'password' => $password,
-            ]);
+        $invoice = $context['invoice'];
+        $attempt = $this->billingInvoiceService->createOrReuseAttempt(
+            invoice: $invoice,
+            context: $context['mode'] === 'onboarding' ? 'registration_onboarding' : 'registration_renewal',
+            requestedBy: null,
+            returnUrl: route('clinica.registro.payment.return', ['publicId' => $registration->public_id]),
+            cancelUrl: route('clinica.registro.payment.cancel', ['publicId' => $registration->public_id]),
+        );
 
-            tenancy()->end();
+        return response()->json([
+            'orderId' => $attempt->paypal_order_id,
+        ]);
+    }
 
-            if (tenancy()->initialized){
-                tenancy()->end();
-            }
+    public function captureBillingOrder(Request $request, string $publicId): JsonResponse
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+        $validated = $request->validate([
+            'order_id' => ['required', 'string'],
+        ]);
 
-            $token = tenancy()->impersonate(
-                tenant: $result->tenant,
-                userId: (string) $result->adminUserId,
-                redirectUrl: '/admin',
-                authGuard: 'web'
-            );
-
-            Log::info('Token de impersonación generado y guardado', [
-                'token' => $token->token,
-                'tenant_id' => $token->tenant_id,
-                'tabla_tokens_check' => \Stancl\Tenancy\Database\Models\ImpersonationToken::count(),
-            ]);
-
-            $scheme = (string) config('tenancy.tenant_scheme', 'https');
-            $target = "{$scheme}://{$result->primaryDomain}/tenant/impersonate/{$token->token}";
-
-            $registration->forceFill([
-                'status' => ClinicRegistrationRequest::STATUS_PROVISIONED,
-                'centro_id' => $centro->id,
-                'tenant_id' => $result->tenant->id,
-                'primary_domain' => $result->primaryDomain,
-                'onboarding_redirect_url' => $target,
-                'provisioned_at' => now(),
-                'password_encrypted' => null,
-                'failure_code' => null,
-                'failure_message' => null,
-                'failed_at' => null,
-            ])->save();
-
-            Log::info('Clinica provisionada luego de verificar correo.', [
-                'registration_public_id' => $registration->public_id,
-                'centro_id' => $centro->id,
-                'tenant_id' => $result->tenant->id,
-                'domain' => $result->primaryDomain,
-            ]);
-
-            return redirect()->away($target);
-        } catch (ValidationException $e) {
-            $this->failRegistration(
-                $registration,
-                'validation_conflict',
-                collect($e->errors())->flatten()->first() ?? 'Conflicto de datos durante la verificacion.'
-            );
-
-            return redirect()
-                ->to(CentralUrl::route('clinica.registro'))
-                ->withErrors($e->errors())
-                ->withInput($this->buildInputPayload($registration));
-        } catch (Throwable $e) {
-            Log::error('Error en provisioning posterior a verificacion de correo.', [
-                'registration_public_id' => $registration->public_id,
-                'centro_id' => $centro?->id,
-                'error' => $e->getMessage(),
-                'exception' => get_class($e),
-            ]);
+        if ($registration->isProvisioned() && $registration->centro_id) {
+            $centro = Centros_Medico::on('mysql')->find($registration->centro_id);
 
             if ($centro) {
-                try {
-                    $centro->delete();
-                } catch (Throwable $cleanupError) {
-                    Log::error('Error limpiando centro tras fallo de provisioning.', [
-                        'registration_public_id' => $registration->public_id,
-                        'centro_id' => $centro->id,
-                        'error' => $cleanupError->getMessage(),
-                    ]);
+                $this->billingInvoiceService->captureAttemptFromReturn(
+                    paypalOrderId: (string) $validated['order_id'],
+                    centro: $centro,
+                );
+            } else {
+                $this->billingInvoiceService->captureAttemptFromReturn(
+                    paypalOrderId: (string) $validated['order_id'],
+                    registration: $registration,
+                );
+            }
+        } else {
+            $this->billingInvoiceService->captureAttemptFromReturn(
+                paypalOrderId: (string) $validated['order_id'],
+                registration: $registration,
+            );
+        }
+
+        $registration->refresh();
+
+        return response()->json([
+            'redirect_url' => $registration->isProvisioned()
+                ? ($this->registrationProvisioningService->issueTenantAccessUrl($registration)
+                    ?: route('clinica.registro.waiting', ['publicId' => $registration->public_id]))
+                : route('clinica.registro.waiting', ['publicId' => $registration->public_id]),
+        ]);
+    }
+
+    public function paymentReturn(Request $request, string $publicId): RedirectResponse
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+        $orderId = (string) ($request->query('token') ?? $request->query('orderId'));
+
+        if ($orderId === '') {
+            return redirect()
+                ->route('clinica.registro.billing', ['publicId' => $registration->public_id])
+                ->with('error', 'PayPal no devolvio una orden valida.');
+        }
+
+        try {
+            if ($registration->isProvisioned() && $registration->centro_id) {
+                $centro = Centros_Medico::on('mysql')->find($registration->centro_id);
+
+                if ($centro) {
+                    $this->billingInvoiceService->captureAttemptFromReturn(
+                        paypalOrderId: $orderId,
+                        centro: $centro,
+                    );
+                } else {
+                    $this->billingInvoiceService->captureAttemptFromReturn(
+                        paypalOrderId: $orderId,
+                        registration: $registration,
+                    );
                 }
+            } else {
+                $this->billingInvoiceService->captureAttemptFromReturn(
+                    paypalOrderId: $orderId,
+                    registration: $registration,
+                );
             }
 
-            $this->failRegistration(
-                $registration,
-                'provisioning_failed',
-                'No se pudo completar la creacion de la clinica. Intenta nuevamente.'
-            );
+            $registration->refresh();
+
+            if ($registration->isProvisioned()) {
+                return $this->redirectProvisionedRegistration($registration);
+            }
 
             return redirect()
                 ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
-                ->with('error', 'No se pudo completar la creacion. Vuelve a llenar el formulario.');
+                ->with('status', 'Pago recibido. Estamos terminando la activacion.');
+        } catch (\Throwable $e) {
+            Log::error('Error capturando pago de onboarding.', [
+                'registration_public_id' => $registration->public_id,
+                'paypal_order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('clinica.registro.billing', ['publicId' => $registration->public_id])
+                ->with('error', 'No se pudo confirmar el pago. Intenta nuevamente.');
         }
+    }
+
+    public function paymentCancel(string $publicId): RedirectResponse
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+
+        return redirect()
+            ->route('clinica.registro.billing', ['publicId' => $registration->public_id])
+            ->with('error', 'Cancelaste el checkout de PayPal. Puedes intentar nuevamente.');
+    }
+
+    public function enterTenant(string $publicId): RedirectResponse
+    {
+        $registration = $this->findRegistrationOrFail($publicId);
+
+        if (! $registration->isProvisioned()) {
+            return redirect()
+                ->route('clinica.registro.billing', ['publicId' => $registration->public_id])
+                ->with('status', 'Tu clinica aun no esta activada. Completa el pago para continuar.');
+        }
+
+        return $this->redirectProvisionedRegistration($registration);
     }
 
     protected function sendVerificationEmail(ClinicRegistrationRequest $registration): void
@@ -371,19 +456,6 @@ class ClinicRegistrationController extends Controller
         );
     }
 
-    protected function failRegistration(
-        ClinicRegistrationRequest $registration,
-        string $code,
-        string $message
-    ): void {
-        $registration->forceFill([
-            'status' => ClinicRegistrationRequest::STATUS_FAILED,
-            'failed_at' => now(),
-            'failure_code' => $code,
-            'failure_message' => $message,
-        ])->save();
-    }
-
     protected function findRegistrationOrFail(string $publicId): ClinicRegistrationRequest
     {
         return ClinicRegistrationRequest::query()
@@ -391,18 +463,72 @@ class ClinicRegistrationController extends Controller
             ->firstOrFail();
     }
 
-    /**
-     * @return array<string, string>
-     */
-    protected function buildInputPayload(ClinicRegistrationRequest $registration): array
+    protected function redirectProvisionedRegistration(ClinicRegistrationRequest $registration): RedirectResponse
     {
+        $target = $this->registrationProvisioningService->issueTenantAccessUrl($registration->fresh());
+
+        if ($target) {
+            return redirect()->away($target);
+        }
+
+        return redirect()
+            ->route('clinica.registro.waiting', ['publicId' => $registration->public_id])
+            ->with('error', 'No se pudo generar un acceso nuevo al tenant. Intenta nuevamente.');
+    }
+
+    /**
+     * @return array{mode: string, invoice: BillingInvoice}|null
+     */
+    protected function resolveBillingContext(ClinicRegistrationRequest $registration): ?array
+    {
+        if ($registration->isProvisioned()) {
+            $invoice = $this->resolveOpenBasePlanInvoiceForRegistration($registration);
+
+            if (! $invoice) {
+                return null;
+            }
+
+            return [
+                'mode' => 'renewal',
+                'invoice' => $invoice,
+            ];
+        }
+
+        if (! in_array($registration->status, [
+            ClinicRegistrationRequest::STATUS_VERIFIED,
+            ClinicRegistrationRequest::STATUS_PENDING_PAYMENT,
+        ], true)) {
+            return null;
+        }
+
         return [
-            'nombre_centro' => $registration->nombre_centro,
-            'direccion' => $registration->direccion,
-            'telefono' => $registration->telefono,
-            'rtn' => $registration->rtn,
-            'owner_name' => $registration->owner_name,
-            'owner_email' => $registration->owner_email,
+            'mode' => 'onboarding',
+            'invoice' => $this->billingInvoiceService->createOnboardingInvoice($registration),
         ];
+    }
+
+    protected function resolveOpenBasePlanInvoiceForRegistration(ClinicRegistrationRequest $registration): ?BillingInvoice
+    {
+        if (! $registration->centro_id) {
+            return null;
+        }
+
+        $centro = Centros_Medico::on('mysql')->find($registration->centro_id);
+        if (! $centro) {
+            return null;
+        }
+
+        return $this->billingInvoiceService->openBasePlanInvoiceForCentro($centro);
+    }
+
+    protected function normalizeNullableString(null|string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

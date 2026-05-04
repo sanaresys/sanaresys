@@ -47,6 +47,10 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'ver descuento']);
         Permission::firstOrCreate(['name' => 'ver factura_detalles']);
         Permission::firstOrCreate(['name' => 'ver pagos_facturas']);
+        Permission::firstOrCreate(['name' => 'gestionar modulos billing']);
+        Permission::firstOrCreate(['name' => 'billing.manage']);
+        Permission::firstOrCreate(['name' => 'billing.invoice.pay']);
+        Permission::firstOrCreate(['name' => 'billing.cancellation.manage']);
 
         // CREAR
         Permission::firstOrCreate(['name' => 'crear personas']);
@@ -141,7 +145,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleAdmin = Role::firstOrCreate(['name' => 'root']);
         $roleAdmin->givePermissionTo([
             // VER
-            'ver personas', 'ver nacionalidad', 'ver usuario', 'ver pacientes', 'ver medicocentromedico', 'ver enfermedades', 'ver centromedico', 'ver especialidad', 'ver especialidadmedicos', 'ver medicos', 'ver enfermedades_pacientes', 'ver recetas', 'ver consultas', 'ver contratomedico', 'ver nomina', 'ver detallenomina', 'ver citas', 'ver examenes', 'ver cai_correlativos', 'ver cai_autorizaciones', 'ver cuentas_por_cobrars', 'ver servicio', 'ver Impuesto', 'ver factura', 'ver descuento', 'ver factura_detalles', 'ver pagos_facturas',
+            'ver personas', 'ver nacionalidad', 'ver usuario', 'ver pacientes', 'ver medicocentromedico', 'ver enfermedades', 'ver centromedico', 'ver especialidad', 'ver especialidadmedicos', 'ver medicos', 'ver enfermedades_pacientes', 'ver recetas', 'ver consultas', 'ver contratomedico', 'ver nomina', 'ver detallenomina', 'ver citas', 'ver examenes', 'ver cai_correlativos', 'ver cai_autorizaciones', 'ver cuentas_por_cobrars', 'ver servicio', 'ver Impuesto', 'ver factura', 'ver descuento', 'ver factura_detalles', 'ver pagos_facturas', 'gestionar modulos billing', 'billing.manage', 'billing.invoice.pay', 'billing.cancellation.manage',
                         // CREAR
             'crear personas', 'crear nacionalidad', 'crear usuario', 'crear pacientes', 'crear medicocentromedico', 'crear centromedico', 'crear enfermedades', 'crear especialidad', 'crear especialidadmedicos', 'crear medicos', 'crear enfermedades_pacientes', 'crear recetas', 'crear consultas', 'crear contratomedico', 'crear nomina', 'crear detallenomina', 'crear examenes', 'crear citas', 'crear cai_correlativos', 'crear cai_autorizaciones', 'crear cuentas_por_cobrars', 'crear servicio', 'crear Impuesto', 'crear factura', 'crear descuento', 'crear factura_detalles', 'crear pagos_facturas',
             // ACTUALIZAR

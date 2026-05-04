@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ContabilidadMedica\NominaResource\Pages;
 
 use App\Filament\Resources\ContabilidadMedica\NominaResource;
+use App\Services\Billing\TenantModuleAccessService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists\Infolist;
@@ -15,6 +16,22 @@ class ViewNomina extends ViewRecord
 {
     protected static string $resource = NominaResource::class;
 
+    public function mount(int | string $record): void
+    {
+        if (! app(TenantModuleAccessService::class)->isModuleActive('nomina')) {
+            \Filament\Notifications\Notification::make()
+                ->title('Modulo no activo')
+                ->body('Debes adquirir o renovar el modulo de nomina para usar esta funcionalidad.')
+                ->warning()
+                ->send();
+
+            $this->redirect(route('tenant.billing.modules.index'));
+            return;
+        }
+
+        parent::mount($record);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -22,18 +39,19 @@ class ViewNomina extends ViewRecord
                 ->label('Generar PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('success')
+                ->visible(fn () => app(TenantModuleAccessService::class)->isModuleActive('nomina'))
                 ->action(function () {
                     return $this->generarPDF();
                 }),
 
             Actions\EditAction::make()
-                ->visible(fn () => !$this->record->cerrada),
+                ->visible(fn () => app(TenantModuleAccessService::class)->isModuleActive('nomina') && !$this->record->cerrada),
 
             Actions\Action::make('cerrar_nomina')
                 ->label('Cerrar Nómina')
                 ->icon('heroicon-o-lock-closed')
                 ->color('warning')
-                ->visible(fn () => !$this->record->cerrada)
+                ->visible(fn () => app(TenantModuleAccessService::class)->isModuleActive('nomina') && !$this->record->cerrada)
                 ->requiresConfirmation()
                 ->modalHeading('Cerrar Nómina')
                 ->modalDescription('Una vez cerrada la nómina, no podrás editarla ni eliminarla. ¿Estás seguro de que deseas cerrarla?')

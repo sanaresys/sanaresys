@@ -122,12 +122,23 @@
                                         Sólo lectura
                                     </span>
                                 </label>
-                                <input type="text"
-                                       class="onb-input onb-mono"
-                                       value="{{ $centro->rtn ?? 'No disponible' }}"
-                                       readonly
-                                       tabindex="-1">
-                                <span class="onb-field-hint">Requerido por SAR para validar facturas</span>
+                                <input type="text" 
+                                       id="rtn" 
+                                       name="rtn" 
+                                       value="{{ old('rtn', $centro->rtn ?? '') }}"
+                                       maxlength="20"
+                                       class="w-full px-4 py-4 border-2 rounded-lg transition-all font-mono text-base" 
+                                       style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
+                                       placeholder="Ej. 08011990123456"
+                                       onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
+                                       onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
+                                       onchange="showSaveIndicator()"
+                                       onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
+                                       onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                @error('rtn')
+                                    <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
+                                @enderror
+                                <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Opcional por ahora. Necesitas completarlo antes de configurar CAI y facturación fiscal.</p>
                             </div>
                         </div>
                     </div>
