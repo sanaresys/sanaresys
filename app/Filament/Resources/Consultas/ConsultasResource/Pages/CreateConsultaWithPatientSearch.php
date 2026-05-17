@@ -7,6 +7,7 @@ use App\Models\Pacientes;
 use App\Models\Medico;
 use App\Models\Consulta;
 use App\Models\Receta;
+use App\Models\Examenes;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,6 +18,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Carbon\Carbon;
 
 class CreateConsultaWithPatientSearch extends Page implements HasForms
@@ -32,6 +34,18 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
     public bool $showConsultaForm = false;
     public ?Pacientes $selectedPatient = null;
 
+    protected function loadSelectedPatientWithContext(int|string $patientId): ?Pacientes
+    {
+        return Pacientes::with([
+            'persona.nacionalidad',
+            'enfermedades',
+            'consultas' => fn ($query) => $query->latest()->limit(8),
+            'consultas.medico.persona',
+            'consultas.recetas',
+            'consultas.examenes',
+        ])->find($patientId);
+    }
+
     public function mount(): void
     {
         $this->patientSearchForm->fill();
@@ -41,7 +55,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
         if (request()->has('paciente_id')) {
             $pacienteId = request()->get('paciente_id');
             $citaId = request()->get('cita_id'); // Capturar también el cita_id
-            $paciente = Pacientes::with('persona')->find($pacienteId);
+            $paciente = $this->loadSelectedPatientWithContext($pacienteId);
 
             if ($paciente && $paciente->persona) {
                 $this->selectedPatient = $paciente;
@@ -120,21 +134,6 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información del Paciente Seleccionado')
-                    ->schema([
-                        Forms\Components\Placeholder::make('patient_info')
-                            ->label('')
-                            ->content(function () {
-                                if ($this->selectedPatient && $this->selectedPatient->persona) {
-                                    return view('filament.components.patient-info', [
-                                        'patient' => $this->selectedPatient
-                                    ]);
-                                }
-                                return 'No hay paciente seleccionado';
-                            })
-                            ->columnSpanFull(),
-                    ]),
-
                 Forms\Components\Hidden::make('centro_id')
                     ->default(fn () => Auth::check() ? Auth::user()->centro_id : null),
 
@@ -250,6 +249,8 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                             ->addActionLabel('➕ Agregar Nueva Receta')
                             ->addAction(function ($action) {
                                 return $action
+                                    ->color('success')
+                                    ->icon('heroicon-m-plus-circle')
                                     ->after(function (callable $set) {
                                         // Actualizar previsualización cuando se agrega una nueva receta
                                         $set('recetas_preview_trigger', uniqid());
@@ -291,10 +292,10 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                             ->columnSpanFull()
                             ->defaultItems(0)
                             ->extraAttributes([
-                                'style' => 'border: 1px solid rgb(209, 213, 219); border-radius: 8px; padding: 16px; background-color: rgba(249, 250, 251, 0.5);'
+                                'class' => 'consultation-recetas-repeater'
                             ])
                             ->hint('💡 Las recetas se crearán automáticamente al guardar la consulta')
-                            ->hintColor('info'),
+                            ->hintColor('gray'),
 
                         // Campo oculto para triggear actualizaciones de la previsualización
                         Forms\Components\Hidden::make('recetas_preview_trigger'),
@@ -303,7 +304,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                         Forms\Components\Placeholder::make('recetas_preview')
                             ->label('📋 Previsualización de Recetas')
                             ->extraAttributes([
-                                'class' => 'border border-blue-200 rounded-lg bg-blue-50/30 dark:bg-blue-900/10 dark:border-blue-800',
+                                'class' => 'consultation-recetas-preview',
                 'x-data' => '{ updating: false }',
                 'x-init' => '$watch("$el.querySelector(\'[wire\\:loading]\')", () => { updating = true; setTimeout(() => updating = false, 300) })'
                             ])
@@ -318,7 +319,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                                             <div class="text-center">
                                                 <div class="text-5xl mb-3 animate-pulse">📝</div>
                                                 <p class="text-gray-500 dark:text-gray-400 font-medium">No hay recetas agregadas aún</p>
-                                                <p class="text-sm text-blue-500 dark:text-blue-400 mt-2">Use el botón "➕ Agregar Nueva Receta" arriba</p>
+                                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Use el botón "➕ Agregar Nueva Receta" arriba</p>
                                                 <p class="text-xs text-gray-400 mt-2">⏰ Actualizado: ' . $timestamp . '</p>
                                             </div>
                                         </div>
@@ -355,16 +356,16 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
 
                                 $html = '
                                 <div class="space-y-4">
-                                    <div class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-900/70 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <h4 class="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">📋 Recetas Médicas - Previsualización en Tiempo Real</h4>
-                                                <p class="text-xs text-green-600 dark:text-green-300">
+                                                <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-1">📋 Recetas Médicas - Previsualización en Tiempo Real</h4>
+                                                <p class="text-xs text-slate-600 dark:text-slate-300">
                                                     ✅ ' . $totalRecetas . ' receta' . ($totalRecetas != 1 ? 's' : '') . ' lista' . ($totalRecetas != 1 ? 's' : '') . ' para crear
                                                 </p>
                                             </div>
                                             <div class="text-right">
-                                                <div class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                                <div class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100">
                                                     <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                                                     Actualizado: ' . $timestamp . '
                                                 </div>
@@ -393,7 +394,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                                     $indicaciones = htmlspecialchars($receta['indicaciones']);
 
                                     $html .= '
-                                        <tr class="hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">
                                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">' . $contador . '</td>
                                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">' . $fecha . '</td>
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
@@ -415,26 +416,26 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                                         </table>
                                     </div>
 
-                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-900/70 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center space-x-3">
                                                 <div class="flex-shrink-0">
-                                                    <div class="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                                                        <span class="text-green-600 dark:text-green-300 text-sm font-bold">✓</span>
+                                                    <div class="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                                                        <span class="text-slate-700 dark:text-slate-200 text-sm font-bold">✓</span>
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <p class="text-sm font-medium text-green-800 dark:text-green-200">
+                                                    <p class="text-sm font-medium text-slate-800 dark:text-slate-100">
                                                         🎯 <strong>' . count($recetasValidas) . ' receta' . (count($recetasValidas) != 1 ? 's' : '') . '</strong> lista' . (count($recetasValidas) != 1 ? 's' : '') . ' para crear
                                                     </p>
-                                                    <p class="text-xs text-green-600 dark:text-green-300 mt-1">
+                                                    <p class="text-xs text-slate-500 dark:text-slate-300 mt-1">
                                                         Se crearán automáticamente al guardar la consulta
                                                     </p>
                                                 </div>
                                             </div>
                                             <div class="flex items-center space-x-2">
-                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                                <span class="text-xs text-green-600 dark:text-green-400 font-medium">Actualización en tiempo real</span>
+                                                <div class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></div>
+                                                <span class="text-xs text-slate-500 dark:text-slate-300 font-medium">Actualización en tiempo real</span>
                                             </div>
                                         </div>
                                     </div>
@@ -451,7 +452,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                     ->collapsible()
                     ->collapsed(false)
                     ->extraAttributes([
-                        'style' => 'border: 2px solid rgb(34, 197, 94); border-radius: 12px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(16, 185, 129, 0.05));'
+                        'class' => 'consultation-recetas-section'
                     ]),
 
                 // 🔬 EXÁMENES MÉDICOS - NUEVA SECCIÓN AGREGADA
@@ -475,6 +476,11 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                             ])
                             ->columns(2)
                             ->addActionLabel('➕ Agregar Nuevo Examen')
+                            ->addAction(function ($action) {
+                                return $action
+                                    ->color('success')
+                                    ->icon('heroicon-m-plus-circle');
+                            })
                             ->deleteAction(
                                 fn ($action) => $action
                                     ->requiresConfirmation()
@@ -507,15 +513,15 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
                             ->columnSpanFull()
                             ->defaultItems(0)
                             ->extraAttributes([
-                                'style' => 'border: 1px solid rgb(59, 130, 246); border-radius: 8px; padding: 16px; background-color: rgba(239, 246, 255, 0.5);'
+                                'class' => 'consultation-examenes-repeater'
                             ])
                             ->hint('💡 Los exámenes se crearán automáticamente al guardar la consulta')
-                            ->hintColor('info'),
+                            ->hintColor('gray'),
                     ])
                     ->collapsible()
                     ->collapsed(false)
                     ->extraAttributes([
-                        'style' => 'border: 2px solid rgb(59, 130, 246); border-radius: 12px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.05));'
+                        'class' => 'consultation-examenes-section'
                     ]),
             ])
             ->statePath('consultaData');
@@ -534,7 +540,7 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
             return;
         }
 
-        $this->selectedPatient = Pacientes::with('persona')->find($data['paciente_id']);
+        $this->selectedPatient = $this->loadSelectedPatientWithContext($data['paciente_id']);
 
         if (!$this->selectedPatient) {
             Notification::make()
@@ -779,6 +785,98 @@ class CreateConsultaWithPatientSearch extends Page implements HasForms
 
         // Redirigir a la página de creación de pacientes
         $this->redirect($createPatientUrl);
+    }
+
+    public function getRecentConsultas(): Collection
+    {
+        if (! $this->selectedPatient) {
+            return collect();
+        }
+
+        return $this->selectedPatient->consultas->take(5);
+    }
+
+    public function getRecentRecetas(): Collection
+    {
+        if (! $this->selectedPatient) {
+            return collect();
+        }
+
+        return Receta::query()
+            ->where('paciente_id', $this->selectedPatient->id)
+            ->latest()
+            ->limit(5)
+            ->get();
+    }
+
+    public function getRecentExamenes(): Collection
+    {
+        if (! $this->selectedPatient) {
+            return collect();
+        }
+
+        return Examenes::query()
+            ->where('paciente_id', $this->selectedPatient->id)
+            ->latest()
+            ->limit(5)
+            ->get();
+    }
+
+    public function getMedicamentosActivos(): Collection
+    {
+        if (! $this->selectedPatient) {
+            return collect();
+        }
+
+        // 1) Priorizar tratamientos guardados al crear/editar paciente
+        //    (tabla enfermedades_pacientes, campo pivot.tratamiento).
+        $tratamientosDesdeAntecedentes = $this->selectedPatient->enfermedades
+            ->map(function ($enfermedad) {
+                return $enfermedad->pivot->tratamiento ?? null;
+            })
+            ->filter(fn ($valor) => filled(trim((string) $valor)))
+            ->flatMap(function ($texto) {
+                return preg_split('/[,;\n]+/', (string) $texto) ?: [];
+            })
+            ->map(fn ($valor) => trim((string) $valor))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($tratamientosDesdeAntecedentes->isNotEmpty()) {
+            return $tratamientosDesdeAntecedentes->take(8);
+        }
+
+        $medicamentosDesdeRecetas = Receta::query()
+            ->where('paciente_id', $this->selectedPatient->id)
+            ->latest()
+            ->limit(15)
+            ->pluck('medicamentos')
+            ->filter(fn ($valor) => filled(trim((string) $valor)))
+            ->flatMap(function ($texto) {
+                return preg_split('/[,;\n]+/', (string) $texto) ?: [];
+            })
+            ->map(fn ($medicamento) => trim((string) $medicamento))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($medicamentosDesdeRecetas->isNotEmpty()) {
+            return $medicamentosDesdeRecetas->take(8);
+        }
+
+        return Consulta::query()
+            ->where('paciente_id', $this->selectedPatient->id)
+            ->whereNotNull('tratamiento')
+            ->where('tratamiento', '!=', '')
+            ->latest()
+            ->limit(8)
+            ->pluck('tratamiento')
+            ->map(fn ($tratamiento) => trim((string) $tratamiento))
+            ->filter()
+            ->unique()
+            ->values()
+            ->take(5);
     }
 
     protected function getForms(): array

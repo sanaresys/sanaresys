@@ -27,7 +27,7 @@ class ExamenesResource extends Resource
 
     protected static ?string $navigationLabel = 'Reportes de Exámenes';
     protected static ?string $modelLabel = 'Examen';
-    protected static ?string $navigationGroup = 'Gestión Médica';
+    protected static ?string $navigationGroup = 'Panel Diario';
     protected static ?string $pluralModelLabel = 'Exámenes';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?int $navigationSort = 8;

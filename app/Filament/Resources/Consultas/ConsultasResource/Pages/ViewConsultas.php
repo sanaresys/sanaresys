@@ -165,78 +165,64 @@ class ViewConsultas extends ViewRecord
                         $observaciones = $record->observaciones ?: 'Sin observaciones registradas';
 
                         return '
-                        <div style="width: 100%;">
-                            <!-- PRIMERA FILA: Información General -->
-                            <!-- TÍTULO: Información del Paciente -->
-                            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; margin-top: 0.5rem; color: #374151;">Información del Paciente</h3>
-
-                            <div style="display: flex !important; flex-direction: row !important; gap: 1rem; width: 100%; margin-bottom: 1rem;">
-                                <!-- Tarjeta Fecha -->
-                                <div style="flex: 1; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        📅 Fecha de Consulta
+                        <div style="width: 100%; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif;">
+                            
+                            <!-- HEADER INFORMACIÓN GENERAL -->
+                            <div style="background: light-dark(#f8f9fa, #111827); border: 1px solid light-dark(#e5e7eb, #374151); border-radius: 0.75rem; padding: 2.5rem; margin-bottom: 2.5rem;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 2.5rem;">
+                                    <!-- Paciente -->
+                                    <div>
+                                        <div style="font-size: 0.7rem; font-weight: 700; color: light-dark(#6b7280, #9ca3af); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">Paciente</div>
+                                        <div style="font-size: 1rem; color: light-dark(#1f2937, #f1f5f9); line-height: 1.6; font-weight: 600;">' . nl2br(htmlspecialchars(strip_tags($pacienteInfo))) . '</div>
                                     </div>
-                                    <div style="font-size: 1.1rem; font-weight: 600; color: #059669;">
-                                        ' . $fecha . '
+                                    
+                                    <!-- Médico -->
+                                    <div>
+                                        <div style="font-size: 0.7rem; font-weight: 700; color: light-dark(#6b7280, #9ca3af); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">Médico Tratante</div>
+                                        <div style="font-size: 1rem; color: light-dark(#1f2937, #f1f5f9); line-height: 1.6; font-weight: 600;">' . nl2br(htmlspecialchars(strip_tags($medicoInfo))) . '</div>
                                     </div>
-                                </div>
-
-                                <!-- Tarjeta Paciente -->
-                                <div style="flex: 1; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        👤 Paciente
+                                    
+                                    <!-- Fecha -->
+                                    <div>
+                                        <div style="font-size: 0.7rem; font-weight: 700; color: light-dark(#6b7280, #9ca3af); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">Fecha Consulta</div>
+                                        <div style="font-size: 1rem; color: light-dark(#1f2937, #f1f5f9); font-weight: 600;">' . $fecha . '</div>
                                     </div>
-                                    <div style="color: #059669; line-height: 1.4;">
-                                        ' . $pacienteInfo . '
-                                    </div>
-                                </div>
-
-                                <!-- Tarjeta Médico -->
-                                <div style="flex: 1; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        👨‍⚕️ Médico
-                                    </div>
-                                    <div style="color: #059669; line-height: 1.4;">
-                                        ' . $medicoInfo . '
+                                    
+                                    <!-- Estado -->
+                                    <div>
+                                        <div style="font-size: 0.7rem; font-weight: 700; color: light-dark(#6b7280, #9ca3af); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">Estado</div>
+                                        <div style="display: inline-block; background: light-dark(#dbeafe, #1e3a8a); color: light-dark(#1e40af, #93c5fd); padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px;">Completada</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- SEGUNDA FILA: Detalles de Consulta -->
-                                                        </div>
+                            <!-- HALLAZGOS CLÍNICOS -->
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 800; color: light-dark(#1f2937, #f1f5f9); margin: 2rem 0 1.5rem 0; text-transform: uppercase; letter-spacing: 0.5px;">Hallazgos Clínicos</h3>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.75rem;">
+                                    <!-- Diagnóstico -->
+                                    <div style="background: light-dark(#ffffff, #1f2937); border: 1px solid light-dark(#e5e7eb, #374151); border-radius: 0.75rem; padding: 2rem;">
+                                        <div style="font-size: 0.75rem; font-weight: 800; color: light-dark(#6b7280, #d1d5db); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 3px solid #3b82f6;">Diagnóstico</div>
+                                        <div style="color: light-dark(#374151, #e5e7eb); line-height: 1.8; white-space: pre-wrap; overflow-wrap: break-word; font-size: 1rem;">
+                                            ' . nl2br(htmlspecialchars($diagnostico)) . '
+                                        </div>
+                                    </div>
 
-                            <!-- TÍTULO: Detalles de Consulta -->
-                            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; margin-top: 0.5rem; color: #374151;">Detalles de Consulta</h3>
+                                    <!-- Tratamiento -->
+                                    <div style="background: light-dark(#ffffff, #1f2937); border: 1px solid light-dark(#e5e7eb, #374151); border-radius: 0.75rem; padding: 2rem;">
+                                        <div style="font-size: 0.75rem; font-weight: 800; color: light-dark(#6b7280, #d1d5db); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 3px solid #10b981;">Tratamiento</div>
+                                        <div style="color: light-dark(#374151, #e5e7eb); line-height: 1.8; white-space: pre-wrap; overflow-wrap: break-word; font-size: 1rem;">
+                                            ' . nl2br(htmlspecialchars($tratamiento)) . '
+                                        </div>
+                                    </div>
 
-                            <!-- SEGUNDA FILA: Detalles de Consulta -->
-                            <div style="display: flex !important; flex-direction: row !important; gap: 1rem; width: 100%; margin-bottom: 2rem;">
-                                <!-- Tarjeta Diagnóstico -->
-                                <div style="flex: 1; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 0.5rem; padding: 1rem; min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        🔍 Diagnóstico
-                                    </div>
-                                    <div style="color: #1e40af; line-height: 1.4; word-wrap: break-word; max-height: 80px; overflow-y: auto;">
-                                        ' . nl2br(htmlspecialchars($diagnostico)) . '
-                                    </div>
-                                </div>
-
-                                <!-- Tarjeta Tratamiento -->
-                                <div style="flex: 1; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 0.5rem; padding: 1rem; min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        💊 Tratamiento
-                                    </div>
-                                    <div style="color: #166534; line-height: 1.4; word-wrap: break-word; max-height: 80px; overflow-y: auto;">
-                                        ' . nl2br(htmlspecialchars($tratamiento)) . '
-                                    </div>
-                                </div>
-
-                                <!-- Tarjeta Observaciones -->
-                                <div style="flex: 1; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 0.5rem; padding: 1rem; min-height: 120px;">
-                                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                        📝 Observaciones
-                                    </div>
-                                    <div style="color: #92400e; line-height: 1.4; word-wrap: break-word; max-height: 80px; overflow-y: auto;">
-                                        ' . nl2br(htmlspecialchars($observaciones)) . '
+                                    <!-- Observaciones -->
+                                    <div style="background: light-dark(#ffffff, #1f2937); border: 1px solid light-dark(#e5e7eb, #374151); border-radius: 0.75rem; padding: 2rem;">
+                                        <div style="font-size: 0.75rem; font-weight: 800; color: light-dark(#6b7280, #d1d5db); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 3px solid #f59e0b;">Observaciones</div>
+                                        <div style="color: light-dark(#374151, #e5e7eb); line-height: 1.8; white-space: pre-wrap; overflow-wrap: break-word; font-size: 1rem;">
+                                            ' . nl2br(htmlspecialchars($observaciones)) . '
+                                        </div>
                                     </div>
                                 </div>
                             </div>

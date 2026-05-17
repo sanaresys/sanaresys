@@ -28,7 +28,7 @@ class FacturasResource extends Resource
     protected static ?string $model = Factura::class;
     protected static ?string $slug = 'facturas';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Facturacion';
 
     protected static function esFacturaSoloLectura(?Factura $record): bool
     {

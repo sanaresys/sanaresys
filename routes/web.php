@@ -7,10 +7,15 @@ use App\Http\Controllers\FacturaPdfController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PacienteExpedientePdfController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
 
 // Rutas de Onboarding (requieren autenticación)
 Route::middleware(['auth', 'tenant.resolve'])->prefix('onboarding')->name('onboarding.')->group(function () {
@@ -25,6 +30,10 @@ Route::middleware(['auth', 'tenant.resolve'])->prefix('onboarding')->name('onboa
     
     Route::get('/step-3', [OnboardingController::class, 'stepThree'])->name('step-3');
     Route::post('/step-3', [OnboardingController::class, 'saveStepThree'])->name('save-step-3');
+
+    Route::get('/step-4', [OnboardingController::class, 'stepFour'])->name('step-4');
+    Route::post('/step-4', [OnboardingController::class, 'saveStepFour'])->name('save-step-4');
+    Route::post('/skip-medico', [OnboardingController::class, 'skipMedico'])->name('skip-medico');
     
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
     Route::post('/mark-completed', [OnboardingController::class, 'markCompleted'])->name('mark-completed');
@@ -55,6 +64,12 @@ Route::get('/consulta/{consulta}/recetas/imprimir', [RecetaController::class, 'i
 // Rutas para imprimir exámenes
 Route::get('/examen/{examen}/imprimir', [ExamenController::class, 'imprimir'])->name('examenes.imprimir');
 Route::get('/consulta/{consulta}/examenes/imprimir', [ExamenController::class, 'imprimirPorConsulta'])->name('examenes.imprimir.consulta');
+
+// Rutas para expediente de paciente
+Route::middleware(['auth', 'tenant.resolve'])->group(function () {
+    Route::get('/paciente/{paciente}/expediente/pdf', [PacienteExpedientePdfController::class, 'generarPdf'])
+        ->name('paciente.expediente.pdf');
+});
 
 // Rutas para nóminas
 Route::middleware(['auth', 'tenant.resolve', 'tenant.initialized', 'tenant.module.active:nomina'])

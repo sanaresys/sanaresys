@@ -39,7 +39,7 @@ class ConsultasResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Consultas';
 
-    protected static ?string $navigationGroup = 'Gestión Médica';
+    protected static ?string $navigationGroup = 'Panel Diario';
 
     protected static ?int $navigationSort = 3;
 

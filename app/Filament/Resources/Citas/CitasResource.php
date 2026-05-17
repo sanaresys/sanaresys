@@ -34,7 +34,7 @@ class CitasResource extends Resource
     // Etiquetas en español
     protected static ?string $navigationLabel = 'Citas';
     protected static ?string $modelLabel      = 'Cita';
-    protected static ?string $navigationGroup = 'Gestión Médica';
+    protected static ?string $navigationGroup = 'Panel Diario';
     protected static ?string $pluralModelLabel = 'Citas';
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';

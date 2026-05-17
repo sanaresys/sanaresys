@@ -23,7 +23,7 @@ use Filament\Support\Enums\FontWeight;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Unique; // Importación añadida
+use Illuminate\Validation\Rules\Unique; // ImportaciÃ³n aÃ±adida
 use Carbon\Carbon;
 
 class PacientesResource extends Resource
@@ -38,7 +38,7 @@ class PacientesResource extends Resource
 
     protected static ?string $model = Pacientes::class;
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'Gestión de Personas';
+    protected static ?string $navigationGroup = 'Panel Diario';
     protected static ?string $navigationLabel = 'Pacientes';
     protected static ?string $modelLabel = 'Paciente';
     protected static ?string $pluralModelLabel = 'Pacientes';
@@ -50,9 +50,9 @@ class PacientesResource extends Resource
                 Wizard::make([
                     Wizard\Step::make('Datos Personales')
                         ->schema([
-                            // DNI COMO PRIMER CAMPO CON VALIDACIÓN MEJORADA
+                            // DNI COMO PRIMER CAMPO CON VALIDACIÃ“N MEJORADA
                             Forms\Components\TextInput::make('dni')
-    ->label('DNI/Cédula')
+    ->label('DNI/CÃ©dula')
     ->required()
     ->maxLength(255)
     ->reactive()
@@ -80,7 +80,7 @@ class PacientesResource extends Resource
                                             if ($existingPaciente) {
                                                 Notification::make()
                                                     ->title('Paciente ya existe')
-                                                    ->body("El DNI {$state} ya está registrado como paciente. Será redirigido para editarlo.")
+                                                    ->body("El DNI {$state} ya estÃ¡ registrado como paciente. SerÃ¡ redirigido para editarlo.")
                                                     ->warning()
                                                     ->persistent()
                                                     ->actions([
@@ -124,14 +124,14 @@ class PacientesResource extends Resource
 
                                             Notification::make()
                                                 ->title('Persona encontrada')
-                                                ->body("Se encontró: {$existingPersona->primer_nombre} {$existingPersona->primer_apellido}. Complete los datos médicos para registrarlo como paciente.")
+                                                ->body("Se encontrÃ³: {$existingPersona->primer_nombre} {$existingPersona->primer_apellido}. Complete los datos mÃ©dicos para registrarlo como paciente.")
                                                 ->success()
                                                 ->send();
                                         } else {
                                             $set('persona_id', null);
                                             $set('fotografia', null);
 
-                                            // Autocompletar desde API externa por número de identidad
+                                            // Autocompletar desde API externa por nÃºmero de identidad
                                             // (solo cuando no existe una persona local con ese DNI).
                                             self::autocompletarDesdeApiIdentidad($state, $set);
                                         }
@@ -140,20 +140,20 @@ class PacientesResource extends Resource
 
                             Forms\Components\Hidden::make('persona_id'),
 
-                            // ✅ VALIDACIÓN DE SOLO LETRAS PARA NOMBRES
+                            // âœ… VALIDACIÃ“N DE SOLO LETRAS PARA NOMBRES
                             Forms\Components\TextInput::make('primer_nombre')
                                 ->label('Primer Nombre')
                                 ->required()
                                 ->maxLength(255)
                                 ->reactive()
-                                ->rules(['regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/'])
+                                ->rules(['regex:/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]+$/'])
                                 ->validationMessages([
                                     'regex' => 'El primer nombre solo puede contener letras.',
                                 ])
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', $state)) {
+                                    if ($state && !preg_match('/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]+$/', $state)) {
                                         Notification::make()
-                                            ->title('Error de validación')
+                                            ->title('Error de validaciÃ³n')
                                             ->body('El primer nombre solo puede contener letras.')
                                             ->danger()
                                             ->send();
@@ -164,14 +164,14 @@ class PacientesResource extends Resource
                             Forms\Components\TextInput::make('segundo_nombre')
                                 ->label('Segundo Nombre')
                                 ->maxLength(255)
-                                ->rules(['regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/'])
+                                ->rules(['regex:/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]*$/'])
                                 ->validationMessages([
                                     'regex' => 'El segundo nombre solo puede contener letras.',
                                 ])
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/', $state)) {
+                                    if ($state && !preg_match('/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]*$/', $state)) {
                                         Notification::make()
-                                            ->title('Error de validación')
+                                            ->title('Error de validaciÃ³n')
                                             ->body('El segundo nombre solo puede contener letras.')
                                             ->danger()
                                             ->send();
@@ -183,14 +183,14 @@ class PacientesResource extends Resource
                                 ->required()
                                 ->maxLength(255)
                                 ->reactive()
-                                ->rules(['regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/'])
+                                ->rules(['regex:/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]+$/'])
                                 ->validationMessages([
                                     'regex' => 'El primer apellido solo puede contener letras.',
                                 ])
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', $state)) {
+                                    if ($state && !preg_match('/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]+$/', $state)) {
                                         Notification::make()
-                                            ->title('Error de validación')
+                                            ->title('Error de validaciÃ³n')
                                             ->body('El primer apellido solo puede contener letras.')
                                             ->danger()
                                             ->send();
@@ -201,14 +201,14 @@ class PacientesResource extends Resource
                             Forms\Components\TextInput::make('segundo_apellido')
                                 ->label('Segundo Apellido')
                                 ->maxLength(255)
-                                ->rules(['regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/'])
+                                ->rules(['regex:/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]*$/'])
                                 ->validationMessages([
                                     'regex' => 'El segundo apellido solo puede contener letras.',
                                 ])
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/', $state)) {
+                                    if ($state && !preg_match('/^[a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘\s]*$/', $state)) {
                                         Notification::make()
-                                            ->title('Error de validación')
+                                            ->title('Error de validaciÃ³n')
                                             ->body('El segundo apellido solo puede contener letras.')
                                             ->danger()
                                             ->send();
@@ -216,12 +216,12 @@ class PacientesResource extends Resource
                                 }),
 
                             Forms\Components\TextInput::make('telefono')
-                                ->label('Teléfono')
+                                ->label('TelÃ©fono')
                                 ->required()
                                 ->maxLength(255),
 
                             Forms\Components\Textarea::make('direccion')
-                                ->label('Dirección')
+                                ->label('DirecciÃ³n')
                                 ->required()
                                 ->rows(3),
 
@@ -244,9 +244,9 @@ class PacientesResource extends Resource
                                 ->required()
                                 ->searchable(),
 
-                            // ✅ MEJORAR SUBIDA DE ARCHIVOS
+                            // âœ… MEJORAR SUBIDA DE ARCHIVOS
                             Forms\Components\FileUpload::make('fotografia')
-                                ->label('Fotografía')
+                                ->label('FotografÃ­a')
                                 ->image()
                                 ->directory('personas/fotos')
                                 ->disk('public')
@@ -268,11 +268,11 @@ class PacientesResource extends Resource
                         ->columns(2)
                         ->afterValidation(function (callable $get) {
                             $requiredFields = [
-                                'dni' => 'DNI/Cédula',
+                                'dni' => 'DNI/CÃ©dula',
                                 'primer_nombre' => 'Primer Nombre',
                                 'primer_apellido' => 'Primer Apellido',
-                                'telefono' => 'Teléfono',
-                                'direccion' => 'Dirección',
+                                'telefono' => 'TelÃ©fono',
+                                'direccion' => 'DirecciÃ³n',
                                 'sexo' => 'Sexo',
                                 'fecha_nacimiento' => 'Fecha de Nacimiento',
                                 'nacionalidad_id' => 'Nacionalidad',
@@ -299,7 +299,7 @@ class PacientesResource extends Resource
                     Wizard\Step::make('Datos del Paciente')
                         ->schema([
                             Forms\Components\Select::make('grupo_sanguineo')
-                                ->label('Grupo Sanguíneo')
+                                ->label('Grupo SanguÃ­neo')
                                 ->options([
                                     'A+' => 'A+',
                                     'A-' => 'A-',
@@ -321,7 +321,7 @@ class PacientesResource extends Resource
                         ->columns(2)
                         ->afterValidation(function (callable $get) {
                             $requiredFields = [
-                                'grupo_sanguineo' => 'Grupo Sanguíneo',
+                                'grupo_sanguineo' => 'Grupo SanguÃ­neo',
                                 'contacto_emergencia' => 'Contacto de Emergencia',
                             ];
 
@@ -347,14 +347,14 @@ class PacientesResource extends Resource
                         ->schema([
                             Forms\Components\Toggle::make('sin_enfermedades')
                                 ->label('No tengo enfermedades')
-                                ->helperText('Marque esta opción si el paciente no tiene enfermedades registradas')
+                                ->helperText('Marque esta opciÃ³n si el paciente no tiene enfermedades registradas')
                                 ->reactive()
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if ($state) {
                                         // Si marca "No tengo enfermedades", limpiar los datos de enfermedades
                                         $set('enfermedades_data', []);
                                     } else {
-                                        // Si desmarca, agregar una enfermedad vacía
+                                        // Si desmarca, agregar una enfermedad vacÃ­a
                                         $set('enfermedades_data', [['enfermedad_id' => null, 'ano_diagnostico' => date('Y'), 'tratamiento' => null]]);
                                     }
                                 })
@@ -381,7 +381,7 @@ class PacientesResource extends Resource
                                             if (isset($repetidas[$state]) && $repetidas[$state] > 1) {
                                                 Notification::make()
                                                     ->title('Enfermedad duplicada')
-                                                    ->body('No puede seleccionar la misma enfermedad más de una vez.')
+                                                    ->body('No puede seleccionar la misma enfermedad mÃ¡s de una vez.')
                                                     ->danger()
                                                     ->send();
                                                 $set('enfermedad_id', null);
@@ -389,7 +389,7 @@ class PacientesResource extends Resource
                                         }),
 
                                     Forms\Components\TextInput::make('ano_diagnostico')
-                                        ->label('Año de Diagnóstico')
+                                        ->label('AÃ±o de DiagnÃ³stico')
                                         ->numeric()
                                         ->minValue(1900)
                                         ->maxValue(date('Y'))
@@ -416,7 +416,7 @@ class PacientesResource extends Resource
                                 ->deleteAction(
                                     fn (Forms\Components\Actions\Action $action) => $action
                                         ->requiresConfirmation()
-                                        ->modalDescription('¿Estás seguro de que deseas eliminar esta enfermedad?')
+                                        ->modalDescription('Â¿EstÃ¡s seguro de que deseas eliminar esta enfermedad?')
                                 )
                                 ->minItems(0)
                                 ->hidden(fn (callable $get) => $get('sin_enfermedades'))
@@ -426,11 +426,11 @@ class PacientesResource extends Resource
                             $sinEnfermedades = $get('sin_enfermedades');
                             $enfermedadesData = $get('enfermedades_data');
 
-                            // Si no marcó "sin enfermedades" debe tener al menos una enfermedad
+                            // Si no marcÃ³ "sin enfermedades" debe tener al menos una enfermedad
                             if (!$sinEnfermedades) {
                                 if (empty($enfermedadesData)) {
                                     Notification::make()
-                                        ->title('Error de validación')
+                                        ->title('Error de validaciÃ³n')
                                         ->body('Debe agregar al menos una enfermedad o marcar "No tengo enfermedades"')
                                         ->danger()
                                         ->send();
@@ -446,7 +446,7 @@ class PacientesResource extends Resource
                                 if (count($enfermedadesSeleccionadas) !== count(array_unique($enfermedadesSeleccionadas))) {
                                     Notification::make()
                                         ->title('Enfermedades duplicadas')
-                                        ->body('No puede seleccionar la misma enfermedad más de una vez.')
+                                        ->body('No puede seleccionar la misma enfermedad mÃ¡s de una vez.')
                                         ->danger()
                                         ->send();
 
@@ -462,7 +462,7 @@ class PacientesResource extends Resource
 
     protected static function checkPersonExists($state, callable $set)
     {
-        // Lógica de verificación si es necesario
+        // LÃ³gica de verificaciÃ³n si es necesario
     }
 
     protected static function autocompletarDesdeApiIdentidad(?string $dniInput, callable $set): void
@@ -519,7 +519,7 @@ class PacientesResource extends Resource
                 }
             }
 
-            // Si existe en API, se asume nacionalidad hondureña.
+            // Si existe en API, se asume nacionalidad hondureÃ±a.
             $nacionalidadHondurenaId = Nacionalidad::query()
                 ->where('nacionalidad', 'like', 'Hondur%')
                 ->value('id');
@@ -528,7 +528,7 @@ class PacientesResource extends Resource
                 $set('nacionalidad_id', $nacionalidadHondurenaId);
             }
 
-            // Dirección: lugar_poblado, aldea, municipio, departamento.
+            // DirecciÃ³n: lugar_poblado, aldea, municipio, departamento.
             $direccion = collect([
                 $payload['lugar_poblado'] ?? null,
                 $payload['aldea'] ?? null,
@@ -559,7 +559,7 @@ class PacientesResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['persona', 'enfermedades'])->orderBy('created_at', 'desc')) // EAGER LOADING AÑADIDO + ORDENAMIENTO
+            ->modifyQueryUsing(fn ($query) => $query->with(['persona', 'enfermedades'])->orderBy('created_at', 'desc')) // EAGER LOADING AÃ‘ADIDO + ORDENAMIENTO
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\ImageColumn::make('persona.fotografia')
@@ -589,7 +589,7 @@ class PacientesResource extends Resource
                     ->copyable(),
 
                 Tables\Columns\TextColumn::make('grupo_sanguineo')
-                    ->label('Grupo Sanguíneo')
+                    ->label('Grupo SanguÃ­neo')
                     ->sortable()
                     ->badge()
                     ->color('danger'),
@@ -599,7 +599,7 @@ class PacientesResource extends Resource
                     ->limit(30)
                     ->tooltip(fn ($record) => $record->contacto_emergencia),
 
-                // ✅ MEJORADA: Columna de enfermedades más visual
+                // âœ… MEJORADA: Columna de enfermedades mÃ¡s visual
                 Tables\Columns\TextColumn::make('enfermedades_count')
                     ->label('Enfermedades')
                     ->getStateUsing(function ($record) {
@@ -633,7 +633,7 @@ class PacientesResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('grupo_sanguineo')
-                    ->label('Grupo Sanguíneo')
+                    ->label('Grupo SanguÃ­neo')
                     ->options([
                         'A+' => 'A+',
                         'A-' => 'A-',
@@ -661,7 +661,7 @@ class PacientesResource extends Resource
                     }),
             ])
             ->actions([
-                // ✅ NUEVO: Acción principal para crear consulta
+                // âœ… NUEVO: AcciÃ³n principal para crear consulta
                 Tables\Actions\Action::make('crear_consulta')
                     ->label('Crear Consulta')
                     ->icon('heroicon-o-clipboard-document-list')
@@ -670,10 +670,10 @@ class PacientesResource extends Resource
                     ->button()
                     ->url(fn ($record) => \App\Filament\Resources\Consultas\ConsultasResource::getUrl('create', ['paciente_id' => $record->id])),
 
-                // ✅ NUEVO: Dropdown con todas las acciones agrupadas
+                // âœ… NUEVO: Dropdown con todas las acciones agrupadas
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
-                    ->label('Ver Información')
+                    ->label('Ver InformaciÃ³n')
                     ->icon('heroicon-o-eye')
                         ->icon('heroicon-m-eye')
                         ->label('Ver'),
@@ -724,3 +724,4 @@ class PacientesResource extends Resource
         return $query;
     }
 }
+

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CentrosMedicoResource extends Resource
 {
-    protected static ?string $navigationGroup = 'Gestión de Centros Médicos';
+    protected static ?string $navigationGroup = 'Configuracion';
     protected static ?string $model = Centros_Medico::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
     protected static ?string $modelLabel = 'Centro Médico';

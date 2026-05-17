@@ -1,258 +1,222 @@
 @extends('onboarding.layout')
 
-@php
-    $currentStep = 2;
-@endphp
+@php $currentStep = 2; @endphp
 
 @section('content')
-<div class="card-premium overflow-hidden min-h-[88vh]">
-    <!-- Header limpio -->
-    <div class="px-8 pt-4 pb-5 md:px-12 md:pt-5 md:pb-6 border-b" style="border-color: #e8e5df; background: #ffffff;">
-        <div class="flex items-start justify-between gap-6 mb-4">
-            <div>
-                <h1 class="display-title text-3xl md:text-4xl font-bold" style="color: var(--onb-ink);">Configuración Fiscal</h1>
-                <p class="mt-1 text-sm leading-relaxed" style="color: var(--onb-ink); opacity: 0.7;">Configura tu CAI para emitir facturas fiscales válidas aprobadas por la SAR.</p>
+<div class="onb-split">
+
+    {{-- ══════════════════════════════════════════════
+         PANEL IZQUIERDO
+    ══════════════════════════════════════════════ --}}
+    <aside class="onb-panel-left">
+        <div>
+            <p class="onb-brand-label">Sanaresys</p>
+
+            <div class="onb-step-counter onb-fade-up">
+                <span class="onb-step-num">02</span>
+                <span class="onb-step-total">/ 04</span>
             </div>
-            <div class="text-right min-w-[80px]">
-                <p class="text-2xl font-bold" style="color: var(--onb-accent);">50%</p>
-                <p class="text-xs mt-1" style="color: var(--onb-ink); opacity: 0.6;">Avance</p>
+
+            <h1 class="onb-panel-headline onb-fade-up onb-delay-1">
+                Configura tu autorización fiscal.
+            </h1>
+
+            <p class="onb-panel-subtext onb-fade-up onb-delay-1">
+                El CAI es requerido por la SAR de Honduras para emitir facturas válidas y cumplir con la normativa tributaria.
+            </p>
+
+            <div class="onb-panel-divider"></div>
+
+            {{-- Card informativa ámbar --}}
+            <div class="onb-amber-card onb-fade-up onb-delay-2">
+                <p class="onb-amber-label">¿Qué es el CAI?</p>
+                <p>Es el Código de Autorización de Impresión que el SAR asigna a tu clínica para emitir facturas fiscales con validez legal.</p>
             </div>
+
+            <p class="onb-optional-note onb-fade-up onb-delay-3">
+                Este paso es <strong style="color:rgba(255,255,255,0.7);">OPCIONAL</strong> — puedes configurarlo después desde el panel de administración.
+            </p>
         </div>
 
-        <!-- Barra de progreso -->
-        <div class="flex items-center gap-2">
-            <div class="w-16 h-1.5 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">1. DATOS BÁSICOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: var(--onb-accent);"></div>
-            <span class="text-xs font-bold" style="color: var(--onb-accent);">2. FACTURACIÓN</span>
-            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">3. SERVICIOS</span>
-            <div class="flex-1 h-1 rounded-full" style="background: #e8e5df;"></div>
-            <span class="text-xs font-bold" style="color: #b0a99a;">4. COMPLETO</span>
+        <div>
+            <div class="onb-progress-dots onb-fade-up onb-delay-3">
+                <span class="onb-dot done"></span>
+                <span class="onb-dot active"></span>
+                <span class="onb-dot"></span>
+                <span class="onb-dot"></span>
+            </div>
+            <p class="onb-panel-footer" style="margin-top:1rem;">© {{ date('Y') }} Sanaresys</p>
         </div>
-    </div>
+    </aside>
 
-    <div class="px-8 py-6 md:px-12 md:py-8" style="background: #fafaf8;">
-        <form action="{{ route('onboarding.save-step-2') }}" method="POST">
-            @csrf
+    {{-- ══════════════════════════════════════════════
+         PANEL DERECHO — Formulario CAI
+    ══════════════════════════════════════════════ --}}
+    <main class="onb-panel-right">
+        <div class="onb-panel-right-inner">
 
-            <!-- Sección única con todo -->
-            <div style="background: #ffffff; border: 1px solid #e8e5df; border-radius: 0.75rem;">
-                <!-- Header -->
-                <div class="px-6 md:px-8 py-6 md:py-8 border-b" style="border-color: #e8e5df;">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: rgba(15, 138, 141, 0.1);">
-                            <svg class="w-6 h-6" style="color: var(--onb-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h2 class="text-lg font-bold" style="color: var(--onb-ink);">Información Fiscal</h2>
-                            <p class="text-sm mt-1" style="color: var(--onb-ink); opacity: 0.6;">El CAI autoriza a tu clínica a emitir facturas fiscales válidas aprobadas por la SAR.</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs font-semibold flex items-center gap-1 transition-opacity" id="save-indicator" style="color: var(--onb-accent); opacity: 0;">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                                </svg>
-                                Guardado
-                            </p>
-                        </div>
-                    </div>
+            {{-- Barra de progreso --}}
+            <div class="onb-progress-bar-wrap onb-fade-up">
+                <div class="onb-progress-segments">
+                    <div class="onb-progress-seg done"></div>
+                    <div class="onb-progress-seg active"></div>
+                    <div class="onb-progress-seg"></div>
+                    <div class="onb-progress-seg"></div>
                 </div>
+                <span class="onb-progress-label">Paso 2 de 4</span>
+            </div>
 
-                <!-- Contenido del formulario -->
-                <div class="px-8 md:px-12 py-8 md:py-10 space-y-10">
-                    <!-- Banner informativo: Paso opcional -->
-                    <div class="p-5 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.06) 0%, rgba(248,243,234,0.3) 100%); border: 1.5px dashed #bfb8a5;">
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(15,138,141,0.15);">
-                                <svg class="w-5 h-5" style="color: var(--onb-accent);" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm font-extrabold" style="color: var(--onb-ink);">Este paso es opcional</p>
-                                <p class="text-xs mt-1.5 leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.7;">Si aún no tienes tu CAI, no te preocupes. Puedes omitir este paso y configurarlo más adelante desde el panel de administración cuando lo tengas disponible.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- SECCIÓN 1: Código CAI -->
-                    <div class="p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                        <div class="flex items-center gap-3 mb-7">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: var(--onb-accent); box-shadow: 0 2px 8px rgba(15,138,141,0.25);">
-                                <svg class="w-5 h-5" style="color: #ffffff;" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-extrabold uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">Código CAI</h3>
-                                <p class="text-xs mt-0.5 font-medium" style="color: var(--onb-ink); opacity: 0.55;">Autorización de impresión fiscal</p>
-                            </div>
-                        </div>
-                        <div class="space-y-2.5">
-                            <label for="cai_codigo" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
-                                Código de Autorización (CAI)
-                            </label>
-                            <input type="text" 
-                                   id="cai_codigo" 
-                                   name="cai_codigo" 
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;" class="onb-fade-up onb-delay-1">
+                <h2 class="onb-screen-title" style="margin:0;">Configuración Fiscal (CAI)</h2>
+                <span class="onb-badge amber">Opcional</span>
+            </div>
+            <p class="onb-screen-subtitle onb-fade-up onb-delay-1">
+                Estos datos autorizan la emisión de facturas fiscales válidas en tu clínica.
+            </p>
+
+            {{-- Banner: puedes omitir --}}
+            <div class="onb-banner amber onb-fade-up onb-delay-2">
+                <svg class="onb-banner-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="onb-banner-body">
+                    <p>Si aún no tienes tu CAI, puedes omitir este paso y configurarlo después desde el panel de administración.</p>
+                    <a href="{{ route('onboarding.save-step-2') }}" class="onb-banner-link"
+                       onclick="event.preventDefault(); document.getElementById('skip-form').submit();">
+                        Ir al siguiente paso sin configurar →
+                    </a>
+                    <form id="skip-form" action="{{ route('onboarding.save-step-2') }}" method="POST" style="display:none;">
+                        @csrf
+                        <input type="hidden" name="skip" value="1">
+                    </form>
+                </div>
+            </div>
+
+            <form action="{{ route('onboarding.save-step-2') }}" method="POST">
+                @csrf
+
+                <div class="onb-form-card onb-fade-up onb-delay-2">
+
+                    {{-- Sección: Código CAI --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Código de Autorización</p>
+
+                        <div class="onb-field">
+                            <label for="cai_codigo" class="onb-label">Código CAI</label>
+                            <input type="text"
+                                   id="cai_codigo"
+                                   name="cai_codigo"
+                                   class="onb-input onb-mono"
                                    value="{{ old('cai_codigo') }}"
                                    maxlength="50"
-                                   class="w-full px-4 py-4 border-2 rounded-lg transition-all font-mono text-base" 
-                                   style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                   placeholder="A1B2C3-D4E5F6-G7H8I9"
-                                   onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                   onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                   onchange="showSaveIndicator()"
-                                   onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                   onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                   placeholder="A1B2C3-D4E5F6-G7H8I9-J0K1L2">
                             @error('cai_codigo')
-                                <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
+                                <span class="onb-field-error">{{ $message }}</span>
                             @enderror
-                            <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Este código lo proporciona la SAR para autorizar la emisión de facturas</p>
+                            <span class="onb-field-hint">Este código lo proporciona la SAR para autorizar la emisión de facturas</span>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 2: Rango de Facturación -->
-                    <div class="p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                        <div class="flex items-center gap-3 mb-7">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: var(--onb-accent); box-shadow: 0 2px 8px rgba(15,138,141,0.25);">
-                                <svg class="w-5 h-5" style="color: #ffffff;" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-extrabold uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">Rango de Facturación</h3>
-                                <p class="text-xs mt-0.5 font-medium" style="color: var(--onb-ink); opacity: 0.55;">Números de factura autorizados</p>
-                            </div>
-                        </div>
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="space-y-2.5">
-                                <label for="rango_inicial" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
-                                    Número Inicial
-                                </label>
-                                <input type="number" 
-                                       id="rango_inicial" 
-                                       name="rango_inicial" 
+                    {{-- Sección: Rango de facturas --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Rango de Facturación</p>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="onb-field">
+                                <label for="rango_inicial" class="onb-label">Número Inicial</label>
+                                <input type="number"
+                                       id="rango_inicial"
+                                       name="rango_inicial"
+                                       class="onb-input"
                                        value="{{ old('rango_inicial') }}"
                                        min="1"
-                                       class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                       style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                       placeholder="1"
-                                       onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                       onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                       onchange="showSaveIndicator()"
-                                       onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                       onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                       placeholder="1">
                                 @error('rango_inicial')
-                                    <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
+                                    <span class="onb-field-error">{{ $message }}</span>
                                 @enderror
-                                <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Primera factura del rango</p>
+                                <span class="onb-field-hint">Primera factura del rango</span>
                             </div>
 
-                            <div class="space-y-2.5">
-                                <label for="rango_final" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
-                                    Número Final
-                                </label>
-                                <input type="number" 
-                                       id="rango_final" 
-                                       name="rango_final" 
+                            <div class="onb-field">
+                                <label for="rango_final" class="onb-label">Número Final</label>
+                                <input type="number"
+                                       id="rango_final"
+                                       name="rango_final"
+                                       class="onb-input"
                                        value="{{ old('rango_final') }}"
                                        min="1"
-                                       class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                       style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                       placeholder="10000"
-                                       onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                       onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                       onchange="showSaveIndicator()"
-                                       onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                       onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                       placeholder="10000">
                                 @error('rango_final')
-                                    <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
+                                    <span class="onb-field-error">{{ $message }}</span>
                                 @enderror
-                                <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Última factura del rango</p>
+                                <span class="onb-field-hint">Última factura del rango</span>
                             </div>
                         </div>
-                        <div class="mt-4 p-3 rounded-lg" style="background: rgba(15,138,141,0.06);">
-                            <p class="text-xs font-medium" style="color: var(--onb-ink); opacity: 0.7;">🔢 El sistema numerará tus facturas automáticamente dentro de este rango</p>
+
+                        <div class="onb-banner info" style="margin-top:0.875rem;margin-bottom:0;">
+                            <svg class="onb-banner-icon" fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-top:0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="onb-banner-body">
+                                <p style="font-size:0.8125rem;">El sistema numerará tus facturas automáticamente dentro de este rango</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 3: Vigencia -->
-                    <div class="p-6 rounded-xl" style="background: linear-gradient(135deg, rgba(15,138,141,0.03) 0%, rgba(248,243,234,0.5) 100%); border: 1px solid #d0cab5;">
-                        <div class="flex items-center gap-3 mb-7">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: var(--onb-accent); box-shadow: 0 2px 8px rgba(15,138,141,0.25);">
-                                <svg class="w-5 h-5" style="color: #ffffff;" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-extrabold uppercase tracking-wide" style="color: var(--onb-ink); opacity: 0.95;">Vigencia</h3>
-                                <p class="text-xs mt-0.5 font-medium" style="color: var(--onb-ink); opacity: 0.55;">Período de validez del CAI</p>
-                            </div>
-                        </div>
-                        <div class="space-y-2.5">
-                            <label for="fecha_limite" class="text-sm font-extrabold" style="color: var(--onb-ink); display: block;">
-                                Fecha Límite de Emisión
-                            </label>
-                            <input type="date" 
-                                   id="fecha_limite" 
-                                   name="fecha_limite" 
+                    {{-- Sección: Vigencia --}}
+                    <div class="onb-form-section">
+                        <p class="onb-section-label">Vigencia</p>
+
+                        <div class="onb-field">
+                            <label for="fecha_limite" class="onb-label">Fecha Límite de Emisión</label>
+                            <input type="date"
+                                   id="fecha_limite"
+                                   name="fecha_limite"
+                                   class="onb-input"
                                    value="{{ old('fecha_limite') }}"
-                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                   class="w-full px-4 py-4 border-2 rounded-lg transition-all text-base" 
-                                   style="border-color: #bfb8a5; background: #ffffff; color: var(--onb-ink); font-weight: 600;"
-                                   onfocus="this.style.borderColor='var(--onb-accent)'; this.style.background='#fefefe'; this.style.boxShadow='0 4px 16px rgba(15,138,141,0.2)'"
-                                   onblur="this.style.borderColor='#bfb8a5'; this.style.background='#ffffff'; this.style.boxShadow='none'"
-                                   onchange="showSaveIndicator()"
-                                   onmouseover="if(this!==document.activeElement) this.style.borderColor='#9a9280'"
-                                   onmouseout="if(this!==document.activeElement) this.style.borderColor='#bfb8a5'">
+                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                             @error('fecha_limite')
-                                <p class="mt-1 text-xs font-semibold" style="color: #ed6a5a;">{{ $message }}</p>
+                                <span class="onb-field-error">{{ $message }}</span>
                             @enderror
-                            <p class="text-xs leading-relaxed font-medium" style="color: var(--onb-ink); opacity: 0.6;">Después de esta fecha no podrás emitir facturas con este CAI</p>
+                        </div>
+
+                        <div class="onb-banner amber" style="margin-top:0.875rem;margin-bottom:0;">
+                            <svg class="onb-banner-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-top:0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div class="onb-banner-body">
+                                <p style="font-size:0.8125rem;">Después de esta fecha no podrás emitir nuevas facturas con este CAI. Recuerda renovarlo a tiempo.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Botones de navegación -->
-            <div class="flex justify-between items-center pt-8 mt-8 border-t" style="border-color: #e8e5df;">
-                <a href="{{ route('onboarding.step-1') }}" 
-                   class="px-6 py-3 text-sm font-semibold rounded-lg transition-all inline-flex items-center gap-2" 
-                   style="color: var(--onb-ink); background: transparent; border: 1.5px solid #d8d3c8;"
-                   onmouseover="this.style.background='#f5f3ee'"
-                   onmouseout="this.style.background='transparent'">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Atrás
-                </a>
-                <button type="submit" 
-                        class="px-8 py-3 text-sm font-bold rounded-lg text-white transition-all inline-flex items-center gap-2"
-                        style="background: var(--onb-accent);"
-                        onmouseover="this.style.background='#0d7578'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(15,138,141,0.3)'"
-                        onmouseout="this.style.background='var(--onb-accent)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    Continuar
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </div>
-        </form>
-    </div>
+                {{-- Navegación --}}
+                <div class="onb-nav onb-fade-up onb-delay-3">
+                    <a href="{{ route('onboarding.step-1') }}" class="onb-btn onb-btn-ghost">
+                        <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5l-7 5 7 5"/>
+                        </svg>
+                        Atrás
+                    </a>
+                    <div class="onb-nav-right">
+                        <button type="button"
+                                class="onb-btn-text"
+                                onclick="document.getElementById('skip-form').submit()">
+                            Omitir por ahora →
+                        </button>
+                        <button type="submit" class="onb-btn onb-btn-primary">
+                            Continuar
+                            <svg fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 5-7 5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
 </div>
-
-<script>
-function showSaveIndicator() {
-    const indicator = document.getElementById('save-indicator');
-    indicator.style.opacity = '1';
-    
-    // Ocultar el indicador después de 3 segundos
-    setTimeout(() => {
-        indicator.style.opacity = '0';
-    }, 3000);
-}
-</script>
 @endsection

@@ -33,7 +33,7 @@ class RecetaResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Recetas';
 
-    protected static ?string $navigationGroup = 'Gestión Médica';
+    protected static ?string $navigationGroup = 'Panel Diario';
 
     public static function form(Form $form): Form
     {

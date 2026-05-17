@@ -20,7 +20,7 @@ class TipoPagosResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Gestión de Facturación';
+    protected static ?string $navigationGroup = 'Configuracion';
 
     protected static ?string $modelLabel = 'Tipo Pago';
 
