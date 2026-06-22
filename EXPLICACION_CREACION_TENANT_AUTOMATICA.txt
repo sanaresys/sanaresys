@@ -1,0 +1,349 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              EXPLICACIÓN: CREACIÓN AUTOMÁTICA DEL TENANT         ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🐛 PROBLEMA ORIGINAL                                             │
+└──────────────────────────────────────────────────────────────────┘
+
+El código en saveStepTwo() (guardar CAI) tenía esta lógica:
+
+╔═══════════════════════════════════════════════════════════════╗
+║ CÓDIGO ANTERIOR (❌ INCORRECTO)                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+```php
+// Inicializar tenant si existe
+$tenant = \App\Models\Tenant::where('centro_id', $centro->id)->first();
+
+if ($tenant) {
+    tenancy()->initialize($tenant);
+}
+
+// Crear autorización CAI en la BD del tenant
+CAIAutorizaciones::create([...]);
+```
+
+📊 FLUJO DEL CÓDIGO ANTERIOR:
+
+1. Buscar tenant en la base de datos
+   ├─> Si EXISTE tenant → Inicializarlo
+   └─> Si NO EXISTE tenant → ❌ NO HACER NADA
+
+2. Intentar crear CAI en base de datos del tenant
+   └─> ❌ BOOM! Falla porque el tenant no existe
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ❌ ¿POR QUÉ FALLABA?                                             │
+└──────────────────────────────────────────────────────────────────┘
+
+El problema era este escenario:
+
+1. Usuario nuevo crea su centro médico
+2. Hace login por primera vez
+3. Completa el wizard de onboarding
+4. Llega al paso 2 (CAI)
+5. Intenta guardar el CAI
+6. ❌ ERROR: El tenant NO EXISTE todavía
+
+¿Por qué no existe?
+───────────────────
+Los tenants se crean normalmente de 2 formas:
+
+A) Manualmente por un administrador root
+B) Automáticamente cuando se crea un centro (usando observador)
+
+Pero en tu sistema, el observador NO SIEMPRE crea el tenant de inmediato.
+A veces el centro se crea ANTES de que el tenant esté listo.
+
+Entonces cuando el usuario llega al onboarding, el tenant no existe aún.
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ✅ SOLUCIÓN IMPLEMENTADA                                         │
+└──────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════╗
+║ CÓDIGO NUEVO (✅ CORRECTO)                                    ║
+╚═══════════════════════════════════════════════════════════════╝
+
+```php
+// Asegurar que el tenant existe y está creado
+$tenant = \App\Models\Tenant::where('centro_id', $centro->id)->first();
+
+if (!$tenant) {
+    // Si no existe tenant, crearlo usando el servicio de provisioning
+    Log::info("Creando tenant para centro {$centro->id} durante onboarding");
+    
+    // 1. Crear el registro del tenant
+    $tenant = \App\Models\Tenant::create([
+        'id' => 'centro_' . $centro->id,
+        'centro_id' => $centro->id,
+    ]);
+    
+    // 2. Crear base de datos física del tenant
+    $tenant->createDatabase();
+    
+    // 3. Ejecutar migraciones en el tenant
+    $tenant->run(function () {
+        artisan()->call('tenants:migrate', ['--tenants' => [tenant()->id]]);
+    });
+}
+
+// Inicializar el contexto del tenant
+tenancy()->initialize($tenant);
+
+// Verificar que estamos en el contexto correcto
+if (!tenancy()->initialized) {
+    throw new \Exception('No se pudo inicializar el tenant');
+}
+
+// Crear autorización CAI en la BD del tenant
+$cai = CAIAutorizaciones::create([...]);
+```
+
+📊 FLUJO DEL CÓDIGO NUEVO:
+
+1. Buscar tenant en la base de datos
+   ├─> Si EXISTE tenant → Usarlo
+   └─> Si NO EXISTE tenant → ✅ CREARLO AUTOMÁTICAMENTE
+       ├─> Crear registro en tabla 'tenants'
+       ├─> Crear base de datos física (centro_1, centro_2, etc.)
+       └─> Ejecutar todas las migraciones
+
+2. Inicializar contexto del tenant
+
+3. Verificar que la inicialización fue exitosa
+
+4. Crear CAI en base de datos del tenant
+   └─> ✅ FUNCIONA porque el tenant ya existe
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🔧 DETALLES TÉCNICOS                                             │
+└──────────────────────────────────────────────────────────────────┘
+
+¿Qué hace cada parte?
+─────────────────────
+
+1. Tenant::create([...])
+   ──────────────────────
+   Crea un registro en la tabla 'tenants' de la base de datos CENTRAL
+   
+   Datos:
+   • id: 'centro_1' (identificador único del tenant)
+   • centro_id: 1 (relación con el centro médico)
+
+2. $tenant->createDatabase()
+   ─────────────────────────
+   Crea la base de datos física en MySQL
+   
+   Ejecuta SQL:
+   CREATE DATABASE IF NOT EXISTS `centro_1`
+   
+   Resultado: Nueva base de datos vacía
+
+3. $tenant->run(function() {...})
+   ────────────────────────────────
+   Ejecuta código en el contexto del tenant
+   
+   Esto cambia temporalmente la conexión de base de datos de:
+   • mysql (base central) 
+   → tenant (base de datos del tenant: centro_1)
+   
+   Ejecuta:
+   php artisan tenants:migrate --tenants=centro_1
+   
+   Resultado: Todas las tablas del tenant se crean
+   • pacientes
+   • citas
+   • servicios
+   • cai_autorizaciones
+   • etc...
+
+4. tenancy()->initialize($tenant)
+   ──────────────────────────────
+   Cambia el contexto de Laravel para usar el tenant
+   
+   Después de esto, todos los modelos como:
+   • CAIAutorizaciones::create()
+   • Servicio::create()
+   • Paciente::create()
+   
+   Se guardan automáticamente en la base de datos del TENANT
+   (centro_1) en lugar de la base central (mysql)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🎯 EJEMPLO PRÁCTICO                                              │
+└──────────────────────────────────────────────────────────────────┘
+
+ESCENARIO: Usuario nuevo "Hospital San Lucas"
+
+SIN EL FIX (❌):
+────────────────
+1. Centro creado: id=1, nombre="Hospital San Lucas"
+2. Usuario hace login
+3. Completa paso 1 del onboarding (datos básicos)
+4. Completa paso 2 del onboarding (CAI)
+   ├─> Buscar tenant para centro_id=1
+   ├─> $tenant = null (no existe)
+   ├─> if ($tenant) → false, NO entra al if
+   ├─> Intenta crear CAI
+   └─> ❌ ERROR: "Base de datos 'centro_1' no existe"
+
+CON EL FIX (✅):
+────────────────
+1. Centro creado: id=1, nombre="Hospital San Lucas"
+2. Usuario hace login
+3. Completa paso 1 del onboarding (datos básicos)
+4. Completa paso 2 del onboarding (CAI)
+   ├─> Buscar tenant para centro_id=1
+   ├─> $tenant = null (no existe)
+   ├─> if (!$tenant) → true, ENTRA al if
+   ├─> ✅ Crear tenant
+   │   ├─> INSERT INTO tenants (id, centro_id)
+   │   ├─> CREATE DATABASE centro_1
+   │   └─> Ejecutar migraciones en centro_1
+   ├─> Inicializar tenant
+   ├─> Crear CAI en centro_1
+   └─> ✅ ÉXITO: CAI guardado correctamente
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 📂 ESTRUCTURA DE BASES DE DATOS                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+ANTES del onboarding:
+─────────────────────
+mysql (base central)
+├─ tenants (tabla)
+│  └─ (vacía o sin el tenant del centro nuevo)
+├─ centros_medicos (tabla)
+│  └─ id=1: Hospital San Lucas
+└─ users (tabla)
+   └─ id=2: admin@testing.com (centro_id=1)
+
+Base de datos físicas en MySQL:
+• mysql (existe)
+• centro_1 (❌ NO EXISTE)
+
+DESPUÉS del fix (durante saveStepTwo):
+──────────────────────────────────────
+mysql (base central)
+├─ tenants (tabla)
+│  └─ id='centro_1', centro_id=1 ✅ CREADO
+├─ centros_medicos (tabla)
+│  └─ id=1: Hospital San Lucas
+└─ users (tabla)
+   └─ id=2: admin@testing.com
+
+Base de datos físicas en MySQL:
+• mysql (existe)
+• centro_1 (✅ CREADA con todas las tablas)
+  ├─ cai_autorizaciones ✅
+  ├─ servicios ✅
+  ├─ pacientes ✅
+  ├─ citas ✅
+  └─ ... (41 tablas)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🔐 SEGURIDAD Y VALIDACIONES                                      │
+└──────────────────────────────────────────────────────────────────┘
+
+El código nuevo incluye validaciones:
+
+1. Verificar que el tenant se inicializó correctamente
+   ────────────────────────────────────────────────
+   ```php
+   if (!tenancy()->initialized) {
+       throw new \Exception('No se pudo inicializar el tenant');
+   }
+   ```
+   
+   Esto previene que se intente crear datos sin contexto de tenant.
+
+2. Logging detallado
+   ─────────────────
+   ```php
+   Log::info("Creando tenant para centro {$centro->id} durante onboarding");
+   ```
+   
+   Registra en logs/laravel.log cuando se crea un tenant automáticamente.
+
+3. Manejo de errores mejorado
+   ──────────────────────────
+   ```php
+   Log::error('Error guardando CAI en onboarding', [
+       'error' => $e->getMessage(),
+       'trace' => $e->getTraceAsString(),
+       'centro_id' => $centro->id,
+       'tenant_id' => $tenant->id ?? null,
+   ]);
+   ```
+   
+   Ahora sabes EXACTAMENTE qué falló y dónde.
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 🎓 CONCEPTOS CLAVE DE MULTI-TENANCY                              │
+└──────────────────────────────────────────────────────────────────┘
+
+Tenant (Inquilino)
+──────────────────
+Cada clínica/centro médico es un "tenant" independiente.
+Tiene su propia base de datos aislada.
+
+Base de Datos Central (mysql)
+──────────────────────────────
+Guarda información compartida:
+• Lista de tenants
+• Centros médicos
+• Usuarios
+• Roles globales
+
+Bases de Datos de Tenants (centro_1, centro_2, etc.)
+─────────────────────────────────────────────────────
+Cada tenant tiene su propia base de datos con:
+• Sus propios pacientes
+• Sus propias citas
+• Sus propios servicios
+• Su propia configuración CAI
+• etc.
+
+Esto asegura AISLAMIENTO total entre clínicas.
+
+Contexto de Tenancy
+───────────────────
+Laravel necesita saber "en cuál tenant estás trabajando".
+
+Antes de crear datos del tenant:
+tenancy()->initialize($tenant);
+
+Después de terminar:
+tenancy()->end();
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ✅ RESUMEN                                                       │
+└──────────────────────────────────────────────────────────────────┘
+
+LO QUE CAMBIÉ:
+──────────────
+Agregué lógica para CREAR AUTOMÁTICAMENTE el tenant durante el
+onboarding si no existe, en lugar de solo verificar si existe.
+
+POR QUÉ ERA NECESARIO:
+──────────────────────
+El tenant no siempre se crea cuando se crea el centro médico.
+El onboarding es el momento perfecto para asegurar que existe.
+
+DÓNDE LO APLIQUÉ:
+─────────────────
+• saveStepTwo() - Al guardar CAI
+• saveStepThree() - Al guardar servicios (por si omitieron CAI)
+
+BENEFICIO:
+──────────
+El usuario puede completar el onboarding sin errores, incluso si
+su tenant no fue creado previamente. El sistema lo crea "on-the-fly".
+
+╔══════════════════════════════════════════════════════════════════╗
+║  CONCLUSIÓN: El onboarding ahora es COMPLETAMENTE AUTÓNOMO.     ║
+║  No depende de que alguien haya creado el tenant manualmente.   ║
+║  El wizard se encarga de TODO automáticamente. ✅                ║
+╚══════════════════════════════════════════════════════════════════╝

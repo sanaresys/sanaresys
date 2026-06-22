@@ -1,0 +1,480 @@
+/* Estilos personalizados para el módulo de nóminas */
+
+/* Colores principales del tema */
+:root {
+    --nomina-primary: #10b981;
+    --nomina-secondary: #0ea5e9;
+    --nomina-accent: #f59e0b;
+    --nomina-danger: #ef4444;
+    --nomina-success: #22c55e;
+    --nomina-warning: #f97316;
+    --nomina-info: #3b82f6;
+    --nomina-gradient-primary: linear-gradient(135deg, #10b981, #22c55e);
+    --nomina-gradient-secondary: linear-gradient(135deg, #0ea5e9, #3b82f6);
+    --nomina-gradient-accent: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+/* Tema oscuro para navegación */
+.fi-sidebar-nav {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+.fi-sidebar-nav-item-button {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 2px 8px;
+}
+
+.fi-sidebar-nav-item-button:hover {
+    background: rgba(16, 185, 129, 0.1);
+    transform: translateX(4px);
+}
+
+.fi-sidebar-nav-item-button[aria-current="page"] {
+    background: var(--nomina-gradient-primary);
+    color: white;
+}
+
+/* Estilos para las secciones del formulario */
+.fi-section {
+    border-radius: 16px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff, #f9fafb);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.fi-section:hover {
+    border-color: var(--nomina-primary);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+    transform: translateY(-2px);
+}
+
+.fi-section-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 14px 14px 0 0;
+    padding: 1.5rem;
+}
+
+/* Estilos para los botones principales */
+.fi-btn-primary {
+    background: var(--nomina-gradient-primary);
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.fi-btn-primary:hover::before {
+    left: 100%;
+}
+
+.fi-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+}
+
+/* Estilos mejorados para botones de acción */
+.fi-ac-btn-action {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-ac-btn-action::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+}
+
+.fi-ac-btn-action:hover::after {
+    width: 120%;
+    height: 120%;
+}
+
+.fi-ac-btn-action:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos avanzados para los badges */
+.fi-badge {
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 6px 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.fi-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+}
+
+.fi-badge:hover::before {
+    left: 100%;
+}
+
+/* Colores personalizados para badges */
+.fi-color-emerald .fi-badge {
+    background: var(--nomina-gradient-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.fi-color-sky .fi-badge {
+    background: var(--nomina-gradient-secondary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.fi-color-amber .fi-badge {
+    background: var(--nomina-gradient-accent);
+    color: white;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.fi-color-rose .fi-badge {
+    background: linear-gradient(135deg, #f43f5e, #ef4444);
+    color: white;
+    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+}
+
+/* Estilos mejorados para las tablas */
+.fi-ta-table {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.fi-ta-header {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fi-ta-header-cell {
+    padding: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.fi-ta-row {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.fi-ta-row:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(34, 197, 94, 0.05));
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.fi-ta-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background: var(--nomina-primary);
+    transition: width 0.3s ease;
+}
+
+.fi-ta-row:hover::before {
+    width: 4px;
+}
+
+/* Estilos mejorados para formularios */
+.fi-fo-field-wrp {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.fi-input {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff, #fafbfc);
+    font-size: 14px;
+    padding: 12px 16px;
+}
+
+.fi-input:focus {
+    border-color: var(--nomina-primary);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    background: white;
+    transform: scale(1.02);
+}
+
+.fi-fo-field-wrp-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Estilos para los iconos con efectos */
+.fi-icon {
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.fi-icon:hover {
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Estilos mejorados para los modales */
+.fi-modal {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.fi-modal-header {
+    background: var(--nomina-gradient-primary);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    padding: 2rem;
+}
+
+.fi-modal-content {
+    padding: 2rem;
+}
+
+/* Animaciones mejoradas */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.fi-page {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.fi-ta-row {
+    animation: slideInLeft 0.4s ease-out;
+}
+
+/* Efectos de carga */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Estilos mejorados para el repeater */
+.fi-fo-repeater-item {
+    border-radius: 16px;
+    border: 2px solid #e5e7eb;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-fo-repeater-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--nomina-gradient-secondary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.fi-fo-repeater-item:hover::before {
+    transform: scaleX(1);
+}
+
+.fi-fo-repeater-item:hover {
+    border-color: var(--nomina-secondary);
+    box-shadow: 0 12px 30px rgba(14, 165, 233, 0.15);
+    transform: translateY(-3px);
+}
+
+/* Estilos para los selects mejorados */
+.fi-select-input {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.fi-select-input:focus {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* Mejoras en la tipografía */
+.fi-section-header-heading {
+    font-weight: 800;
+    color: #1f2937;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fi-section-header-description {
+    color: #6b7280;
+    font-size: 14px;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Estilos para los filtros mejorados */
+.fi-ta-filters {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para los botones de acción bulk */
+.fi-ta-bulk-actions {
+    border-radius: 12px;
+    background: var(--nomina-gradient-primary);
+    color: white;
+    padding: 1rem;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Efectos especiales para elementos interactivos */
+.interactive-element {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.interactive-element:hover {
+    transform: translateY(-2px);
+}
+
+.interactive-element::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.interactive-element:hover::after {
+    opacity: 1;
+}
+
+/* Estilos responsivos mejorados */
+@media (max-width: 768px) {
+    .fi-section {
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+    }
+    
+    .fi-ta-table {
+        font-size: 12px;
+    }
+    
+    .fi-btn-primary {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .fi-modal {
+        margin: 1rem;
+        border-radius: 16px;
+    }
+}
+
+/* Efectos de pulso para elementos importantes */
+.pulse-effect {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}

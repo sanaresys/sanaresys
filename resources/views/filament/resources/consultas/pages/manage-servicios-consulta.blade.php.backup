@@ -1,0 +1,643 @@
+
+<x-filament-panels::page>
+    {{-- Panel de información de la factura --}}
+    <x-filament::section>
+        <x-slot name="heading">
+            Información de la Factura
+        </x-slot>
+        
+        @php
+            // Información de contexto usando el record disponible
+            $pacienteNombre = 'Paciente no encontrado';
+            $medicoNombre = 'Médico no encontrado';
+            $centroNombre = auth()->user()->centro?->nombre_centro ?? 'Centro Médico';
+            $fecha = now()->format('d/m/Y');
+            
+            if ($this->record) {
+                $consulta = $this->record;
+                
+                if ($consulta->paciente && $consulta->paciente->persona) {
+                    $pacienteNombre = $consulta->paciente->persona->nombre_completo;
+                }
+                
+                if ($consulta->medico && $consulta->medico->persona) {
+                    $medicoNombre = $consulta->medico->persona->nombre_completo;
+                }
+                
+                if ($consulta->centro) {
+                    $centroNombre = $consulta->centro->nombre_centro;
+                }
+                
+                $fecha = $consulta->created_at->format('d/m/Y');
+            }
+            
+            // Obtener información del CAI disponible
+            $centroId = auth()->user()->centro_id;
+            $cai = \App\Services\CaiNumerador::obtenerCAIDisponible($centroId);
+        @endphp
+        
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-700">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Paciente -->
+                <div class="text-center">
+                    <div class="flex justify-center mb-3">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Paciente</p>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $pacienteNombre }}</p>
+                </div>
+                
+                <!-- Médico -->
+                <div class="text-center">
+                    <div class="flex justify-center mb-3">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Médico</p>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $medicoNombre }}</p>
+                </div>
+                
+                <!-- Centro -->
+                <div class="text-center">
+                    <div class="flex justify-center mb-3">
+                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Centro</p>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $centroNombre }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $fecha }}</p>
+                </div>
+            </div>
+            
+            <!-- Información de la Factura -->
+            <div class="mt-6 pt-6 border-t border-blue-200 dark:border-blue-700">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Número de Factura -->
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Número de Factura</p>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Se generará automáticamente</p>
+                    </div>
+                    
+                    <!-- ¿Emitir con CAI? -->
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">¿Emitir con CAI?</p>
+                        <div class="flex items-center justify-center space-x-2">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" 
+                                       id="emitir_cai_toggle"
+                                       onchange="toggleCAIInfo()"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-400">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Activar CAI</span>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Active si desea emitir una factura fiscal con CAI</p>
+                    </div>
+                    
+                    <!-- Estado -->
+                    <div class="text-center">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Estado</p>
+                        <div id="estado_factura_preview" class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-200">
+                            <span id="estado_factura_text">Pendiente</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información del CAI (mostrar solo cuando se active el checkbox) -->
+                <div id="cai-info-section" style="display: none;" class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
+                    @if($cai)
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-700">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-green-800 dark:text-green-300 mb-1">CAI Disponible</p>
+                                <p class="text-sm font-mono font-medium text-green-800 dark:text-green-200">{{ $cai->cai_codigo }}</p>
+                                <p class="text-xs text-green-600 dark:text-green-400">Se emitirá automáticamente con CAI al facturar</p>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-700">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Sin CAI disponible</p>
+                                <p class="text-xs text-amber-600 dark:text-amber-400">Se emitirá como proforma sin número fiscal</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </x-filament::section>
+
+    {{-- Panel de resumen --}}
+    @php($subtotal = $this->getServiciosTotal())
+    @php($cantidad = $this->getCantidadServicios())
+
+    @if ($subtotal > 0)
+        <x-filament::section>
+            <x-slot name="heading">
+                Resumen de Servicios
+            </x-slot>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="text-center md:text-left">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Servicios agregados
+                    </p>
+                    <p class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                        {{ $cantidad }} servicio(s)
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Descuento a Aplicar</p>
+                    <select id="descuento_select" 
+                            class="w-full max-w-xs rounded border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 text-sm">
+                        <option value="">Sin descuento</option>
+                        @foreach(\App\Models\Descuento::where('centro_id', Auth::user()->centro_id)->get() as $descuento)
+                            <option value="{{ $descuento->id }}" 
+                                    data-tipo="{{ $descuento->tipo }}"
+                                    data-valor="{{ $descuento->valor }}">
+                                {{ $descuento->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Selecciona un descuento para la factura</p>
+                </div>
+
+                <div class="text-center md:text-right">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Subtotal General
+                    </p>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="subtotal_general_display">
+                        L. {{ number_format($subtotal + $this->getServiciosImpuesto(), 2) }}
+                    </p>
+                </div>
+            </div>
+            
+            {{-- Sección de Totales Detallados --}}
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Desglose de Totales</h4>
+                
+                <div class="flex flex-row gap-4">
+                    {{-- Subtotal (sin impuestos ni descuentos) --}}
+                    <div class="flex-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                        <p class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Subtotal</p>
+                        <p class="text-lg font-bold text-blue-800 dark:text-blue-200" id="subtotal_display">
+                            L. {{ number_format($this->getServiciosSubtotal(), 2) }}
+                        </p>
+                        <p class="text-xs text-blue-600 dark:text-blue-400">Sin impuestos ni descuentos</p>
+                    </div>
+                    
+                    {{-- Total de Impuestos (calculado de los servicios reales) --}}
+                    @php($impuestos = $this->getServiciosImpuesto())
+                    <div class="flex-1 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-700">
+                        <p class="text-xs font-medium text-yellow-600 dark:text-yellow-400 uppercase tracking-wide mb-1">Impuestos</p>
+                        <p class="text-lg font-bold text-yellow-800 dark:text-yellow-200" id="impuestos_display">
+                            L. {{ number_format($impuestos, 2) }}
+                        </p>
+                        <p class="text-xs text-yellow-600 dark:text-yellow-400">Total de impuestos</p>
+                    </div>
+                    
+                    {{-- Total de Descuentos --}}
+                    <div class="flex-1 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                        <p class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-1">Descuentos</p>
+                        <p class="text-lg font-bold text-purple-800 dark:text-purple-200" id="descuentos_display">
+                            L. 0.00
+                        </p>
+                        <p class="text-xs text-purple-600 dark:text-purple-400">Descuento aplicado</p>
+                    </div>
+                    
+                    {{-- Total Final --}}
+                    @php($total_final = $this->getServiciosSubtotal() + $impuestos)
+                    <div class="flex-1 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-700">
+                        <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">Total Final</p>
+                        <p class="text-xl font-bold text-green-800 dark:text-green-200" id="total_final_display">
+                            L. {{ number_format($total_final, 2) }}
+                        </p>
+                        <p class="text-xs text-green-600 dark:text-green-400">Subtotal + Impuestos - Descuentos</p>
+                    </div>
+                </div>
+            </div>
+        </x-filament::section>
+    @else
+        <x-filament::section>
+            <div class="text-center py-8">
+                <div class="text-gray-400 text-6xl mb-4">
+                    📋
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    No hay servicios agregados
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Usa el botón <strong>"Agregar Servicios"</strong> para comenzar.
+                </p>
+            </div>
+        </x-filament::section>
+    @endif
+
+    {{-- Tabla de servicios --}}
+    <div class="mt-6">
+        {{ $this->table }}
+    </div>
+
+    {{-- Script simple para toggle CAI --}}
+    <script>
+        function toggleCAIInfo() {
+            const checkbox = document.getElementById('emitir_cai_toggle');
+            const caiSection = document.getElementById('cai-info-section');
+            
+            if (checkbox && caiSection) {
+                if (checkbox.checked) {
+                    caiSection.style.display = 'block';
+                } else {
+                    caiSection.style.display = 'none';
+                }
+            }
+        }
+        
+        // Función simple para manejar descuentos
+        function actualizarDescuento() {
+            const descuentoSelect = document.getElementById('descuento_select');
+            if (descuentoSelect) {
+                const descuentoValue = parseFloat(descuentoSelect.value) || 0;
+                console.log('Descuento aplicado:', descuentoValue + '%');
+            }
+        }
+    </script>
+    <script>
+        // Función SIMPLE para el toggle del CAI - COMO FUNCIONABA ANTES
+        function toggleCAIInfo() {
+            const checkbox = document.getElementById('emitir_cai_toggle');
+            const caiSection = document.getElementById('cai-info-section');
+            
+            console.log('Toggle CAI:', {
+                checkbox: !!checkbox,
+                caiSection: !!caiSection,
+                checked: checkbox ? checkbox.checked : 'N/A'
+            });
+            
+            if (checkbox && caiSection) {
+                if (checkbox.checked) {
+                    caiSection.style.display = 'block';
+                    console.log('CAI mostrado');
+                } else {
+                    caiSection.style.display = 'none';
+                    console.log('CAI ocultado');
+                }
+            }
+        }
+        
+        // Asegurar que esté disponible globalmente
+        window.toggleCAIInfo = toggleCAIInfo;
+        
+        // Debug helper
+        window.debugCAI = function() {
+            const checkbox = document.getElementById('emitir_cai_toggle');
+            const caiSection = document.getElementById('cai-info-section');
+            console.log('DEBUG CAI:', {
+                checkbox: checkbox,
+                caiSection: caiSection,
+                checkboxChecked: checkbox ? checkbox.checked : 'NO EXISTE',
+                caiDisplay: caiSection ? caiSection.style.display : 'NO EXISTE'
+            });
+        };
+        
+        // Manejar todo al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const descuentoSelect = document.getElementById('descuento_select');
+            const caiToggle = document.getElementById('emitir_cai_toggle');
+            const subtotalBase = @json(floatval($this->getServiciosSubtotal()));
+            const impuestosBase = @json(floatval($this->getServiciosImpuesto()));
+            const consultaId = '{{ $this->record->id }}'; // ID específico de esta consulta
+            
+            console.log('Valores base:', {subtotal: subtotalBase, impuestos: impuestosBase, consultaId: consultaId});
+            
+            // Restaurar estado del CAI específico para esta consulta
+            if (caiToggle) {
+                console.log('=== INICIALIZANDO CAI TOGGLE ===');
+                const caiKey = `cai_toggle_state_${consultaId}`;
+                const savedCaiState = sessionStorage.getItem(caiKey);
+                
+                console.log('Clave CAI:', caiKey);
+                console.log('Estado guardado:', savedCaiState);
+                
+                if (savedCaiState !== null) {
+                    caiToggle.checked = savedCaiState === 'true';
+                    console.log('Estado restaurado:', caiToggle.checked);
+                } else {
+                    // Para nueva consulta, empezar desmarcado
+                    caiToggle.checked = false;
+                    sessionStorage.setItem(caiKey, 'false');
+                    console.log('Estado inicial establecido: false');
+                }
+                
+                // Aplicar el estado visual inicial
+                toggleCAIInfo();
+                
+                // Solo un listener para guardar el estado
+                caiToggle.addEventListener('change', function() {
+                    sessionStorage.setItem(caiKey, this.checked);
+                    console.log('Estado CAI guardado:', this.checked);
+                });
+            } else {
+                console.log('❌ No se encontró el toggle del CAI');
+            }
+            
+            // Función adicional para verificar y corregir el estado del CAI cada 2 segundos
+            setInterval(() => {
+                const checkbox = document.getElementById('emitir_cai_toggle');
+                const caiSection = document.getElementById('cai-info-section');
+                
+                if (checkbox && caiSection) {
+                    const shouldShow = checkbox.checked;
+                    const isVisible = caiSection.style.display !== 'none' && caiSection.style.display !== '';
+                    
+                    if (shouldShow && !isVisible) {
+                        console.log('🔧 Corrección automática: Mostrando CAI');
+                        caiSection.style.display = 'block';
+                        caiSection.style.visibility = 'visible';
+                    } else if (!shouldShow && isVisible) {
+                        console.log('🔧 Corrección automática: Ocultando CAI');
+                        caiSection.style.display = 'none';
+                    }
+                }
+            }, 2000);            function actualizarTotales() {
+                console.log('=== ACTUALIZANDO TOTALES ===');
+                const selectedOption = descuentoSelect.options[descuentoSelect.selectedIndex];
+                const descuentoId = descuentoSelect.value;
+                let montoDescuento = 0;
+                
+                console.log('Descuento seleccionado ID:', descuentoId);
+                console.log('Opción seleccionada:', selectedOption);
+                console.log('Opción texto:', selectedOption ? selectedOption.text : 'N/A');
+                
+                if (descuentoId && selectedOption && descuentoId !== '') {
+                    const tipo = selectedOption.getAttribute('data-tipo');
+                    const valor = parseFloat(selectedOption.getAttribute('data-valor') || 0);
+                    
+                    console.log('Datos del descuento:', {tipo, valor, subtotalBase, impuestosBase});
+                    
+                    if (tipo === 'PORCENTAJE' && valor > 0) {
+                        // El descuento se calcula sobre el subtotal (sin impuestos)
+                        montoDescuento = subtotalBase * (valor / 100);
+                        console.log('Calculando descuento porcentual:', subtotalBase, '*', valor, '% =', montoDescuento);
+                    } else if (tipo === 'MONTO' && valor > 0) {
+                        montoDescuento = valor;
+                        console.log('Aplicando descuento fijo:', valor);
+                    }
+                } else {
+                    console.log('Sin descuento aplicado');
+                }
+
+                const totalFinal = subtotalBase + impuestosBase - montoDescuento;
+                
+                // Actualizar displays
+                document.getElementById('descuentos_display').textContent = 'L. ' + montoDescuento.toFixed(2);
+                document.getElementById('total_final_display').textContent = 'L. ' + totalFinal.toFixed(2);
+                
+                // Actualizar el Subtotal General para que muestre el total final
+                const subtotalGeneralElement = document.getElementById('subtotal_general_display');
+                if (subtotalGeneralElement) {
+                    subtotalGeneralElement.textContent = 'L. ' + totalFinal.toFixed(2);
+                }
+                
+                // NUEVO: Actualizar el estado de la factura basándose en los pagos guardados
+                actualizarEstadoFactura(totalFinal);
+                
+                // Guardar en sessionStorage para usar al crear la factura (específico por consulta)
+                if (descuentoId) {
+                    const descuentoKey = `selected_descuento_${consultaId}`;
+                    sessionStorage.setItem(descuentoKey, JSON.stringify({
+                        id: descuentoId,
+                        tipo: selectedOption.getAttribute('data-tipo'),
+                        valor: selectedOption.getAttribute('data-valor'),
+                        nombre: selectedOption.text,
+                        monto_calculado: montoDescuento
+                    }));
+                    
+                    console.log('Descuento seleccionado para consulta', consultaId, ':', selectedOption.text, 'Monto:', montoDescuento);
+                } else {
+                    const descuentoKey = `selected_descuento_${consultaId}`;
+                    sessionStorage.removeItem(descuentoKey);
+                    console.log('Descuento removido para consulta', consultaId);
+                }
+            }
+            
+            // NUEVA FUNCIÓN: Calcular y mostrar estado de factura
+            function actualizarEstadoFactura(totalFactura) {
+                // Múltiples fuentes de datos para pagos
+                const consultaId = '{{ $this->record->id }}'; // ID específico de esta consulta
+                let montoPagado = 0;
+                
+                // 1. Intentar con el nuevo formato de sessionStorage
+                const pagosDataKey = `pagosData_consulta_${consultaId}`;
+                let pagosDataStr = sessionStorage.getItem(pagosDataKey) || localStorage.getItem(pagosDataKey);
+                
+                if (pagosDataStr) {
+                    try {
+                        const pagosData = JSON.parse(pagosDataStr);
+                        montoPagado = pagosData.totalPagado || 0;
+                        console.log('Datos de pago encontrados (nuevo formato):', pagosData);
+                    } catch (e) {
+                        console.log('Error parseando datos de pago (nuevo formato):', e);
+                    }
+                }
+                
+                // 2. Si no hay datos, intentar con el formato anterior
+                if (montoPagado === 0) {
+                    const pagosKey = `payments_preview_${consultaId}`;
+                    const savedPayments = sessionStorage.getItem(pagosKey);
+                    
+                    if (savedPayments) {
+                        try {
+                            const payments = JSON.parse(savedPayments);
+                            montoPagado = payments.reduce((total, pago) => {
+                                return total + (parseFloat(pago.monto) || 0);
+                            }, 0);
+                            console.log('Datos de pago encontrados (formato anterior):', payments);
+                        } catch (e) {
+                            console.log('Error parseando datos de pago (formato anterior):', e);
+                        }
+                    }
+                }
+                
+                console.log('=== CALCULANDO ESTADO FACTURA ===');
+                console.log('Total factura:', totalFactura);
+                console.log('Monto pagado:', montoPagado);
+                console.log('Datos de pago completos:', pagosDataStr ? JSON.parse(pagosDataStr) : 'No hay datos');
+                
+                // DEBUG: Verificar comparaciones exactas
+                console.log('¿Monto pagado >= Total factura?', montoPagado, '>=', totalFactura, '=', montoPagado >= totalFactura);
+                console.log('¿Monto pagado > 0?', montoPagado, '> 0 =', montoPagado > 0);
+                
+                // Calcular estado con colores representativos
+                let estado = 'Pendiente';
+                let colorClass = 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-200'; // 🔴 Rojo para pendiente
+                
+                if (totalFactura === 0) {
+                    estado = 'Sin Deuda';
+                    colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200'; // 🔵 Azul para sin deuda
+                    console.log('Estado calculado: Sin Deuda (total = 0)');
+                } else if (montoPagado >= totalFactura) {
+                    estado = 'Pagada';
+                    colorClass = 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-200'; // 🟢 Verde para pagada
+                    console.log('Estado calculado: Pagada (pago >= total)');
+                } else if (montoPagado > 0) {
+                    estado = 'Pago Parcial';
+                    colorClass = 'bg-orange-100 text-orange-800 dark:bg-orange-800/30 dark:text-orange-200'; // 🟠 Naranja para pago parcial
+                    console.log('Estado calculado: Pago Parcial (pago > 0 pero < total)');
+                } else {
+                    console.log('Estado calculado: Pendiente (sin pagos)');
+                }
+                } else if (montoPagado > 0) {
+                    estado = 'Pago Parcial';
+                    colorClass = 'bg-orange-100 text-orange-800 dark:bg-orange-800/30 dark:text-orange-200'; // 🟠 Naranja para pago parcial
+                }
+                
+                // Actualizar UI con transición suave
+                const estadoBadge = document.getElementById('estado_factura_preview');
+                const estadoText = document.getElementById('estado_factura_text');
+                
+                if (estadoBadge && estadoText) {
+                    // Solo actualizar si ha cambiado para evitar parpadeo
+                    const estadoActual = estadoText.textContent;
+                    
+                    if (estadoActual !== estado) {
+                        // Limpiar todas las clases anteriores
+                        estadoBadge.className = 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full';
+                        
+                        // Aplicar nuevas clases de color de forma más directa
+                        if (estado === 'Pagada') {
+                            estadoBadge.style.backgroundColor = '#dcfce7'; // green-100
+                            estadoBadge.style.color = '#166534'; // green-800
+                        } else if (estado === 'Pago Parcial') {
+                            estadoBadge.style.backgroundColor = '#fed7aa'; // orange-100  
+                            estadoBadge.style.color = '#9a3412'; // orange-800
+                        } else if (estado === 'Sin Deuda') {
+                            estadoBadge.style.backgroundColor = '#dbeafe'; // blue-100
+                            estadoBadge.style.color = '#1e40af'; // blue-800
+                        } else { // Pendiente
+                            estadoBadge.style.backgroundColor = '#fee2e2'; // red-100
+                            estadoBadge.style.color = '#991b1b'; // red-800
+                        }
+                        
+                        estadoText.textContent = estado;
+                        
+                        console.log('✅ Estado actualizado de "' + estadoActual + '" a "' + estado + '"');
+                        console.log('🎨 Colores aplicados directamente via style');
+                    }
+                } else {
+                    console.log('❌ Elementos UI no encontrados');
+                }
+            }
+            
+            if (descuentoSelect) {
+                descuentoSelect.addEventListener('change', actualizarTotales);
+                
+                // Restaurar selección si existe para esta consulta específica
+                const descuentoKey = `selected_descuento_${consultaId}`;
+                const savedDescuento = sessionStorage.getItem(descuentoKey);
+                if (savedDescuento) {
+                    const descuento = JSON.parse(savedDescuento);
+                    descuentoSelect.value = descuento.id;
+                }
+                
+                // Llamar actualizarTotales() siempre para inicializar los valores correctos
+                actualizarTotales();
+            }
+            
+            // Función para verificar cambios de estado periódicamente
+            function iniciarMonitoreoEstado() {
+                console.log('Iniciando monitoreo de estado...');
+                
+                // Función para actualizar estado
+                function verificarYActualizarEstado() {
+                    const totalElement = document.getElementById('total_final_display'); // Corregido el ID
+                    let totalFactura = 0;
+                    
+                    if (totalElement) {
+                        const totalText = totalElement.textContent;
+                        totalFactura = parseFloat(totalText.replace(/[^0-9.-]/g, '')) || 0;
+                        console.log('✅ Total extraído correctamente:', {
+                            elementoTexto: totalText,
+                            totalCalculado: totalFactura
+                        });
+                    } else {
+                        console.log('❌ Elemento total_final_display no encontrado');
+                        // Buscar elementos alternativos
+                        const altElements = ['#total_general_display', '#subtotal_general_display', '[id*="total"]'];
+                        altElements.forEach(selector => {
+                            const el = document.querySelector(selector);
+                            if (el) {
+                                console.log('Elemento alternativo encontrado:', selector, el.textContent);
+                            }
+                        });
+                    }
+                    
+                    actualizarEstadoFactura(totalFactura);
+                }
+                
+                // Actualizar inmediatamente
+                verificarYActualizarEstado();
+                
+                // Actualizar cada 1 segundo para mayor responsividad
+                setInterval(verificarYActualizarEstado, 1000);
+                
+                // También escuchar eventos de focus en la ventana (cuando regresa de otra página)
+                window.addEventListener('focus', function() {
+                    console.log('Ventana recuperó el foco, actualizando estado...');
+                    setTimeout(verificarYActualizarEstado, 500);
+                });
+                
+                // Escuchar cambios en sessionStorage/localStorage
+                window.addEventListener('storage', function(e) {
+                    if (e.key && e.key.includes('pagosData_consulta_')) {
+                        console.log('Detectado cambio en storage, actualizando estado...');
+                        setTimeout(verificarYActualizarEstado, 200);
+                    }
+                });
+            }
+            
+            // Iniciar monitoreo cuando la página esté lista
+            document.addEventListener('DOMContentLoaded', iniciarMonitoreoEstado);
+            
+            // También iniciar después de un delay para asegurar que todo esté cargado
+            setTimeout(iniciarMonitoreoEstado, 1000);
+            
+            // Y ejecutar cada vez que la página se hace visible
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    console.log('Página se hizo visible, actualizando estado...');
+                    setTimeout(iniciarMonitoreoEstado, 500);
+                }
+            });
+            
+            // Al cargar la página, también actualizar el estado inicial
+            const totalInicialConDescuento = subtotalBase + impuestosBase;
+            actualizarEstadoFactura(totalInicialConDescuento);
+        });
+    </script>
+</x-filament-panels::page>

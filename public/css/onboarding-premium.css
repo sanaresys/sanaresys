@@ -1,0 +1,800 @@
+/* ============================================================================
+   Sanaresys Onboarding — "The Digital Sanctuary" Design System v2.0
+   Teal profundo + Crema cálida + Ámbar — Human-centric editorial
+   ============================================================================ */
+
+/* ---------- Design Tokens ---------- */
+:root {
+    /* Paleta principal */
+    --onb-primary:        #004547;   /* Teal profundo — CTAs, barras activas */
+    --onb-primary-mid:    #0D5E60;   /* Teal contenedor — gradientes */
+    --onb-primary-light:  rgba(0, 69, 71, 0.10); /* Fondos tint teal */
+    --onb-primary-ring:   rgba(0, 69, 71, 0.18); /* Sombra focus */
+
+    /* Ámbar — pasos opcionales, advertencias amables */
+    --onb-amber:          #FFBF06;
+    --onb-amber-bg:       rgba(255, 191, 6, 0.12);
+    --onb-amber-border:   rgba(255, 191, 6, 0.35);
+    --onb-amber-text:     #5C4300;
+
+    /* Superficies */
+    --onb-surface:        #FDF9F3;   /* Crema cálida — fondo base */
+    --onb-surface-card:   #FFFFFF;   /* Blanco puro — tarjetas */
+    --onb-surface-low:    #F7F3ED;   /* Crema oscura — secciones */
+    --onb-surface-hover:  #F1EDE7;
+
+    /* Texto */
+    --onb-ink:            #1C1C18;   /* Nunca negro puro */
+    --onb-ink-soft:       #3F4949;   /* Texto secundario */
+    --onb-ink-muted:      #6F7979;   /* Texto terciario */
+
+    /* Bordes */
+    --onb-border:         rgba(0, 0, 0, 0.08);
+    --onb-border-strong:  rgba(0, 0, 0, 0.14);
+
+    /* Error */
+    --onb-error:          #C0392B;
+    --onb-error-bg:       rgba(192, 57, 43, 0.08);
+
+    /* Éxito */
+    --onb-success:        #1A7A4A;
+    --onb-success-bg:     rgba(26, 122, 74, 0.10);
+
+    /* Sombras */
+    --onb-shadow-sm:      0 2px 8px rgba(28, 28, 24, 0.06);
+    --onb-shadow-md:      0 8px 24px rgba(28, 28, 24, 0.08);
+    --onb-shadow-lg:      0 16px 40px rgba(28, 28, 24, 0.10);
+    --onb-shadow-teal:    0 8px 24px rgba(0, 69, 71, 0.22);
+
+    /* Radios */
+    --onb-radius-sm:      8px;
+    --onb-radius-md:      12px;
+    --onb-radius-lg:      16px;
+    --onb-radius-xl:      20px;
+    --onb-radius-pill:    999px;
+
+    /* Tipografía — hereda del layout */
+    --onb-font-head:      'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    --onb-font-body:      'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ---------- Animaciones ---------- */
+@keyframes onbFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes onbFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes onbSlideRight {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0);     }
+}
+
+@keyframes onbProgressFill {
+    from { width: 0%; }
+    to   { width: var(--fill-width, 100%); }
+}
+
+@keyframes onbPulseCheck {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.08); }
+}
+
+@keyframes onbShimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center;  }
+}
+
+/* Clases de animación */
+.onb-fade-up   { animation: onbFadeUp   0.40s ease-out both; }
+.onb-fade-in   { animation: onbFadeIn   0.30s ease-out both; }
+.onb-slide-in  { animation: onbSlideRight 0.35s ease-out both; }
+
+.onb-delay-1 { animation-delay: 0.08s; }
+.onb-delay-2 { animation-delay: 0.16s; }
+.onb-delay-3 { animation-delay: 0.24s; }
+.onb-delay-4 { animation-delay: 0.32s; }
+
+/* ---------- Layout: Split Panel ---------- */
+.onb-split {
+    display: grid;
+    grid-template-columns: 38% 62%;
+    min-height: 100vh;
+}
+
+@media (max-width: 1023px) {
+    .onb-split {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+}
+
+/* ---------- Panel Izquierdo (Teal) ---------- */
+.onb-panel-left {
+    background: linear-gradient(160deg, #004547 0%, #083D3F 55%, #0D5E60 100%);
+    color: #FFFFFF;
+    padding: 2.5rem 2.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Textura sutil en el panel */
+.onb-panel-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 15% 85%, rgba(255,191,6,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 90% 10%, rgba(142,210,212,0.08) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.onb-panel-left > * { position: relative; z-index: 1; }
+
+.onb-brand-label {
+    font-family: var(--onb-font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.60);
+    margin-bottom: 2rem;
+}
+
+.onb-step-counter {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-bottom: 1.25rem;
+}
+
+.onb-step-counter .onb-step-num {
+    font-family: var(--onb-font-head);
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #FFFFFF;
+    letter-spacing: -0.03em;
+}
+
+.onb-step-counter .onb-step-total {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+}
+
+.onb-panel-headline {
+    font-family: var(--onb-font-head);
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    font-weight: 800;
+    line-height: 1.18;
+    color: #FFFFFF;
+    letter-spacing: -0.025em;
+    margin-bottom: 1rem;
+}
+
+.onb-panel-subtext {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.72);
+    margin-bottom: 1.75rem;
+}
+
+.onb-panel-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.14);
+    margin-bottom: 1.75rem;
+}
+
+/* Bullets de beneficios */
+.onb-benefits { list-style: none; padding: 0; margin: 0 0 2rem 0; display: flex; flex-direction: column; gap: 0.85rem; }
+
+.onb-benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.4;
+}
+
+.onb-benefit-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+.onb-benefit-icon svg { width: 10px; height: 10px; color: #fff; }
+
+/* Card ámbar informativa en panel izquierdo */
+.onb-amber-card {
+    background: rgba(255,191,6,0.14);
+    border: 1px solid rgba(255,191,6,0.30);
+    border-radius: var(--onb-radius-md);
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.onb-amber-card p {
+    font-size: 0.8125rem;
+    color: rgba(255,255,255,0.90);
+    line-height: 1.55;
+    margin: 0;
+}
+
+.onb-amber-card .onb-amber-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--onb-amber);
+    margin-bottom: 0.35rem;
+}
+
+/* Nota opcional en panel */
+.onb-optional-note {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.52);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+/* Puntos de progreso */
+.onb-progress-dots {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.onb-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.45);
+    background: transparent;
+    transition: all 0.25s ease;
+}
+
+.onb-dot.active {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    width: 24px;
+    border-radius: 4px;
+}
+
+.onb-dot.done {
+    background: rgba(255,255,255,0.55);
+    border-color: rgba(255,255,255,0.55);
+}
+
+.onb-panel-footer {
+    font-size: 11px;
+    color: rgba(255,255,255,0.32);
+    margin-top: 1.5rem;
+}
+
+/* ---------- Panel Derecho (Crema) ---------- */
+.onb-panel-right {
+    background: var(--onb-surface);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.onb-panel-right-inner {
+    flex: 1;
+    padding: 2.5rem 2.75rem 3rem;
+    max-width: 840px;
+}
+
+@media (max-width: 1279px) {
+    .onb-panel-right-inner { padding: 2rem 2rem 2.5rem; }
+}
+
+/* ---------- Barra de Progreso Superior ---------- */
+.onb-progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+}
+
+.onb-progress-segments {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+}
+
+.onb-progress-seg {
+    flex: 1;
+    height: 5px;
+    border-radius: var(--onb-radius-pill);
+    background: var(--onb-surface-hover);
+    overflow: hidden;
+    position: relative;
+}
+
+.onb-progress-seg.done { background: var(--onb-primary); }
+.onb-progress-seg.active { background: linear-gradient(90deg, var(--onb-primary) 0%, var(--onb-primary-mid) 100%); }
+
+.onb-progress-label {
+    font-family: var(--onb-font-body);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--onb-primary);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ---------- Encabezado de pantalla ---------- */
+.onb-screen-title {
+    font-family: var(--onb-font-head);
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    font-weight: 800;
+    color: var(--onb-ink);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 0.4rem;
+}
+
+.onb-screen-subtitle {
+    font-size: 0.9rem;
+    color: var(--onb-ink-soft);
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+}
+
+/* ---------- Tarjeta de formulario ---------- */
+.onb-form-card {
+    background: var(--onb-surface-card);
+    border-radius: var(--onb-radius-lg);
+    box-shadow: var(--onb-shadow-md);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+/* ---------- Secciones del formulario ---------- */
+.onb-section-label {
+    font-family: var(--onb-font-body);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--onb-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.onb-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--onb-border);
+}
+
+.onb-form-section {
+    padding: 1.5rem 1.75rem;
+}
+
+.onb-form-section + .onb-form-section {
+    border-top: 1px solid var(--onb-border);
+}
+
+/* ---------- Inputs ---------- */
+.onb-field { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.onb-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--onb-ink);
+}
+
+.onb-input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    background: var(--onb-surface-card);
+    border: 1.5px solid var(--onb-border-strong);
+    border-radius: var(--onb-radius-sm);
+    font-family: var(--onb-font-body);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--onb-ink);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.onb-input::placeholder { color: var(--onb-ink-muted); font-weight: 400; }
+
+.onb-input:hover:not(:focus):not(:disabled) {
+    border-color: rgba(0,69,71,0.35);
+}
+
+.onb-input:focus {
+    border-color: var(--onb-primary);
+    box-shadow: 0 0 0 3px var(--onb-primary-ring);
+}
+
+.onb-input:disabled, .onb-input[readonly] {
+    background: var(--onb-surface-low);
+    color: var(--onb-ink-soft);
+    cursor: not-allowed;
+    border-color: var(--onb-border);
+}
+
+.onb-input.onb-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.9rem; letter-spacing: 0.04em; }
+
+.onb-field-hint {
+    font-size: 12px;
+    color: var(--onb-ink-muted);
+    line-height: 1.45;
+}
+
+.onb-field-error {
+    font-size: 12px;
+    color: var(--onb-error);
+    font-weight: 600;
+}
+
+/* Campo con icono izquierdo */
+.onb-input-wrap { position: relative; display: flex; align-items: center; }
+.onb-input-icon {
+    position: absolute;
+    left: 0.875rem;
+    color: var(--onb-ink-muted);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+.onb-input-icon svg { width: 16px; height: 16px; }
+.onb-input-wrap .onb-input { padding-left: 2.5rem; }
+
+/* Campo bloqueado con badge */
+.onb-field-locked {
+    position: relative;
+}
+.onb-locked-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--onb-ink-muted);
+    letter-spacing: 0.06em;
+    background: var(--onb-surface-hover);
+    border-radius: var(--onb-radius-pill);
+    padding: 2px 8px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+.onb-locked-badge svg { width: 10px; height: 10px; }
+
+/* ---------- Banners informativos ---------- */
+.onb-banner {
+    display: flex;
+    gap: 0.875rem;
+    padding: 0.875rem 1.125rem;
+    border-radius: var(--onb-radius-md);
+    margin-bottom: 1.25rem;
+}
+
+.onb-banner.amber {
+    background: var(--onb-amber-bg);
+    border: 1px solid var(--onb-amber-border);
+    border-left: 3.5px solid var(--onb-amber);
+}
+
+.onb-banner.info {
+    background: var(--onb-primary-light);
+    border: 1px solid rgba(0,69,71,0.15);
+    border-left: 3.5px solid var(--onb-primary);
+}
+
+.onb-banner-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--onb-amber);
+}
+.onb-banner.info .onb-banner-icon { color: var(--onb-primary); }
+
+.onb-banner-body p { font-size: 0.84375rem; color: var(--onb-ink-soft); line-height: 1.55; margin: 0; }
+.onb-banner-body strong { color: var(--onb-ink); }
+.onb-banner-link {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--onb-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ---------- Badges ---------- */
+.onb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: var(--onb-radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.onb-badge.teal   { background: var(--onb-primary-light); color: var(--onb-primary); border: 1px solid rgba(0,69,71,0.2); }
+.onb-badge.amber  { background: var(--onb-amber-bg); color: var(--onb-amber-text); border: 1px solid var(--onb-amber-border); }
+.onb-badge.green  { background: var(--onb-success-bg); color: var(--onb-success); }
+.onb-badge.locked { background: var(--onb-surface-low); color: var(--onb-ink-muted); }
+
+/* ---------- Botones ---------- */
+.onb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--onb-radius-pill);
+    font-family: var(--onb-font-body);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    border: none;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.onb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Primario */
+.onb-btn-primary {
+    background: var(--onb-primary);
+    color: #FFFFFF;
+    box-shadow: var(--onb-shadow-teal);
+}
+.onb-btn-primary:hover {
+    background: #003537;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0,69,71,0.28);
+}
+.onb-btn-primary:active { transform: translateY(0); }
+
+/* Ghost / Secundario */
+.onb-btn-ghost {
+    background: transparent;
+    color: var(--onb-ink-soft);
+    border: 1.5px solid var(--onb-border-strong);
+}
+.onb-btn-ghost:hover {
+    background: var(--onb-surface-hover);
+    border-color: rgba(0,69,71,0.30);
+    color: var(--onb-ink);
+}
+
+/* Texto: "Omitir por ahora" */
+.onb-btn-text {
+    background: transparent;
+    color: var(--onb-primary);
+    padding: 0.7rem 0.75rem;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.onb-btn-text:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- Navegación inferior ---------- */
+.onb-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.75rem;
+    margin-top: 1.75rem;
+    border-top: 1px solid var(--onb-border);
+}
+
+.onb-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* ---------- Tarjetas de paso (Welcome) ---------- */
+.onb-step-card {
+    background: var(--onb-surface-card);
+    border-radius: var(--onb-radius-md);
+    border: 1.5px solid var(--onb-border);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.onb-step-card.active {
+    border-color: var(--onb-primary);
+    border-left-width: 4px;
+    box-shadow: var(--onb-shadow-sm);
+    background: #FAFFFE;
+}
+
+.onb-step-card.locked {
+    background: var(--onb-surface-low);
+    opacity: 0.72;
+}
+
+.onb-step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.onb-step-circle.active { background: var(--onb-primary); color: #fff; }
+.onb-step-circle.locked { background: var(--onb-surface-hover); color: var(--onb-ink-muted); border: 1.5px solid var(--onb-border-strong); }
+
+.onb-step-card-body { flex: 1; }
+.onb-step-card-title { font-size: 0.9rem; font-weight: 700; color: var(--onb-ink); }
+.onb-step-card-desc  { font-size: 0.78rem; color: var(--onb-ink-muted); margin-top: 1px; }
+
+/* Icono de candado en paso bloqueado */
+.onb-lock-icon { color: var(--onb-ink-muted); opacity: 0.6; }
+.onb-lock-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Servicios (Step 3) ---------- */
+.onb-service-card {
+    background: var(--onb-surface-card);
+    border: 1px solid var(--onb-border);
+    border-radius: var(--onb-radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0.75rem;
+    transition: box-shadow 150ms ease;
+}
+
+.onb-service-card:hover { box-shadow: var(--onb-shadow-sm); }
+
+.onb-add-service-btn {
+    width: 100%;
+    padding: 0.875rem;
+    background: var(--onb-primary-light);
+    border: 1.5px dashed rgba(0,69,71,0.35);
+    border-radius: var(--onb-radius-md);
+    color: var(--onb-primary);
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 140ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.onb-add-service-btn:hover { background: rgba(0,69,71,0.16); border-color: rgba(0,69,71,0.5); }
+
+/* Chips de sugerencia */
+.onb-suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    background: var(--onb-primary-light);
+    border: 1px solid rgba(0,69,71,0.18);
+    border-radius: var(--onb-radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--onb-primary);
+    cursor: pointer;
+    transition: background 130ms ease;
+}
+.onb-suggestion-chip:hover { background: rgba(0,69,71,0.18); }
+
+/* ---------- Pantalla completada ---------- */
+.onb-success-hero {
+    background: linear-gradient(155deg, var(--onb-primary) 0%, var(--onb-primary-mid) 100%);
+    padding: 3rem 2.5rem;
+    text-align: center;
+    color: #fff;
+}
+
+.onb-success-check {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    animation: onbPulseCheck 2s ease-in-out infinite;
+}
+
+.onb-success-check svg { width: 32px; height: 32px; color: #fff; }
+
+.onb-summary-card {
+    background: var(--onb-surface-card);
+    border-radius: var(--onb-radius-lg);
+    box-shadow: var(--onb-shadow-md);
+    padding: 1.5rem;
+}
+
+.onb-summary-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--onb-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.875rem;
+}
+
+.onb-summary-icon-wrap svg { width: 18px; height: 18px; color: var(--onb-primary); }
+
+/* ---------- Mensajes de alerta del sistema ---------- */
+.onb-alert {
+    border-radius: var(--onb-radius-md);
+    padding: 0.875rem 1.125rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.onb-alert-success { background: var(--onb-success-bg); border-left: 3px solid var(--onb-success); }
+.onb-alert-success p { color: #0F5132; }
+
+.onb-alert-warning { background: var(--onb-amber-bg); border-left: 3px solid var(--onb-amber); }
+.onb-alert-warning p { color: var(--onb-amber-text); }
+
+.onb-alert-error   { background: var(--onb-error-bg); border-left: 3px solid var(--onb-error); }
+.onb-alert-error p { color: var(--onb-error); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1023px) {
+    .onb-panel-left {
+        position: relative;
+        height: auto;
+        min-height: 200px;
+        padding: 1.75rem 1.5rem;
+    }
+    .onb-step-counter .onb-step-num { font-size: 2.5rem; }
+    .onb-panel-headline { font-size: 1.375rem; }
+    .onb-panel-right-inner { padding: 1.5rem 1.25rem 2rem; }
+}
+
+@media (max-width: 640px) {
+    .onb-panel-right-inner { padding: 1.25rem 1rem 1.75rem; }
+    .onb-nav { flex-wrap: wrap; gap: 0.75rem; }
+    .onb-btn { padding: 0.625rem 1.125rem; font-size: 0.84375rem; }
+}

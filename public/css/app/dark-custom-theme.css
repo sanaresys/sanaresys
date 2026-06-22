@@ -1,0 +1,280 @@
+/* Tema Oscuro Personalizado - SE APLICA SOBRE EL MODO OSCURO BASE */
+/* Requiere que html tenga las clases: 'dark custom-dark-theme' */
+
+html.dark.custom-dark-theme {
+    /* Variables CSS para el tema personalizado - TEMA COMPLETAMENTE ÚNICO */
+    --custom-primary: #ff6b6b;        /* Rojo coral vibrante */
+    --custom-secondary: #4ecdc4;      /* Turquesa */
+    --custom-accent: #ffe66d;         /* Amarillo brillante */
+    --custom-bg-primary: #2c1810;     /* Marrón muy oscuro */
+    --custom-bg-secondary: #1a0e0a;   /* Marrón casi negro */
+    --custom-bg-tertiary: #0a1930;    /* Azul marino profundo */
+    --custom-text-primary: #fff2e6;   /* Crema cálido */
+    --custom-text-secondary: #d4b996; /* Beige dorado */
+    --custom-border: #ff6b6b;         /* Borde rojo coral */
+    --custom-glow: rgba(255, 107, 107, 0.8); /* Glow rojo */
+}
+
+/* Fondo principal - TEMA ÚNICO CON GRADIENTE CÁLIDO */
+html.dark.custom-dark-theme body {
+    background: linear-gradient(135deg, 
+        #2c1810 0%,    /* Marrón oscuro */
+        #1a0e0a 25%,   /* Marrón casi negro */
+        #0a1930 50%,   /* Azul marino */
+        #1a0e0a 75%,   /* Marrón casi negro */
+        #2c1810 100%   /* Marrón oscuro */
+    ) !important;
+    background-size: 400% 400% !important;
+    animation: warmGradientShift 8s ease infinite !important;
+    color: var(--custom-text-primary) !important;
+}
+
+@keyframes warmGradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Mantener solo efectos sutiles sin cambiar el fondo base */
+
+/* Panel principal */
+html.dark.custom-dark-theme .fi-main {
+    background: rgba(15, 15, 35, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid var(--custom-border) !important;
+}
+
+/* Sidebar mejorado - ESTILO CORAL Y TURQUESA */
+html.dark.custom-dark-theme .fi-sidebar {
+    background: linear-gradient(180deg, 
+        var(--custom-bg-secondary) 0%,
+        #ff6b6b15 50%,
+        var(--custom-bg-secondary) 100%) !important;
+    border-right: 4px solid var(--custom-primary) !important;
+    box-shadow: 6px 0 25px rgba(255, 107, 107, 0.4) !important;
+    position: relative !important;
+}
+
+/* Agregar efecto de brillo coral en el sidebar */
+html.dark.custom-dark-theme .fi-sidebar::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 3px !important;
+    height: 100% !important;
+    background: linear-gradient(180deg, transparent, var(--custom-primary), var(--custom-secondary), transparent) !important;
+    animation: coralGlow 2s ease-in-out infinite !important;
+}
+
+@keyframes coralGlow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Navegación del sidebar - EFECTOS MÁS SUTILES */
+html.dark.custom-dark-theme .fi-sidebar-nav {
+    background: transparent !important;
+}
+
+html.dark.custom-dark-theme .fi-sidebar-nav-item {
+    margin: 4px 8px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+html.dark.custom-dark-theme .fi-sidebar-nav-item:hover {
+    background: linear-gradient(135deg, var(--custom-primary), var(--custom-secondary)) !important;
+    transform: translateX(4px) !important;
+    box-shadow: 0 4px 15px var(--custom-glow) !important;
+}
+
+html.dark.custom-dark-theme .fi-sidebar-nav-item.fi-active {
+    background: linear-gradient(135deg, var(--custom-primary), var(--custom-secondary)) !important;
+    box-shadow: 0 0 20px var(--custom-glow) !important;
+}
+
+/* Header personalizado - TEMA CORAL CARIBEÑO */
+html.dark.custom-dark-theme .fi-topbar {
+    background: linear-gradient(90deg, 
+        rgba(255, 107, 107, 0.15) 0%,
+        rgba(78, 205, 196, 0.15) 50%, 
+        rgba(255, 230, 109, 0.15) 100%) !important;
+    border-bottom: 3px solid var(--custom-primary) !important;
+    backdrop-filter: blur(15px) !important;
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3) !important;
+}
+
+/* Navegación y breadcrumbs - CORAL CÁLIDO */
+html.dark.custom-dark-theme .fi-breadcrumbs li a {
+    color: var(--custom-secondary) !important;
+    text-shadow: 0 0 8px rgba(78, 205, 196, 0.6) !important;
+    transition: all 0.3s ease !important;
+}
+
+html.dark.custom-dark-theme .fi-breadcrumbs li a:hover {
+    color: var(--custom-accent) !important;
+    text-shadow: 0 0 12px rgba(255, 230, 109, 0.8) !important;
+    transform: scale(1.05) !important;
+}
+
+/* Cards y paneles - TEMA CORAL Y TURQUESA */
+html.dark.custom-dark-theme .fi-section,
+html.dark.custom-dark-theme .fi-section-content,
+html.dark.custom-dark-theme .fi-fieldset,
+html.dark.custom-dark-theme .fi-card,
+html.dark.custom-dark-theme .fi-table {
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 107, 0.08) 0%,
+        rgba(78, 205, 196, 0.08) 50%,
+        rgba(255, 230, 109, 0.08) 100%) !important;
+    border: 2px solid rgba(255, 107, 107, 0.3) !important;
+    border-radius: 18px !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 
+        0 8px 25px rgba(255, 107, 107, 0.25),
+        inset 0 1px 0 rgba(255, 107, 107, 0.5) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover effects para cards - CORAL */
+html.dark.custom-dark-theme .fi-card:hover,
+html.dark.custom-dark-theme .fi-section:hover {
+    border-color: var(--custom-primary) !important;
+    box-shadow: 
+        0 12px 35px rgba(255, 107, 107, 0.4),
+        inset 0 1px 0 rgba(255, 107, 107, 0.7) !important;
+    transform: translateY(-3px) !important;
+}
+
+/* Tablas - CONTRASTE CON FONDO NEGRO */
+html.dark.custom-dark-theme .fi-ta-table {
+    background: #1a1a1a !important; /* Gris muy oscuro */
+    border: 2px solid var(--custom-border) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+html.dark.custom-dark-theme .fi-ta-row:hover {
+    background: linear-gradient(90deg, 
+        rgba(139, 92, 246, 0.2), 
+        rgba(6, 182, 212, 0.2), 
+        rgba(245, 158, 11, 0.1)) !important;
+    transform: scale(1.01) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Botones mejorados para tema personalizado - CORAL TROPICAL */
+html.dark.custom-dark-theme .fi-btn-primary {
+    background: linear-gradient(135deg, var(--custom-primary), var(--custom-secondary)) !important;
+    border: 2px solid var(--custom-primary) !important;
+    box-shadow: 
+        0 6px 20px rgba(255, 107, 107, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 12px !important;
+    color: white !important;
+}
+
+html.dark.custom-dark-theme .fi-btn-primary:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 
+        0 12px 35px rgba(78, 205, 196, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    background: linear-gradient(135deg, var(--custom-secondary), var(--custom-accent)) !important;
+    border-color: var(--custom-secondary) !important;
+}
+
+/* Inputs y formularios - TURQUESA CORAL */
+html.dark.custom-dark-theme .fi-input,
+html.dark.custom-dark-theme .fi-select-input {
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 107, 0.08), 
+        rgba(78, 205, 196, 0.08)) !important;
+    border: 2px solid rgba(255, 107, 107, 0.3) !important;
+    color: var(--custom-text-primary) !important;
+    transition: all 0.4s ease !important;
+    border-radius: 10px !important;
+    backdrop-filter: blur(8px) !important;
+    box-shadow: inset 0 2px 4px rgba(255, 107, 107, 0.1) !important;
+}
+
+html.dark.custom-dark-theme .fi-input:focus,
+html.dark.custom-dark-theme .fi-select-input:focus {
+    border-color: var(--custom-secondary) !important;
+    box-shadow: 
+        0 0 20px rgba(78, 205, 196, 0.6),
+        inset 0 2px 4px rgba(78, 205, 196, 0.2) !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 107, 0.12), 
+        rgba(78, 205, 196, 0.12)) !important;
+    transform: scale(1.02) !important;
+}
+
+/* Efectos de partículas en el fondo - CORAL Y TURQUESA TROPICAL */
+html.dark.custom-dark-theme::before {
+    content: '' !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(255, 107, 107, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 85% 25%, rgba(78, 205, 196, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 45% 75%, rgba(255, 230, 109, 0.3) 0%, transparent 35%),
+        radial-gradient(circle at 75% 85%, rgba(255, 107, 107, 0.3) 0%, transparent 30%) !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+    animation: coralFloat 15s ease-in-out infinite !important;
+}
+
+@keyframes coralFloat {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.8;
+    }
+    25% {
+        transform: translateY(-15px) rotate(90deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-10px) rotate(180deg);
+        opacity: 0.9;
+    }
+    75% {
+        transform: translateY(-20px) rotate(270deg);
+        opacity: 1;
+    }
+}/* Scrollbar personalizado */
+html.dark.custom-dark-theme ::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+html.dark.custom-dark-theme ::-webkit-scrollbar-track {
+    background: var(--custom-bg-primary) !important;
+}
+
+html.dark.custom-dark-theme ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--custom-primary), var(--custom-secondary)) !important;
+    border-radius: 4px !important;
+}
+
+html.dark.custom-dark-theme ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #9333ea, #0891b2) !important;
+}
+
+/* Notificaciones */
+html.dark.custom-dark-theme .fi-no-success {
+    background: linear-gradient(135deg, var(--custom-accent), #059669) !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Modal y overlays */
+html.dark.custom-dark-theme .fi-modal {
+    background: var(--custom-bg-secondary) !important;
+    border: 2px solid var(--custom-primary) !important;
+    box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3) !important;
+}
